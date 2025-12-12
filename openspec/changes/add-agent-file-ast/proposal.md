@@ -6,9 +6,10 @@ Introduce a flavour-agnostic AST to model agent files, separating construction f
 ## What Changes
 - Add a new capability spec: `agent-ast`
 - Define immutable AST nodes for agent metadata, sections, lists, and imports
-- Specify frontmatter as a `Map<string, obj>` carried by the AST
+- Specify frontmatter as a `Map<string, obj>` supporting nested maps/arrays, carried by the AST
 - Establish invariants for deterministic construction and traversal
 - Clarify import representation: path-only (sourcePath + declared format); resolution is out of scope
+- Expose explicit AST constructors: `role: string -> Section`, `objective: string -> Section`, `instructions: string -> Section`, `context: string -> Section`, `output: string -> Section`, `example: Section list -> Section`, and `examples: Section list -> Section`
 
 ## Impact
 - Affected specs: `agent-ast`

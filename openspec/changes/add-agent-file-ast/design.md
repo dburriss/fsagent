@@ -10,6 +10,10 @@ Introduce an immutable, flavour-agnostic AST for agent files that cleanly separa
 - Frontmatter stored as `Map<string, obj>` attached to root Agent
 - Imported node retains `sourcePath` + declared `DataFormat` (yaml|json|toon); no parsed object inside AST
 - AST is immutable; nodes are not mutated during traversal
+- Node kinds `CodeFence` and `Table` are explicitly out of scope for v1
+- Frontmatter supports nested maps/arrays (not flat-only)
+- Expose value constructors in `AST` module: `role: string -> Section`, `objective: string -> Section`, `instructions: string -> Section`, `context: string -> Section`, `output: string -> Section`, `example: Section list -> Section`, `examples: Section list -> Section` (pure, non-mutating)
+
 
 ## Risks / Trade-offs
 - Risk: Overly complex AST
@@ -20,5 +24,4 @@ Introduce an immutable, flavour-agnostic AST for agent files that cleanly separa
 - Add tests for AST construction invariants and deterministic traversal
 
 ## Open Questions
-- Do we need additional node kinds (e.g., CodeFence, Table) in v1?
-- Should frontmatter allow nested maps/arrays or remain flat initially?
+- None at this time
