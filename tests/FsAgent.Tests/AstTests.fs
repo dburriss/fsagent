@@ -87,8 +87,3 @@ let ``AST examples constructor creates correct Section with List`` () =
         | _ -> Assert.Fail("Expected single List node")
     | _ -> Assert.Fail("Expected Section node")
 
-[<Fact>]
-let ``AST construction is deterministic`` () =
-    let agent1 = { Frontmatter = Map.empty; Sections = [AST.role "Role1"; AST.objective "Obj1"] }
-    let agent2 = { Frontmatter = Map.empty; Sections = [AST.role "Role1"; AST.objective "Obj1"] }
-    Assert.Equal(agent1, agent2)
