@@ -17,6 +17,11 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
 
+Key files:
+- `README.md`
+- `ARCHITECTURE.md`
+- `opencode/project.md`
+
 # General
 - Keep answers succinct and information-dense.  
 - Be critical of ideas; call out flawed assumptions, missing information, or unnecessary complexity.  
@@ -59,7 +64,10 @@ Label tests by external dependencies (e.g., `yaml`, `json`, `filesystem`, `seria
 An F# DSL and library for generating custom agent files for AI agent tools. The project uses stratified design: DSL layer builds AST, writers convert AST to output formats (Markdown, JSON), and low-level import pipeline handles file parsing and serialization.
 
 Key directories:
-- `/` - Root project files (DSL, AST, Writers, Serialization modules)
+- `/src` - Root project files (DSL, AST, Writers, Serialization modules)
+- `/tests` - Test projects follow ABC style
+- `/docs` - Basic docs for developers
+- `/knowledge` - Summaries for compacting knowledge for AGENTS
 - `.opencode/` - OpenCode plugin configuration and command definitions
 - `openspec/` - Project specifications and change proposals
 
@@ -72,6 +80,7 @@ Key directories:
 - Writers must not mutate AST.
 - Follow naming: `PascalCase` for types/modules, `camelCase` for values/parameters.
 - Run `build` and `test` before and after all code/config changes.
+- Update `CHANGELOG.md` with changes when a feature is added, modified, or removed.
 
 # Git Conventions
 - `main` contains releasable code
