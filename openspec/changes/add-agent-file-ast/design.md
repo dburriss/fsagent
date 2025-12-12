@@ -6,7 +6,7 @@ Introduce an immutable, flavour-agnostic AST for agent files that cleanly separa
 - Non-Goals: implement or modify writers; implement or modify DSL builders; commit to specific output formats; introduce IO
 
 ## Decisions
-- AST nodes: Text, Block, Section, List, Imported, Agent (root)
+- AST nodes: Text, Section, List, Imported, Agent (root)
 - Frontmatter stored as `Map<string, obj>` attached to root Agent
 - Imported node retains `sourcePath` + declared `DataFormat` (yaml|json|toon); no parsed object inside AST
 - AST is immutable; nodes are not mutated during traversal
