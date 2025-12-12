@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FsAgent/FsAgent.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FsAgent.Tests/FsAgent.Tests.fsproj" />
+  </Folder>
+</Solution>
