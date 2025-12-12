@@ -8,7 +8,7 @@ Introduce a flavour-agnostic AST to model agent files so writers can render Mark
 - Define immutable AST nodes for agent metadata, sections, lists, and imports
 - Specify frontmatter as a `Map<string, obj>` carried by the AST
 - Establish invariants for deterministic construction and traversal
-- Clarify import representation (parsed object + original format)
+- Clarify import representation: path-only (sourcePath + declared format), resolved by writers via low-level IO/parsing modules
 - Align writer expectations: writers operate on AST only
 
 ## Impact

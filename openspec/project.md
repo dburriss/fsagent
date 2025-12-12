@@ -38,7 +38,7 @@ This project provides a small, composable F# DSL for generating agent markdown f
 * **AST-Driven Rendering:** one in-memory model; all writers operate on it.
 * **Composable Node Structure:** Giraffe.ViewEngine-inspired `Node` tree.
 * **Pluggable Writers:** Writers wrap the baseline Markdown writer and inject flavour-specific frontmatter rules.
-* **Late-Bound Import Formatting:** Imported files carry their parsed representation; writers choose the serialization format at render time.
+* **Late-Bound Import Formatting:** AST carries import references (path + declared format); writers read those files via lower-level modules and choose the serialization format (TOON/YAML/JSON) at write time.
 * **Pure Construction:** DSL builds pure data; no side-effects.
 * **Small Surface Area:** API should stay minimal, orthogonal, and predictable.
 
@@ -75,7 +75,7 @@ This project provides a small, composable F# DSL for generating agent markdown f
 
 * DSL must not depend on any specific output format.
 * Writers must not mutate the AST.
-* All imported data must remain available in raw parsed form to allow re-serialization.
+* Imported data is referenced by path in the AST; writers resolve and parse via lower-level modules and select re-serialization format at write time.
 * No flavour-specific logic allowed in the DSL layer.
 * Rendering must be deterministic.
 * Avoid introducing complexity that prevents manual extension by end-users.

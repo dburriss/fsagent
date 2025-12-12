@@ -1,5 +1,5 @@
 ## Context
-Introduce an immutable, flavour-agnostic AST for agent files that cleanly separates construction (DSL) from rendering (writers). The AST must carry frontmatter and imported data as parsed objects without format-specific logic.
+Introduce an immutable, flavour-agnostic AST for agent files that cleanly separates construction (DSL) from rendering (writers). The AST must carry frontmatter and import references (path + declared format) without parsed objects or format-specific logic; writers resolve imports via lower-level IO/parsing modules.
 
 ## Goals / Non-Goals
 - Goals: stable core model; deterministic rendering; late-bound import serialization; writer independence

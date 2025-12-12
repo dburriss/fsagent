@@ -27,7 +27,7 @@ The system builds agent definitions through a high-level F# DSL or directly thro
 |    - Flavour-agnostic, pure data model                         |
 |    - Node-based structure (Text, Block, List, Imported)         |
 |    - Frontmatter: Map<string, obj>                              |
-|    - Holds parsed imported data + original format information   |
+|    - Holds import references: sourcePath + declared DataFormat (yaml|json|toon)   |
 +---------------------+-----------------------------------------+
                       |
                       v
@@ -119,21 +119,21 @@ Flavour writers only modify frontmatter and structural rules but do not assume M
 
 ---
 
-## 4. **Imported Data Format Selected at Write Time**
+## 4. **Imported Data Resolution at Write Time**
 
 Imported nodes store:
 
-* parsed object representation
-* original declared format (`DataFormat`)
+* sourcePath
+* declared format (`DataFormat`)
 
-Writers decide how to serialize it:
+Writers resolve the referenced files via low-level import/parsing modules and decide how to serialize them:
 
 * Preserve original format
 * Force TOON
 * Force JSON
 * Force YAML
 
-This avoids mixing file-format concerns into the DSL.
+This keeps the AST pure while allowing flexible output formatting.
 
 ---
 
@@ -174,14 +174,14 @@ Writers can post-process by constructing a temporary augmented AST, but the orig
 
 * Stable core model.
 * Small surface, easy to render.
-* Stores imported data in a parsed form.
+* Stores import references (path + declared format); no parsed data in the AST.
 * F# Discriminated Unions and functions.
 
 ## Writers
 
 * Decide layout, output rendering, flavour metadata.
 * Reformat imports.
-* ERROR: Writers must never touch IO for imports; they operate only on AST + parsed imported objects.
+* Writers may perform IO for imports via lower-level modules; they do not mutate the AST and handle missing files/parse errors predictably.
 
 ## Importers & Serializers
 
