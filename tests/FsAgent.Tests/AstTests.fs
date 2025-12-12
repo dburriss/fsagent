@@ -1,0 +1,94 @@
+module AstTests
+
+open Xunit
+open FsAgent
+
+[<Fact>]
+let ``AST role constructor creates correct Section`` () =
+    let node = AST.role "You are a .NET Version Upgrade Assistant, an expert in migrating .NET projects to newer versions while maintaining compatibility and resolving breaking changes."
+    match node with
+    | Section(name, content) ->
+        Assert.Equal("role", name)
+        match content with
+        | [Text text] -> Assert.Equal("You are a .NET Version Upgrade Assistant, an expert in migrating .NET projects to newer versions while maintaining compatibility and resolving breaking changes.", text)
+        | _ -> Assert.True(false, "Expected single Text node")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST objective constructor creates correct Section`` () =
+    let node = AST.objective "Upgrade a .NET codebase from an older version (e.g., .NET 6) to a newer version (e.g., .NET 8 or .NET 9), ensuring all project files, dependencies, and code are updated correctly without introducing breaking changes."
+    match node with
+    | Section(name, content) ->
+        Assert.Equal("objective", name)
+        match content with
+        | [Text text] -> Assert.Equal("Upgrade a .NET codebase from an older version (e.g., .NET 6) to a newer version (e.g., .NET 8 or .NET 9), ensuring all project files, dependencies, and code are updated correctly without introducing breaking changes.", text)
+        | _ -> Assert.True(false, "Expected single Text node")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST instructions constructor creates correct Section`` () =
+    let instructionsText = "1. Analyze the current .NET version in .csproj/.fsproj files and global.json.\n2. Check for deprecated APIs and breaking changes between versions.\n3. Update TargetFramework in project files.\n4. Update NuGet packages to compatible versions.\n5. Run dotnet restore and build to identify compilation errors.\n6. Fix any code incompatibilities (e.g., API changes in ASP.NET Core).\n7. Update Docker files if applicable.\n8. Run tests and validate functionality.\n9. Document changes and potential migration notes."
+    let node = AST.instructions instructionsText
+    match node with
+    | Section(name, content) ->
+        Assert.Equal("instructions", name)
+        match content with
+        | [Text text] -> Assert.Equal(instructionsText, text)
+        | _ -> Assert.True(false, "Expected single Text node")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST context constructor creates correct Section`` () =
+    let node = AST.context "The codebase is a typical .NET application with multiple projects, using packages like Entity Framework, ASP.NET Core, and various NuGet dependencies. The upgrade must consider LTS versions, security patches, and performance improvements."
+    match node with
+    | Section(name, content) ->
+        Assert.Equal("context", name)
+        match content with
+        | [Text text] -> Assert.Equal("The codebase is a typical .NET application with multiple projects, using packages like Entity Framework, ASP.NET Core, and various NuGet dependencies. The upgrade must consider LTS versions, security patches, and performance improvements.", text)
+        | _ -> Assert.True(false, "Expected single Text node")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST output constructor creates correct Section`` () =
+    let outputText = "Provide a summary of changes made, including:\n- Updated project files\n- Modified dependencies\n- Code changes required\n- Test results\n- Any remaining manual steps or warnings\n\nFormat the output as a markdown report with sections for each project updated."
+    let node = AST.output outputText
+    match node with
+    | Section(name, content) ->
+        Assert.Equal("output", name)
+        match content with
+        | [Text text] -> Assert.Equal(outputText, text)
+        | _ -> Assert.True(false, "Expected single Text node")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST example constructor creates correct Section`` () =
+    let ex = AST.example "Example Title" "Example content"
+    match ex with
+    | Section(name, content) ->
+        Assert.Equal("example", name)
+        match content with
+        | [Text "Example Title"; Text "Example content"] -> ()
+        | _ -> Assert.Fail("Expected title and content texts")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST examples constructor creates correct Section with List`` () =
+    let ex1 = AST.example "Upgrading from .NET 6 to .NET 8" "Successfully upgraded project with updated dependencies"
+    let ex2 = AST.example "Handling breaking changes in ASP.NET Core" "Modern ASP.NET Core 8 application structure"
+    let examplesNode = AST.examples [ex1; ex2]
+    match examplesNode with
+    | Section(name, content) ->
+        Assert.Equal("examples", name)
+        match content with
+        | [List examples] ->
+            match examples with
+            | [Section("example", _); Section("example", _)] -> ()
+            | _ -> Assert.True(false, "Expected two example sections")
+        | _ -> Assert.True(false, "Expected single List node")
+    | _ -> Assert.True(false, "Expected Section node")
+
+[<Fact>]
+let ``AST construction is deterministic`` () =
+    let agent1 = { Frontmatter = Map.empty; Sections = [AST.role "Role1"; AST.objective "Obj1"] }
+    let agent2 = { Frontmatter = Map.empty; Sections = [AST.role "Role1"; AST.objective "Obj1"] }
+    Assert.Equal(agent1, agent2)

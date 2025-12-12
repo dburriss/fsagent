@@ -1,6 +1,8 @@
 # fsagent
 A small DSL and library for generating custom agent files for popular agent tools
 
+Provides an immutable AST for representing agent files, with constructors for common sections like role, objective, instructions, etc.
+
 ## Build & Test
 
 ```bash

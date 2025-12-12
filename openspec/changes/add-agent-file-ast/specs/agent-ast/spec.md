@@ -49,11 +49,11 @@ The system SHALL expose pure constructor functions in the `AST` module for commo
 - **AND** the node is immutable and order deterministic
 
 #### Scenario: Create examples list via constructor
-- **WHEN** `examples [ example [ output "Final answer..."; instructions "Steps used"; context "Relevant notes" ]; example [ output "Another answer" ] ]` is used
+- **WHEN** `examples [ example "Example 1 Title" "Example 1 content"; example "Example 2 Title" "Example 2 content" ]` is used
 - **THEN** the AST contains a `Section` node with `name="examples"` whose items hold each `example` Section in order
-- **AND** each `example` is a `Section` holding a list of `Section` nodes (e.g., `output`, `instructions`, `context`)
+- **AND** each `example` is a `Section` with `name="example"` holding a list of `Text` nodes for title and content
 - **AND** the nodes are immutable and traversal order deterministic
 
 #### Scenario: Function signatures
 - **WHEN** reviewing the API
-- **THEN** signatures are `role: string -> Section`, `objective: string -> Section`, `instructions: string -> Section`, `context: string -> Section`, `output: string -> Section`, `example: Section list -> Section`, and `examples: Section list -> Section` exported from the `AST` module
+- **THEN** signatures are `role: string -> Section`, `objective: string -> Section`, `instructions: string -> Section`, `context: string -> Section`, `output: string -> Section`, `example: string -> string -> Section`, and `examples: Section list -> Section` exported from the `AST` module

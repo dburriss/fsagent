@@ -25,8 +25,8 @@ The system builds agent definitions through a high-level F# DSL or directly thro
 +---------------------------------------------------------------+
 | 2. Agent AST (Intermediate Representation)                     |
 |    - Flavour-agnostic, pure data model                         |
-|    - Node-based structure (Text, Block, List, Imported)         |
-|    - Frontmatter: Map<string, obj>                              |
+|    - Node-based structure (Text, Block, Section, List, Imported) |
+|    - Agent root with frontmatter: Map<string, obj> and sections: Node list |
 |    - Holds import references: sourcePath + declared DataFormat (yaml|json|toon)   |
 +---------------------+-----------------------------------------+
                       |
