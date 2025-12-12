@@ -11,8 +11,8 @@ let ``AST role constructor creates correct Section`` () =
         Assert.Equal("role", name)
         match content with
         | [Text text] -> Assert.Equal("You are a .NET Version Upgrade Assistant, an expert in migrating .NET projects to newer versions while maintaining compatibility and resolving breaking changes.", text)
-        | _ -> Assert.True(false, "Expected single Text node")
-    | _ -> Assert.True(false, "Expected Section node")
+        | _ -> Assert.Fail("Expected single Text node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST objective constructor creates correct Section`` () =
@@ -22,8 +22,8 @@ let ``AST objective constructor creates correct Section`` () =
         Assert.Equal("objective", name)
         match content with
         | [Text text] -> Assert.Equal("Upgrade a .NET codebase from an older version (e.g., .NET 6) to a newer version (e.g., .NET 8 or .NET 9), ensuring all project files, dependencies, and code are updated correctly without introducing breaking changes.", text)
-        | _ -> Assert.True(false, "Expected single Text node")
-    | _ -> Assert.True(false, "Expected Section node")
+        | _ -> Assert.Fail("Expected single Text node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST instructions constructor creates correct Section`` () =
@@ -34,8 +34,8 @@ let ``AST instructions constructor creates correct Section`` () =
         Assert.Equal("instructions", name)
         match content with
         | [Text text] -> Assert.Equal(instructionsText, text)
-        | _ -> Assert.True(false, "Expected single Text node")
-    | _ -> Assert.True(false, "Expected Section node")
+        | _ -> Assert.Fail("Expected single Text node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST context constructor creates correct Section`` () =
@@ -45,8 +45,8 @@ let ``AST context constructor creates correct Section`` () =
         Assert.Equal("context", name)
         match content with
         | [Text text] -> Assert.Equal("The codebase is a typical .NET application with multiple projects, using packages like Entity Framework, ASP.NET Core, and various NuGet dependencies. The upgrade must consider LTS versions, security patches, and performance improvements.", text)
-        | _ -> Assert.True(false, "Expected single Text node")
-    | _ -> Assert.True(false, "Expected Section node")
+        | _ -> Assert.Fail("Expected single Text node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST output constructor creates correct Section`` () =
@@ -57,8 +57,8 @@ let ``AST output constructor creates correct Section`` () =
         Assert.Equal("output", name)
         match content with
         | [Text text] -> Assert.Equal(outputText, text)
-        | _ -> Assert.True(false, "Expected single Text node")
-    | _ -> Assert.True(false, "Expected Section node")
+        | _ -> Assert.Fail("Expected single Text node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST example constructor creates correct Section`` () =
@@ -69,7 +69,7 @@ let ``AST example constructor creates correct Section`` () =
         match content with
         | [Text "Example Title"; Text "Example content"] -> ()
         | _ -> Assert.Fail("Expected title and content texts")
-    | _ -> Assert.True(false, "Expected Section node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST examples constructor creates correct Section with List`` () =
@@ -83,9 +83,9 @@ let ``AST examples constructor creates correct Section with List`` () =
         | [List examples] ->
             match examples with
             | [Section("example", _); Section("example", _)] -> ()
-            | _ -> Assert.True(false, "Expected two example sections")
-        | _ -> Assert.True(false, "Expected single List node")
-    | _ -> Assert.True(false, "Expected Section node")
+            | _ -> Assert.Fail("Expected two example sections")
+        | _ -> Assert.Fail("Expected single List node")
+    | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
 let ``AST construction is deterministic`` () =

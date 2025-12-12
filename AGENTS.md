@@ -44,9 +44,10 @@ fsx scripts/build.fsx           # Alternative build script
 ```
 
 ## Testing Guidelines
-- Default to TDD.  
-- Prefer in-memory tests.  
+- Default to TDD.
+- Prefer in-memory tests.
 - Run build and tests before and after modifications.
+- Use Assert.Fail("message") instead of Assert.True(false, "message") for test failures.
 
 ### ABC Test Categories
 **A – Acceptance Tests**  
