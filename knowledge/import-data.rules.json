@@ -1,0 +1,24 @@
+{
+  "rules": [
+    {
+      "code": "CODE001",
+      "text": "Favor immutability; isolate side effects at boundaries."
+    },
+    {
+      "code": "CODE002",
+      "text": "Keep stratified design: DSL independent of writers; writers never mutate AST."
+    },
+    {
+      "code": "CODE003",
+      "text": "Use expressive types: prefer Option/Result and discriminated unions; avoid exceptions; ensure exhaustive pattern matches."
+    },
+    {
+      "code": "CODE004",
+      "text": "Write small, composable functions with idiomatic pipelines and computation expressions; avoid unnecessary abstraction."
+    },
+    {
+      "code": "CODE005",
+      "text": "Follow naming conventions: PascalCase for types/modules, camelCase for values; keep modules cohesive."
+    }
+  ]
+}
