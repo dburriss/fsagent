@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <Compile Include="AstTests.fs" />
+    <Compile Include="MarkdownWriterTests.fs" />
   </ItemGroup>
 
   <ItemGroup>

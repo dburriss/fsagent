@@ -3,6 +3,39 @@ A small DSL and library for generating custom agent files for popular agent tool
 
 Provides an immutable AST for representing agent files, with constructors for common sections like role, objective, instructions, etc.
 
+## Markdown Writer
+
+The library includes a Markdown writer to convert the Agent AST to Markdown strings with configurable options.
+
+### Example
+
+```fsharp
+open FsAgent
+
+let agent = {
+    Frontmatter = Map.ofList ["description", "A helpful assistant" :> obj]
+    Sections = [
+        AST.role "You are a helpful assistant"
+        AST.objective "Assist users with coding tasks"
+    ]
+}
+
+let markdown = MarkdownWriter.writeMarkdown agent id
+```
+
+### Options
+
+- `OutputFormat`: `Opencode` (default) or `Copilot`
+- `OutputType`: `Md` (default), `Json`, or `Yaml`
+- `ImportInclusion`: `None` (default) or `Raw`
+- `RenameMap`: Map for renaming section headings
+- `HeadingFormatter`: Optional function to format headings
+- `GeneratedFooter`: Optional function to generate footer content
+- `IncludeFrontmatter`: Whether to include frontmatter (default true)
+- `CustomWriter`: Optional custom writer function
+
+See `knowledge/import-data.md` for an example of generated output with imported data rules from `knowledge/import-data.rules.json`.
+
 ## Build & Test
 
 ```bash
