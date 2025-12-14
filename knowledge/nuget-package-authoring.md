@@ -40,18 +40,18 @@ This example follows current NuGet guidance. Adjust values for your project.
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- Target one or more frameworks -->
-    <TargetFrameworks>net8.0;netstandard2.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
 
     <!-- Core package identity -->
-    <PackageId>Contoso.MyLibrary</PackageId>
-    <Version>1.0.0</Version>
-    <Authors>Your Name</Authors>
-    <Description>A concise description of the library.</Description>
-    <Title>Contoso MyLibrary</Title>
+    <PackageId>FsAgent</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Devon Burriss</Authors>
+    <Description>A small F# DSL and library for generating custom agent files for popular agent tools. Provides an immutable Agent AST, a Markdown writer, and a top-level computation expression DSL for ergonomic agent authoring.</Description>
+    <Title>FsAgent</Title>
 
     <!-- Links & source metadata -->
-    <PackageProjectUrl>https://github.com/you/your-repo</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/you/your-repo</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/dburriss/fsagent</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dburriss/fsagent</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <!-- Licensing (prefer SPDX expression) -->
@@ -62,8 +62,8 @@ This example follows current NuGet guidance. Adjust values for your project.
     <PackageIcon>icon.png</PackageIcon>
 
     <!-- Discoverability & docs -->
-    <PackageTags>fsharp library utility</PackageTags>
-    <PackageReleaseNotes>Initial stable release.</PackageReleaseNotes>
+    <PackageTags>fsharp agent dsl ast markdown writer yaml json</PackageTags>
+    <PackageReleaseNotes>Initial release: Agent AST, Markdown writer, and top-level DSL; frontmatter helpers (fmStr/fmNum/fmBool/fmList/fmMap); import inference (importRef) for .yml/.yaml/.json/.toon; added YamlDotNet and System.Text.Json dependencies.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- SourceLink / reproducible builds -->
