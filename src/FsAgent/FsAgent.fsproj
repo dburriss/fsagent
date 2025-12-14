@@ -1,8 +1,35 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Target one or more frameworks -->
     <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Core package identity -->
+    <PackageId>FsAgent</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Devon Burriss</Authors>
+    <Description>A small F# DSL and library for generating custom agent files for popular agent tools. Provides an immutable Agent AST, a Markdown writer, and a top-level computation expression DSL for ergonomic agent authoring.</Description>
+    <Title>FsAgent</Title>
+
+    <!-- Links & source metadata -->
+    <PackageProjectUrl>https://github.com/dburriss/fsagent</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dburriss/fsagent</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <!-- Licensing (prefer SPDX expression) -->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <!-- README on NuGet.org -->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Discoverability & docs -->
+    <PackageTags>fsharp agent dsl markdown</PackageTags>
+    <PackageReleaseNotes>Initial release: Agent AST, Markdown writer, and top-level DSL; frontmatter helpers (fmStr/fmNum/fmBool/fmList/fmMap); import inference (importRef) for .yml/.yaml/.json/.toon; added YamlDotNet and System.Text.Json dependencies.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- SourceLink / reproducible builds -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +39,16 @@
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="10.0.1" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SourceLink provider for GitHub (private asset) -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Include README.md from project root -->
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
 </Project>
