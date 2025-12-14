@@ -28,6 +28,7 @@ Key files:
 - Prefer simplicity and incremental changes.  
 - State uncertainty explicitly when information is incomplete.  
 - Work in small steps and verify each change.  
+- When building new things, consult the @ARCHITECTURE.md file
 
 # Tech Stack
 - F# (.NET 10.0) with computation expressions for DSL
