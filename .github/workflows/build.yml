@@ -1,0 +1,37 @@
+name: Build & Test (.NET 10)
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Setup .NET 10 SDK
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          # Enable cache when packages.lock.json exists
+          cache: true
+
+      # Optional: fail fast if lock file missing
+      # - run: |
+      #     test -f ./packages.lock.json || (echo "Missing packages.lock.json" && exit 1)
+
+      - name: Restore (locked-mode)
+        run: dotnet restore --locked-mode
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
