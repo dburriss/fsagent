@@ -59,3 +59,45 @@ The system SHALL expose pure constructor functions in the `AST` module for commo
 - **WHEN** reviewing the API
 - **THEN** signatures are `role: string -> Section`, `objective: string -> Section`, `instructions: string -> Section`, `context: string -> Section`, `output: string -> Section`, `example: string -> string -> Section`, and `examples: Section list -> Section` exported from the `AST` module
 
+### Requirement: Frontmatter Helper Constructors
+The system SHALL provide helper constructors for frontmatter values to support DSL ergonomics.
+
+#### Scenario: Construct string value
+- **WHEN** `fmStr "value"` is used
+- **THEN** it returns `"value" :> obj`
+
+#### Scenario: Construct numeric value
+- **WHEN** `fmNum 42.0` is used
+- **THEN** it returns `42.0 :> obj`
+
+#### Scenario: Construct boolean value
+- **WHEN** `fmBool true` is used
+- **THEN** it returns `true :> obj`
+
+#### Scenario: Construct list value
+- **WHEN** `fmList ["a"; "b"]` is used
+- **THEN** it returns `["a"; "b"] :> obj`
+
+#### Scenario: Construct map value
+- **WHEN** `fmMap (Map.ofList [("k", "v" :> obj)])` is used
+- **THEN** it returns `Map(...) :> obj`
+
+### Requirement: Import Reference with Format Inference
+The system SHALL provide `importRef` that infers format from filename extension.
+
+#### Scenario: Infer YAML format
+- **WHEN** `importRef "data.yml"` is used
+- **THEN** it returns an import reference with path "data.yml" and format Yaml
+
+#### Scenario: Infer JSON format
+- **WHEN** `importRef "data.json"` is used
+- **THEN** it returns an import reference with path "data.json" and format Json
+
+#### Scenario: Infer TOON format
+- **WHEN** `importRef "data.toon"` is used
+- **THEN** it returns an import reference with path "data.toon" and format Toon
+
+#### Scenario: Unknown extension
+- **WHEN** `importRef "data.txt"` is used
+- **THEN** it returns an import reference with path "data.txt" and format Unknown
+
