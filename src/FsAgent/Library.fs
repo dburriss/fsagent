@@ -10,6 +10,7 @@ type DataFormat =
     | Yaml
     | Json
     | Toon
+    | Unknown
 
 type Node =
     | Text of string
@@ -43,6 +44,94 @@ module AST =
 
     let examples (examples: Node list) : Node =
         Section("examples", [List examples])
+
+    let fmStr (value: string) : obj = value :> obj
+
+    let fmNum (value: float) : obj = value :> obj
+
+    let fmBool (value: bool) : obj = value :> obj
+
+    let fmList (value: obj list) : obj = value :> obj
+
+    let fmMap (value: Map<string, obj>) : obj = value :> obj
+
+    let inferFormat (path: string) : DataFormat =
+        match System.IO.Path.GetExtension(path).ToLower() with
+        | ".yml" | ".yaml" -> Yaml
+        | ".json" -> Json
+        | ".toon" -> Toon
+        | _ -> Unknown
+
+    let importRef (path: string) : Node =
+        Imported(path, inferFormat path)
+
+module DSL =
+
+    type MetaBuilder() =
+        member _.Yield _ = Map.empty<string, obj>
+
+        member _.Run(map) = map
+
+        [<CustomOperation("kv")>]
+        member _.Kv(map, key: string, value: string) =
+            map |> Map.add key (AST.fmStr value)
+
+        [<CustomOperation("kvList")>]
+        member _.KvList(map, key: string, value: string list) =
+            map |> Map.add key (AST.fmList (value |> List.map box))
+
+        [<CustomOperation("kvObj")>]
+        member _.KvObj(map, key: string, value: Map<string, obj>) =
+            map |> Map.add key (AST.fmMap value)
+
+        [<CustomOperation("kvListObj")>]
+        member _.KvListObj(map, key: string, value: obj list) =
+            map |> Map.add key (AST.fmList value)
+
+    let meta = MetaBuilder()
+
+    type AgentBuilder() =
+        member _.Yield _ = { Frontmatter = Map.empty; Sections = [] }
+
+        member _.Run(agent) = agent
+
+        [<CustomOperation("meta")>]
+        member _.Meta(agent, frontmatter: Map<string, obj>) =
+            { agent with Frontmatter = frontmatter }
+
+        [<CustomOperation("role")>]
+        member _.Role(agent, text: string) =
+            { agent with Sections = agent.Sections @ [AST.role text] }
+
+        [<CustomOperation("objective")>]
+        member _.Objective(agent, text: string) =
+            { agent with Sections = agent.Sections @ [AST.objective text] }
+
+        [<CustomOperation("instructions")>]
+        member _.Instructions(agent, text: string) =
+            { agent with Sections = agent.Sections @ [AST.instructions text] }
+
+        [<CustomOperation("context")>]
+        member _.Context(agent, text: string) =
+            { agent with Sections = agent.Sections @ [AST.context text] }
+
+        [<CustomOperation("output")>]
+        member _.Output(agent, text: string) =
+            { agent with Sections = agent.Sections @ [AST.output text] }
+
+        [<CustomOperation("examples")>]
+        member _.Examples(agent, examples: Node list) =
+            { agent with Sections = agent.Sections @ [AST.examples examples] }
+
+        [<CustomOperation("section")>]
+        member _.Section(agent, name: string, content: string) =
+            { agent with Sections = agent.Sections @ [Section(name, [Text content])] }
+
+        [<CustomOperation("import")>]
+        member _.Import(agent, path: string) =
+            { agent with Sections = agent.Sections @ [AST.importRef path] }
+
+    let agent = AgentBuilder()
 
 module MarkdownWriter =
 
@@ -107,15 +196,46 @@ module MarkdownWriter =
         if opts.IncludeFrontmatter then
             match opts.OutputFormat with
             | Opencode ->
-                if ctx.AgentDescription.IsSome then
+                if agent.Frontmatter.Count > 0 then
                     sb.AppendLine("---") |> ignore
-                    sb.AppendLine($"description: {ctx.AgentDescription.Value}") |> ignore
+                    for kv in agent.Frontmatter do
+                        let valueStr = 
+                            match kv.Value with
+                            | :? string as s -> s
+                            | :? float as f -> f.ToString()
+                            | :? bool as b -> b.ToString().ToLower()
+                            | :? (obj list) as l -> 
+                                l |> List.map (fun o -> 
+                                    match o with
+                                    | :? string as s -> s
+                                    | _ -> o.ToString()
+                                ) |> String.concat "\n  - "
+                                |> sprintf "\n  - %s"
+                            | :? Map<string, obj> as m ->
+                                m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
+                            | _ -> kv.Value.ToString()
+                        sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
                     sb.AppendLine("---") |> ignore
                     sb.AppendLine() |> ignore
             | Copilot ->
                 sb.AppendLine("---") |> ignore
-                sb.AppendLine($"name: {ctx.AgentName.Value}") |> ignore
-                sb.AppendLine($"description: {ctx.AgentDescription.Value}") |> ignore
+                for kv in agent.Frontmatter do
+                    let valueStr = 
+                        match kv.Value with
+                        | :? string as s -> s
+                        | :? float as f -> f.ToString()
+                        | :? bool as b -> b.ToString().ToLower()
+                        | :? (obj list) as l -> 
+                            l |> List.map (fun o -> 
+                                match o with
+                                | :? string as s -> s
+                                | _ -> o.ToString()
+                            ) |> String.concat "\n  - "
+                            |> sprintf "\n  - %s"
+                        | :? Map<string, obj> as m ->
+                            m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
+                        | _ -> kv.Value.ToString()
+                    sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
                 sb.AppendLine("---") |> ignore
                 sb.AppendLine() |> ignore
 

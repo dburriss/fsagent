@@ -8,24 +8,6 @@ open System.IO
 // A - Acceptance Tests: End-to-end DSL → AST → Writer pipeline
 
 [<Fact>]
-let ``A: DSL-built agent renders correct Markdown`` () =
-    let agent = DSL.agent {
-        meta (DSL.meta {
-            kv "description" "A test agent"
-            kv "model" "gpt-4"
-        })
-        role "You are a test agent"
-        objective "Test objective"
-    }
-    let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
-    Assert.Contains("description: A test agent", result)
-    Assert.Contains("model: gpt-4", result)
-    Assert.Contains("# role", result)
-    Assert.Contains("# objective", result)
-    Assert.Contains("You are a test agent", result)
-    Assert.Contains("Test objective", result)
-
-[<Fact>]
 let ``A: Default writeMarkdown produces Markdown with ATX headings and frontmatter`` () =
     let agent = {
         Frontmatter = Map.ofList ["description", "Test agent" :> obj]

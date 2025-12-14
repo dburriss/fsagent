@@ -23,6 +23,32 @@ let agent = {
 let markdown = MarkdownWriter.writeMarkdown agent id
 ```
 
+## DSL
+
+The library provides a top-level F# computation expression for authoring agents.
+
+### Example
+
+```fsharp
+open FsAgent.DSL
+
+let agent = agent {
+    meta (meta {
+        kv "description" "A helpful assistant"
+        kv "model" "gpt-4"
+        kvList "tools" ["grep"; "bash"]
+    })
+    role "You are a helpful assistant"
+    objective "Assist users with coding tasks"
+    instructions "Follow these steps..."
+    examples [
+        example "How to build?" "Run dotnet build"
+    ]
+}
+
+let markdown = MarkdownWriter.writeMarkdown agent id
+```
+
 ### Options
 
 - `OutputFormat`: `Opencode` (default) or `Copilot`

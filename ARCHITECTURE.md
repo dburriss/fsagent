@@ -164,11 +164,15 @@ Writers can post-process by constructing a temporary augmented AST, but the orig
 
 ## DSL
 
-* Provide ergonomic domain-specific combinators.
+* Provide ergonomic domain-specific combinators via F# computation expression `agent { ... }`.
+* Supports frontmatter building with `meta { kv ... }` for generic keys like description, model, tools.
+* Core sections: role, objective, instructions, context, output, examples with example.
+* Generic section for ad hoc content.
+* Import references via `import "path"` with inferred format from extension.
 * Hide Node/AST boilerplate.
 * No IO.
 * No formatting logic.
-* F# Computation Expression using F# Builder
+* Pure and flavour-agnostic.
 
 ## AST
 

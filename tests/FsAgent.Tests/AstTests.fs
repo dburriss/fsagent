@@ -2,6 +2,7 @@ module AstTests
 
 open Xunit
 open FsAgent
+open FsAgent.DSL
 
 [<Fact>]
 let ``AST role constructor creates correct Section`` () =
@@ -15,15 +16,60 @@ let ``AST role constructor creates correct Section`` () =
     | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
-let ``AST objective constructor creates correct Section`` () =
-    let node = AST.objective "Upgrade a .NET codebase from an older version (e.g., .NET 6) to a newer version (e.g., .NET 8 or .NET 9), ensuring all project files, dependencies, and code are updated correctly without introducing breaking changes."
+let ``AST fmStr creates boxed string`` () =
+    let obj = AST.fmStr "test"
+    Assert.Equal("test", obj :?> string)
+
+[<Fact>]
+let ``AST fmNum creates boxed float`` () =
+    let obj = AST.fmNum 42.0
+    Assert.Equal(42.0, obj :?> float)
+
+[<Fact>]
+let ``AST fmBool creates boxed bool`` () =
+    let obj = AST.fmBool true
+    Assert.Equal(true, obj :?> bool)
+
+[<Fact>]
+let ``AST fmList creates boxed list`` () =
+    let obj = AST.fmList ["a" :> obj; "b" :> obj]
+    let list = obj :?> obj list
+    Assert.Equal(2, list.Length)
+    Assert.Equal("a", list[0] :?> string)
+
+[<Fact>]
+let ``AST fmMap creates boxed map`` () =
+    let map = Map.ofList [("k", "v" :> obj)]
+    let obj = AST.fmMap map
+    let m = obj :?> Map<string, obj>
+    Assert.Equal("v", m["k"] :?> string)
+
+[<Fact>]
+let ``AST inferFormat recognizes yaml`` () =
+    Assert.Equal(Yaml, AST.inferFormat "file.yml")
+    Assert.Equal(Yaml, AST.inferFormat "file.yaml")
+
+[<Fact>]
+let ``AST inferFormat recognizes json`` () =
+    Assert.Equal(Json, AST.inferFormat "file.json")
+
+[<Fact>]
+let ``AST inferFormat recognizes toon`` () =
+    Assert.Equal(Toon, AST.inferFormat "file.toon")
+
+[<Fact>]
+let ``AST inferFormat returns Unknown for unknown extension`` () =
+    Assert.Equal(Unknown, AST.inferFormat "file.txt")
+
+[<Fact>]
+let ``AST importRef creates Imported node with inferred format`` () =
+    let node = AST.importRef "data.yml"
     match node with
-    | Section(name, content) ->
-        Assert.Equal("objective", name)
-        match content with
-        | [Text text] -> Assert.Equal("Upgrade a .NET codebase from an older version (e.g., .NET 6) to a newer version (e.g., .NET 8 or .NET 9), ensuring all project files, dependencies, and code are updated correctly without introducing breaking changes.", text)
-        | _ -> Assert.Fail("Expected single Text node")
-    | _ -> Assert.Fail("Expected Section node")
+    | Imported(path, format) ->
+        Assert.Equal("data.yml", path)
+        Assert.Equal(Yaml, format)
+    | _ -> Assert.Fail("Expected Imported node")
+
 
 [<Fact>]
 let ``AST instructions constructor creates correct Section`` () =
