@@ -1,5 +1,30 @@
 #!/usr/bin/env -S dotnet fsi
 
+// =================================================================================
+// Publish Script for FsAgent
+// =================================================================================
+// This script automates the release process for the FsAgent library.
+// It performs the following steps:
+// 1. Reads the current version from src/FsAgent/FsAgent.fsproj
+// 2. Extracts the "Unreleased" section from CHANGELOG.md
+// 3. Prompts the user to select the next version (Major, Minor, or Patch)
+// 4. Updates CHANGELOG.md:
+//    - Moves "Unreleased" changes to a new versioned section
+//    - Creates a new empty "Unreleased" section
+// 5. Updates FsAgent.fsproj:
+//    - Increments the <Version> tag
+//    - Updates <PackageReleaseNotes> with the changes
+// 6. Stages, commits, and tags the release in Git
+// 7. Optionally pushes the changes and tag to the remote repository
+//
+// Arguments:
+//   --dry-run    Simulate the process without making any changes to disk or git.
+//
+// Usage:
+//   ./scripts/publish.fsx              # Standard execution
+//   ./scripts/publish.fsx --dry-run    # Test run to verify changes
+// =================================================================================
+
 open System
 open System.IO
 open System.Text.RegularExpressions
@@ -7,7 +32,7 @@ open System.Diagnostics
 
 // Helper to run git commands
 let runGit args =
-    let psi = ProcessStartInfo("git", args)
+    let psi = ProcessStartInfo("git", Arguments = args)
     psi.RedirectStandardOutput <- true
     psi.RedirectStandardError <- true
     psi.UseShellExecute <- false
@@ -18,6 +43,15 @@ let runGit args =
     if p.ExitCode <> 0 then
         failwithf "Git command failed: git %s\nError: %s" args error
     output.Trim()
+
+// Parse arguments
+let args = fsi.CommandLineArgs |> Array.skip 1
+let isDryRun = args |> Array.contains "--dry-run"
+
+if isDryRun then
+    printfn "=== DRY RUN MODE ==="
+    printfn "No changes will be written to disk."
+    printfn "===================="
 
 // Paths
 let rootDir = __SOURCE_DIRECTORY__ |> Directory.GetParent
@@ -114,7 +148,12 @@ let newFsprojContent =
     // Update PackageReleaseNotes
     |> fun s -> Regex.Replace(s, "<PackageReleaseNotes>.*?</PackageReleaseNotes>", sprintf "<PackageReleaseNotes>%s</PackageReleaseNotes>" releaseNotes, RegexOptions.Singleline)
 
-File.WriteAllText(fsprojPath, newFsprojContent)
+if isDryRun then
+    printfn "\n[Dry Run] Would update fsproj:"
+    printfn "  Version: %O" newVersion
+    printfn "  ReleaseNotes: %s" releaseNotes
+else
+    File.WriteAllText(fsprojPath, newFsprojContent)
 
 // 5. Update CHANGELOG.md
 printfn "Updating CHANGELOG.md..."
@@ -143,9 +182,22 @@ let newChangelogLines =
     newChangelogSection @ 
     postUnreleasedLines
 
-File.WriteAllLines(changelogPath, newChangelogLines)
+if isDryRun then
+    printfn "\n[Dry Run] Would update CHANGELOG.md with new section:"
+    newChangelogSection |> List.iter (fun l -> printfn "  %s" l)
+else
+    File.WriteAllLines(changelogPath, newChangelogLines)
 
 // 6. Git Operations
+if isDryRun then
+    printfn "\n[Dry Run] Git operations skipped. Would execute:"
+    printfn "1. git add \"%s\" \"%s\"" fsprojPath changelogPath
+    printfn "2. git commit -m \"release: prepare v%O\"" newVersion
+    printfn "3. git tag v%O" newVersion
+    printfn "4. git push origin main"
+    printfn "5. git push origin v%O" newVersion
+    exit 0
+
 printfn "\nFiles updated. Ready to commit."
 printfn "Commands to be executed:"
 printfn "1. git add \"%s\" \"%s\"" fsprojPath changelogPath
