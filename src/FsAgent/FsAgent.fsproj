@@ -6,7 +6,7 @@
 
     <!-- Core package identity -->
     <PackageId>FsAgent</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.0.0</Version>
     <Authors>Devon Burriss</Authors>
     <Description>A small F# DSL and library for generating custom agent files for popular agent tools. Provides an immutable Agent AST, a Markdown writer, and a top-level computation expression DSL for ergonomic agent authoring.</Description>
     <Title>FsAgent</Title>
