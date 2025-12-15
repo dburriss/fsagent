@@ -1,28 +1,6 @@
 # fsagent
 A small DSL and library for generating custom agent files for popular agent tools
 
-Provides an immutable AST for representing agent files, with constructors for common sections like role, objective, instructions, etc.
-
-## Markdown Writer
-
-The library includes a Markdown writer to convert the Agent AST to Markdown strings with configurable options.
-
-### Example
-
-```fsharp
-open FsAgent
-
-let agent = {
-    Frontmatter = Map.ofList ["description", "A helpful assistant" :> obj]
-    Sections = [
-        AST.role "You are a helpful assistant"
-        AST.objective "Assist users with coding tasks"
-    ]
-}
-
-let markdown = MarkdownWriter.writeMarkdown agent id
-```
-
 ## DSL
 
 The library provides a top-level F# computation expression for authoring agents.
@@ -48,6 +26,8 @@ let agent = agent {
 
 let markdown = MarkdownWriter.writeMarkdown agent id
 ```
+
+For lower-level usage using the AST directly, see [Using the AST](docs/using-ast.md).
 
 ### Options
 
