@@ -49,6 +49,16 @@ dotnet build                    # Build project
 dotnet test                     # Run unit tests
 ```
 
+## Publishing
+
+To publish a new version, use the helper script:
+
+```bash
+./publish.sh
+```
+
+See [Publishing Guide](docs/publishing.md) for details.
+
 ## Using OpenSpec
 
 This project uses OpenSpec for spec-driven development. OpenSpec manages change proposals, specifications, and ensures structured development.

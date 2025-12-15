@@ -7,7 +7,28 @@ This guide outlines the steps to publish a new version of FsAgent to NuGet.org.
 - Ensure all changes are committed and pushed to `main`.
 - Run `dotnet build` and `dotnet test` locally to verify everything works.
 
-## Steps
+## Automated Publishing (Recommended)
+
+You can use the `publish.sh` script to automate the versioning and tagging process.
+
+```bash
+# Dry run to preview changes
+./publish.sh --dry-run
+
+# Interactive release process
+./publish.sh
+```
+
+This script will:
+1. Parse the current version and changelog.
+2. Prompt you to select the next version (Major, Minor, or Patch).
+3. Update `src/FsAgent/FsAgent.fsproj` and `CHANGELOG.md` automatically.
+4. Perform the git commit and tag operations.
+5. Push changes to origin (after confirmation).
+
+## Manual Steps
+
+If you prefer to do it manually:
 
 1. **Update CHANGELOG.md**
    - Move the `[Unreleased]` section to a new version section, e.g., `## [0.2.0] - YYYY-MM-DD`
