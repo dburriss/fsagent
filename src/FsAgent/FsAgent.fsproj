@@ -6,7 +6,7 @@
 
     <!-- Core package identity -->
     <PackageId>FsAgent</PackageId>
-    <Version>0.0.0</Version>
+    <Version>0.1.0</Version>
     <Authors>Devon Burriss</Authors>
     <Description>A small F# DSL and library for generating custom agent files for popular agent tools. Provides an immutable Agent AST, a Markdown writer, and a top-level computation expression DSL for ergonomic agent authoring.</Description>
     <Title>FsAgent</Title>
@@ -24,7 +24,7 @@
 
     <!-- Discoverability & docs -->
     <PackageTags>fsharp agent dsl markdown</PackageTags>
-    <PackageReleaseNotes>Initial release: Agent AST, Markdown writer, and top-level DSL; frontmatter helpers (fmStr/fmNum/fmBool/fmList/fmMap); import inference (importRef) for .yml/.yaml/.json/.toon; added YamlDotNet and System.Text.Json dependencies.</PackageReleaseNotes>
+    <PackageReleaseNotes>Constructors for `instructions`, `context`, `result`, `example`, `examples`; Markdown writer with configurable options for output format, type, import inclusion, heading renames, and custom writers; Agent DSL: Top-level F# computation expression `agent { ... }` for ergonomic agent authoring; Frontmatter helpers: `fmStr`, `fmNum`, `fmBool`, `fmList`, `fmMap` for generic metadata; Import inference: `importRef` infers format from file extensions (.yml/.yaml/.json/.toon)</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- SourceLink / reproducible builds -->
