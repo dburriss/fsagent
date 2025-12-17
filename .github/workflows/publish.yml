@@ -38,7 +38,8 @@ jobs:
       - name: Publish to nuget.org
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.NUGET_DEPLOY_KEY }}
-        run: dotnet nuget push ./artifacts/*.nupkg \
-              --source https://api.nuget.org/v3/index.json \
-              --api-key $NUGET_DEPLOY_KEY \
-              --skip-duplicate
+         run: |
+           dotnet nuget push ./artifacts/*.nupkg \
+             --source https://api.nuget.org/v3/index.json \
+             --api-key $NUGET_AUTH_TOKEN \
+             --skip-duplicate
