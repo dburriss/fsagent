@@ -83,6 +83,7 @@ Key directories:
 - Follow naming: `PascalCase` for types/modules, `camelCase` for values/parameters.
 - Run `build` and `test` before and after all code/config changes.
 - Update `CHANGELOG.md` with changes when a feature is added, modified, or removed.
+- When splitting Bash commands across multiple lines, ensure there is **no trailing whitespace** after the backslash (`\`) continuation character.
 
 # Git Conventions
 - `main` contains releasable code
