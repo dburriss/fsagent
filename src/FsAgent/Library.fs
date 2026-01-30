@@ -16,7 +16,7 @@ type Node =
     | Text of string
     | Section of name: string * content: Node list
     | List of Node list
-    | Imported of sourcePath: string * format: DataFormat
+    | Imported of sourcePath: string * format: DataFormat * wrapInCodeBlock: bool
 
 type Agent = {
     Frontmatter: Map<string, obj>
@@ -63,7 +63,10 @@ module AST =
         | _ -> Unknown
 
     let importRef (path: string) : Node =
-        Imported(path, inferFormat path)
+        Imported(path, inferFormat path, true)
+
+    let importRawRef (path: string) : Node =
+        Imported(path, inferFormat path, false)
 
 module DSL =
 
@@ -129,7 +132,7 @@ module DSL =
 
         [<CustomOperation("importRaw")>]
         member _.ImportRaw(agent, path: string) =
-            { agent with Sections = agent.Sections @ [AST.importRef path] }
+            { agent with Sections = agent.Sections @ [AST.importRawRef path] }
 
         [<CustomOperation("import")>]
         member _.Import(agent, path: string) =
@@ -148,11 +151,6 @@ module MarkdownWriter =
         | Json
         | Yaml
 
-    type ImportInclusion =
-        | Exclude
-        | IncludeRaw
-        | IncludeCodeBlock
-
     type WriterContext = {
         Format: AgentFormat
         OutputType: OutputType
@@ -164,7 +162,7 @@ module MarkdownWriter =
     type Options = {
         mutable OutputFormat: AgentFormat
         mutable OutputType: OutputType
-        mutable ImportInclusion: ImportInclusion
+        mutable DisableCodeBlockWrapping: bool
         mutable RenameMap: Map<string, string>
         mutable HeadingFormatter: (string -> string) option
         mutable GeneratedFooter: (WriterContext -> string) option
@@ -182,7 +180,7 @@ module MarkdownWriter =
     let defaultOptions () = {
         OutputFormat = Opencode
         OutputType = Md
-        ImportInclusion = Exclude
+        DisableCodeBlockWrapping = false
         RenameMap = Map.empty
         HeadingFormatter = None
         GeneratedFooter = None
@@ -198,8 +196,8 @@ module MarkdownWriter =
             dict [name, contentObjs :> obj] :> obj
         | List items ->
             (items |> List.map nodeToObj) :> obj
-        | Imported (path, format) ->
-            dict ["path", path; "format", format.ToString().ToLower()] :> obj
+        | Imported (path, format, wrapInCodeBlock) ->
+            dict [("path", path :> obj); ("format", format.ToString().ToLower() :> obj); ("wrapInCodeBlock", wrapInCodeBlock :> obj)] :> obj
 
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = System.Text.StringBuilder()
@@ -268,26 +266,21 @@ module MarkdownWriter =
                     sb.Append("- ") |> ignore
                     writeNode item level
                     sb.AppendLine() |> ignore
-            | Imported (path, format) ->
-                match opts.ImportInclusion with
-                | Exclude -> ()
-                | IncludeRaw ->
-                    try
-                        let content = System.IO.File.ReadAllText(path)
-                        sb.AppendLine(content) |> ignore
-                    with
-                    | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
-                | IncludeCodeBlock ->
-                    try
-                        let content = System.IO.File.ReadAllText(path)
+            | Imported (path, format, wrapInCodeBlock) ->
+                let shouldWrap = wrapInCodeBlock && not opts.DisableCodeBlockWrapping
+                try
+                    let content = System.IO.File.ReadAllText(path)
+                    if shouldWrap then
                         let langTag = formatToLanguageTag format
                         sb.AppendLine($"```{langTag}") |> ignore
                         sb.Append(content) |> ignore
                         if not (content.EndsWith("\n")) then
                             sb.AppendLine() |> ignore
                         sb.AppendLine("```") |> ignore
-                    with
-                    | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
+                    else
+                        sb.AppendLine(content) |> ignore
+                with
+                | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
 
         for section in agent.Sections do
             writeNode section 1

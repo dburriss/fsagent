@@ -1,6 +1,6 @@
 ## Context
 
-The FsAgent library provides a DSL for authoring agent files with an `import` operation that embeds external file content. Currently, `ImportInclusion.IncludeRaw` embeds content directly without any wrapper. This loses format context that could help consumers (AI agents, editors) understand the embedded content's structure.
+The FsAgent library provides a DSL for authoring agent files with an `import` operation that embeds external file content. Originally, `ImportInclusion.IncludeRaw` embedded content directly without any wrapper. This loses format context that could help consumers (AI agents, editors) understand the embedded content's structure.
 
 The AST already tracks `DataFormat` (Yaml, Json, Toon, Unknown) for imported files via `inferFormat`. The writer can use this to derive appropriate code fence language tags.
 
@@ -8,40 +8,44 @@ The AST already tracks `DataFormat` (Yaml, Json, Toon, Unknown) for imported fil
 
 **Goals:**
 - Provide code-block-wrapped import that preserves format hints (` ```json `, ` ```yaml `, ` ```toon `)
-- Maintain backward compatibility path via renamed `importRaw` operation
-- Keep AST unchanged—wrapping is a writer concern, not an AST concern
+- Make code-block wrapping the default for `import` without requiring writer configuration
+- Maintain backward compatibility path via `importRaw` operation
+- Allow users to disable code-block wrapping via writer option if needed
 
 **Non-Goals:**
-- Changing AST structure (the `Imported` node remains as-is)
 - Supporting custom language tags (use inferred format only)
 - Transforming or parsing imported content (raw embedding only)
 
 ## Decisions
 
-### Decision 1: Wrapping is a writer concern, not AST
+### Decision 1: Wrapping intent is stored in AST (revised)
 
-The AST `Imported` node already stores `DataFormat`. Rather than adding a "wrap" flag to the AST, the writer's `ImportInclusion` option controls embedding style. This keeps the AST pure and format-agnostic.
+Initially we considered keeping the AST unchanged and using writer options to control wrapping. However, this required users to configure both the DSL operation AND the writer, which was confusing.
 
-**Alternative considered**: Add `ImportedRaw` vs `ImportedCodeBlock` node types. Rejected because it duplicates format inference logic and complicates the AST for a presentation concern.
+**Final decision**: Add `wrapInCodeBlock: bool` to the `Imported` node. The `import` operation sets this to `true`, while `importRaw` sets it to `false`. The writer respects this flag by default.
 
-### Decision 2: New `IncludeCodeBlock` inclusion mode
+**Alternative rejected**: Separate `ImportedRaw` vs `ImportedCodeBlock` node types. Adding a boolean flag is simpler and maintains a single `Imported` type.
 
-Add `IncludeCodeBlock` to `ImportInclusion` discriminated union. The writer maps `DataFormat` to language tag:
-- `Yaml` → `yaml`
-- `Json` → `json`
-- `Toon` → `toon`
-- `Unknown` → empty (no language tag, just triple backticks)
+### Decision 2: Simplified writer options
 
-**Alternative considered**: Extend `IncludeRaw` with an optional wrapper parameter. Rejected because it overloads one mode's semantics.
+Remove `ImportInclusion` entirely—imports are always resolved. Add:
+- `DisableCodeBlockWrapping`: bool (default false)
 
-### Decision 3: DSL `import` becomes code-block, `importRaw` for raw
+The writer respects the AST node's `wrapInCodeBlock` flag unless `DisableCodeBlockWrapping` is true.
 
-Rename current `import` → `importRaw` (breaking change). New `import` produces same AST node, but the intended usage pairs with `IncludeCodeBlock` writer option. The DSL itself doesn't change behavior—both produce `Imported` nodes. The semantic difference is in writer configuration.
+**Rationale**: The DSL operation (`import` vs `importRaw`) should be the primary way to control wrapping, not writer options. This makes usage intuitive: `import` wraps, `importRaw` doesn't—no extra configuration needed. Excluding imports at the writer level is not a useful feature since users can simply omit the `import`/`importRaw` operations in their DSL if they don't want imports.
 
-**Alternative considered**: Add `importCodeBlock` operation instead of renaming. Rejected because code-block wrapping is the better default behavior—raw embedding is the exception.
+### Decision 3: DSL `import` vs `importRaw`
+
+- `import "path"` → creates `Imported(path, format, wrapInCodeBlock=true)`
+- `importRaw "path"` → creates `Imported(path, format, wrapInCodeBlock=false)`
+
+Both produce `Imported` nodes but with different wrapping intent.
 
 ## Risks / Trade-offs
 
-**[Risk] Breaking change for existing `import` users** → Mitigation: Document in release notes; rename is mechanical (`import` → `importRaw`).
+**[Risk] Breaking change for existing `import` users** → Mitigation: Document in release notes; users who want raw embedding switch to `importRaw`.
 
-**[Trade-off] DSL operation name doesn't enforce writer mode** → The DSL `import` vs `importRaw` is a naming convention; both produce identical AST nodes. Writer configuration must match intent. Accepted because AST purity is more valuable than coupling DSL to writer options.
+**[Risk] `ImportInclusion` removed entirely** → Imports are always resolved. Users who previously used `ImportInclusion=Exclude` should simply omit the `import`/`importRaw` operations in their DSL.
+
+**[Trade-off] AST now includes presentation hint** → The `wrapInCodeBlock` flag is arguably a presentation concern. Accepted because it enables the simpler API where DSL operations fully control behavior without writer configuration.

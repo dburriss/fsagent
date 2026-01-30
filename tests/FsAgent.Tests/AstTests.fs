@@ -62,12 +62,23 @@ let ``AST inferFormat returns Unknown for unknown extension`` () =
     Assert.Equal(Unknown, AST.inferFormat "file.txt")
 
 [<Fact>]
-let ``AST importRef creates Imported node with inferred format`` () =
+let ``AST importRef creates Imported node with inferred format and wrapInCodeBlock true`` () =
     let node = AST.importRef "data.yml"
     match node with
-    | Imported(path, format) ->
+    | Imported(path, format, wrapInCodeBlock) ->
         Assert.Equal("data.yml", path)
         Assert.Equal(Yaml, format)
+        Assert.True(wrapInCodeBlock)
+    | _ -> Assert.Fail("Expected Imported node")
+
+[<Fact>]
+let ``AST importRawRef creates Imported node with wrapInCodeBlock false`` () =
+    let node = AST.importRawRef "data.json"
+    match node with
+    | Imported(path, format, wrapInCodeBlock) ->
+        Assert.Equal("data.json", path)
+        Assert.Equal(Json, format)
+        Assert.False(wrapInCodeBlock)
     | _ -> Assert.Fail("Expected Imported node")
 
 

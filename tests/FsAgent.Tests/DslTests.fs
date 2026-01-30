@@ -41,19 +41,19 @@ let ``DSL examples operation builds correct structure`` () =
     | _ -> Assert.Fail("Expected examples section with list of examples")
 
 [<Fact>]
-let ``DSL import operation adds Imported node`` () =
+let ``DSL import operation adds Imported node with wrapInCodeBlock true`` () =
     let agent = DSL.agent {
         import "data.yml"
     }
     match agent.Sections[0] with
-    | Imported("data.yml", Yaml) -> ()
-    | _ -> Assert.Fail("Expected Imported node with yaml format")
+    | Imported("data.yml", Yaml, true) -> ()
+    | _ -> Assert.Fail("Expected Imported node with yaml format and wrapInCodeBlock=true")
 
 [<Fact>]
-let ``DSL importRaw operation adds Imported node`` () =
+let ``DSL importRaw operation adds Imported node with wrapInCodeBlock false`` () =
     let agent = DSL.agent {
         importRaw "data.json"
     }
     match agent.Sections[0] with
-    | Imported("data.json", Json) -> ()
-    | _ -> Assert.Fail("Expected Imported node with json format")
+    | Imported("data.json", Json, false) -> ()
+    | _ -> Assert.Fail("Expected Imported node with json format and wrapInCodeBlock=false")

@@ -33,7 +33,7 @@ For lower-level usage using the AST directly, see [Using the AST](docs/using-ast
 
 - `OutputFormat`: `Opencode` (default) or `Copilot`
 - `OutputType`: `Md` (default), `Json`, or `Yaml`
-- `ImportInclusion`: `Exclude` (default), `IncludeRaw`, or `IncludeCodeBlock`
+- `DisableCodeBlockWrapping`: Force raw output even for `import` (default false)
 - `RenameMap`: Map for renaming section headings
 - `HeadingFormatter`: Optional function to format headings
 - `GeneratedFooter`: Optional function to generate footer content
@@ -46,25 +46,24 @@ See `knowledge/import-data.md` for an example of generated output with imported 
 
 The DSL provides two operations for importing external files:
 
-- `import "path"` - For code-block wrapped embedding (use with `IncludeCodeBlock`)
-- `importRaw "path"` - For raw embedding without wrapping (use with `IncludeRaw`)
+- `import "path"` - Wraps content in a fenced code block (e.g., ` ```json ... ``` `)
+- `importRaw "path"` - Embeds content directly without wrapping
 
 ```fsharp
 let agent = agent {
     role "Data processor"
-    import "config.json"      // Intended for code-block wrapped output
-    importRaw "inline.txt"    // Intended for raw text embedding
+    import "config.json"      // Wraps in ```json ... ```
+    importRaw "inline.txt"    // Embeds directly
 }
 
-// Code-block wrapping: wraps content in ```json ... ```
-let withCodeBlock = MarkdownWriter.writeMarkdown agent (fun opts ->
-    opts.ImportInclusion <- IncludeCodeBlock)
+// Default: imports are resolved with code blocks respected
+let markdown = MarkdownWriter.writeMarkdown agent (fun _ -> ())
 
-// Raw embedding: inserts content directly
-let withRaw = MarkdownWriter.writeMarkdown agent (fun opts ->
-    opts.ImportInclusion <- IncludeRaw)
+// Force all imports to raw (no code blocks)
+let rawMarkdown = MarkdownWriter.writeMarkdown agent (fun opts ->
+    opts.DisableCodeBlockWrapping <- true)
 ```
 
 ## Toon import example
 
-The script `examples/toon.fsx` demonstrates building an agent that pulls structured lore from `examples/toon-data.toon` and writes `examples/toon-agent.md`. It runs the DSL-defined agent through `MarkdownWriter.writeMarkdown` with `ImportInclusion.IncludeRaw` so the generated sheet includes the catalog contents directly. This shows how to keep TOON catalogs external while still serializing them into final Markdown on demand.
+The script `examples/toon.fsx` demonstrates building an agent that pulls structured lore from `examples/toon-data.toon` and writes `examples/toon-agent.md`. It runs the DSL-defined agent through `MarkdownWriter.writeMarkdown` so the generated sheet includes the catalog contents directly. This shows how to keep TOON catalogs external while still serializing them into final Markdown on demand.

@@ -33,15 +33,16 @@ let ``A: Copilot format includes name and description in frontmatter`` () =
     Assert.Contains("description: Test desc", result)
 
 [<Fact>]
-let ``A: Raw import inclusion embeds file content`` () =
+let ``A: importRaw embeds file content without code fences`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "Imported content")
     let agent = {
         Frontmatter = Map.empty
-        Sections = [Imported(tempFile, Yaml)]
+        Sections = [Imported(tempFile, Yaml, false)]  // wrapInCodeBlock = false
     }
-    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeRaw)
+    let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Contains("Imported content", result)
+    Assert.DoesNotContain("```", result)
     File.Delete(tempFile)
 
 [<Fact>]
@@ -109,57 +110,68 @@ let ``A: Deterministic output for same agent and options`` () =
     Assert.Equal(result1, result2)
 
 [<Fact>]
-let ``A: CodeBlock import inclusion wraps JSON in json fence`` () =
+let ``A: import wraps JSON in json fence by default`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, """{"key": "value"}""")
     let agent = {
         Frontmatter = Map.empty
-        Sections = [Imported(tempFile, Json)]
+        Sections = [Imported(tempFile, Json, true)]  // wrapInCodeBlock = true
     }
-    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Contains("```json", result)
     Assert.Contains("""{"key": "value"}""", result)
-    Assert.Contains("```", result)
     File.Delete(tempFile)
 
 [<Fact>]
-let ``A: CodeBlock import inclusion wraps YAML in yaml fence`` () =
+let ``A: import wraps YAML in yaml fence by default`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "key: value")
     let agent = {
         Frontmatter = Map.empty
-        Sections = [Imported(tempFile, Yaml)]
+        Sections = [Imported(tempFile, Yaml, true)]
     }
-    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Contains("```yaml", result)
     Assert.Contains("key: value", result)
     File.Delete(tempFile)
 
 [<Fact>]
-let ``A: CodeBlock import inclusion wraps TOON in toon fence`` () =
+let ``A: import wraps TOON in toon fence by default`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "toon content here")
     let agent = {
         Frontmatter = Map.empty
-        Sections = [Imported(tempFile, Toon)]
+        Sections = [Imported(tempFile, Toon, true)]
     }
-    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Contains("```toon", result)
     Assert.Contains("toon content here", result)
     File.Delete(tempFile)
 
 [<Fact>]
-let ``A: CodeBlock import inclusion uses plain fence for Unknown format`` () =
+let ``A: import uses plain fence for Unknown format`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "unknown content")
     let agent = {
         Frontmatter = Map.empty
-        Sections = [Imported(tempFile, Unknown)]
+        Sections = [Imported(tempFile, Unknown, true)]
     }
-    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
-    // Should have ``` but not ```json or ```yaml etc
+    let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Contains("```\n", result)
     Assert.Contains("unknown content", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+let ``A: DisableCodeBlockWrapping forces raw output even for import`` () =
+    let tempFile = Path.GetTempFileName()
+    File.WriteAllText(tempFile, """{"key": "value"}""")
+    let agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Json, true)]  // wrapInCodeBlock = true
+    }
+    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.DisableCodeBlockWrapping <- true)
+    Assert.DoesNotContain("```json", result)
+    Assert.Contains("""{"key": "value"}""", result)
     File.Delete(tempFile)
 
 // C - Communication Tests: External boundaries
@@ -177,7 +189,7 @@ let ``B: Default options are set correctly`` () =
     let opts = MarkdownWriter.defaultOptions()
     Assert.Equal(MarkdownWriter.Opencode, opts.OutputFormat)
     Assert.Equal(MarkdownWriter.Md, opts.OutputType)
-    Assert.Equal(MarkdownWriter.Exclude, opts.ImportInclusion)
+    Assert.False(opts.DisableCodeBlockWrapping)
     Assert.True(opts.IncludeFrontmatter)
     Assert.True(opts.RenameMap.IsEmpty)
     Assert.Equal(None, opts.HeadingFormatter)

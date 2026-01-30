@@ -3,11 +3,12 @@
 ## [Unreleased]
 
 ### Added
-- `IncludeCodeBlock` import inclusion mode that wraps imported content in fenced code blocks with format-derived language tags (```json, ```yaml, ```toon)
-- `importRaw` DSL operation for raw content embedding (preserves previous `import` behavior)
+- `importRaw` DSL operation for raw content embedding without code fences
+- `DisableCodeBlockWrapping` writer option to force raw output for all imports
 
 ### Changed
-- **BREAKING**: DSL `import` operation now signals intent for code-block wrapped embedding. Use `importRaw` for the previous raw embedding behavior.
+- **BREAKING**: `import` now automatically wraps content in fenced code blocks (` ```json `, ` ```yaml `, ` ```toon `). Use `importRaw` for raw embedding.
+- **BREAKING**: `ImportInclusion` type removed entirely. Imports are always resolved—code block behavior is controlled by the DSL operation (`import` vs `importRaw`), not writer options.
 
 ## [0.1.0] - 2025-12-15
 

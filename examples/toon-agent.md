@@ -20,6 +20,7 @@ Use the imported TOON catalog to highlight signatures, roles, and mission hooks.
 # context
 
 Catalog file: examples/toon-data.toon
+```toon
 title: Celestia Rescue
 mood: neon
 palette:
@@ -45,7 +46,7 @@ missions:
 notes:
   - "Keep the roster lively and vivid."
   - "Lean into color references whenever you describe each character."
-
+```
 # examples
 
 - ## example
@@ -56,4 +57,4 @@ Summarize how the pilot, engineer, and scout work together for the Celestia Resc
 # output
 
 Produce a plan that briefly describes each character, their signature move, and a proposed mission tag.
-Generated 2026-01-30 15:00:21Z for toon-importer
+Generated 2026-01-30 19:40:37Z for toon-importer

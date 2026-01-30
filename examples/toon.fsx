@@ -40,7 +40,6 @@ let outputPath = Path.Combine(scriptDir, "toon-agent.md")
 
 let markdown =
     MarkdownWriter.writeMarkdown toonAgent (fun opts ->
-        opts.ImportInclusion <- IncludeRaw
         opts.GeneratedFooter <- Some (fun ctx ->
             let timestamp = ctx.Timestamp.ToString("u")
             let agentName = ctx.AgentName |> Option.defaultValue "toon-importer"
