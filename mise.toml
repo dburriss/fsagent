@@ -1,0 +1,4 @@
+[tools]
+dotnet = "latest"
+node = "latest"
+"npm:@fission-ai/openspec" = "latest"
