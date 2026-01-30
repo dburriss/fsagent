@@ -1,5 +1,5 @@
 // Run `dotnet fsi examples/toon.fsx` from the repo root to emit toon-agent.md.
-#r "../src/FsAgent/bin/Debug/net10.0/FsAgent.dll"
+#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 
 open System
 open System.IO
