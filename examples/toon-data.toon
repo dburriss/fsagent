@@ -1,0 +1,25 @@
+title: Celestia Rescue
+mood: neon
+palette:
+  primary: sunrise
+  accent: aurora
+characters:
+  - name: Astra
+    role: pilot
+    signature: "Skyline sweep"
+  - name: Rig
+    role: engineer
+    signature: "Weld and calm"
+  - name: Nova
+    role: scout
+    signature: "Trailglow"
+missions:
+  - id: 01
+    objective: "Stabilize the aurora shield"
+    lead: Astra
+  - id: 02
+    objective: "Guide the comet convoy through the meteor band"
+    lead: Rig
+notes:
+  - "Keep the roster lively and vivid."
+  - "Lean into color references whenever you describe each character."

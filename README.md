@@ -41,3 +41,7 @@ For lower-level usage using the AST directly, see [Using the AST](docs/using-ast
 - `CustomWriter`: Optional custom writer function
 
 See `knowledge/import-data.md` for an example of generated output with imported data rules from `knowledge/import-data.rules.json`.
+
+## Toon import example
+
+The script `examples/toon.fsx` demonstrates building an agent that pulls structured lore from `examples/toon-data.toon` and writes `examples/toon-agent.md`. It runs the DSL-defined agent through `MarkdownWriter.writeMarkdown` with `ImportInclusion.IncludeRaw` so the generated sheet includes the catalog contents directly. This shows how to keep TOON catalogs external while still serializing them into final Markdown on demand.
