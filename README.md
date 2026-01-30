@@ -33,7 +33,7 @@ For lower-level usage using the AST directly, see [Using the AST](docs/using-ast
 
 - `OutputFormat`: `Opencode` (default) or `Copilot`
 - `OutputType`: `Md` (default), `Json`, or `Yaml`
-- `ImportInclusion`: `None` (default) or `Raw`
+- `ImportInclusion`: `Exclude` (default), `IncludeRaw`, or `IncludeCodeBlock`
 - `RenameMap`: Map for renaming section headings
 - `HeadingFormatter`: Optional function to format headings
 - `GeneratedFooter`: Optional function to generate footer content
@@ -41,6 +41,29 @@ For lower-level usage using the AST directly, see [Using the AST](docs/using-ast
 - `CustomWriter`: Optional custom writer function
 
 See `knowledge/import-data.md` for an example of generated output with imported data rules from `knowledge/import-data.rules.json`.
+
+## Importing Data
+
+The DSL provides two operations for importing external files:
+
+- `import "path"` - For code-block wrapped embedding (use with `IncludeCodeBlock`)
+- `importRaw "path"` - For raw embedding without wrapping (use with `IncludeRaw`)
+
+```fsharp
+let agent = agent {
+    role "Data processor"
+    import "config.json"      // Intended for code-block wrapped output
+    importRaw "inline.txt"    // Intended for raw text embedding
+}
+
+// Code-block wrapping: wraps content in ```json ... ```
+let withCodeBlock = MarkdownWriter.writeMarkdown agent (fun opts ->
+    opts.ImportInclusion <- IncludeCodeBlock)
+
+// Raw embedding: inserts content directly
+let withRaw = MarkdownWriter.writeMarkdown agent (fun opts ->
+    opts.ImportInclusion <- IncludeRaw)
+```
 
 ## Toon import example
 

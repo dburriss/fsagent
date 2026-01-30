@@ -127,6 +127,10 @@ module DSL =
         member _.Section(agent, name: string, content: string) =
             { agent with Sections = agent.Sections @ [Section(name, [Text content])] }
 
+        [<CustomOperation("importRaw")>]
+        member _.ImportRaw(agent, path: string) =
+            { agent with Sections = agent.Sections @ [AST.importRef path] }
+
         [<CustomOperation("import")>]
         member _.Import(agent, path: string) =
             { agent with Sections = agent.Sections @ [AST.importRef path] }
@@ -147,6 +151,7 @@ module MarkdownWriter =
     type ImportInclusion =
         | Exclude
         | IncludeRaw
+        | IncludeCodeBlock
 
     type WriterContext = {
         Format: AgentFormat
@@ -166,6 +171,13 @@ module MarkdownWriter =
         mutable IncludeFrontmatter: bool
         mutable CustomWriter: (Agent -> Options -> string) option
     }
+
+    let formatToLanguageTag (format: DataFormat) : string =
+        match format with
+        | DataFormat.Yaml -> "yaml"
+        | DataFormat.Json -> "json"
+        | DataFormat.Toon -> "toon"
+        | DataFormat.Unknown -> ""
 
     let defaultOptions () = {
         OutputFormat = Opencode
@@ -263,6 +275,17 @@ module MarkdownWriter =
                     try
                         let content = System.IO.File.ReadAllText(path)
                         sb.AppendLine(content) |> ignore
+                    with
+                    | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
+                | IncludeCodeBlock ->
+                    try
+                        let content = System.IO.File.ReadAllText(path)
+                        let langTag = formatToLanguageTag format
+                        sb.AppendLine($"```{langTag}") |> ignore
+                        sb.Append(content) |> ignore
+                        if not (content.EndsWith("\n")) then
+                            sb.AppendLine() |> ignore
+                        sb.AppendLine("```") |> ignore
                     with
                     | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
 

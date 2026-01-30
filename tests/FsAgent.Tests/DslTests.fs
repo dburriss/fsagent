@@ -48,3 +48,12 @@ let ``DSL import operation adds Imported node`` () =
     match agent.Sections[0] with
     | Imported("data.yml", Yaml) -> ()
     | _ -> Assert.Fail("Expected Imported node with yaml format")
+
+[<Fact>]
+let ``DSL importRaw operation adds Imported node`` () =
+    let agent = DSL.agent {
+        importRaw "data.json"
+    }
+    match agent.Sections[0] with
+    | Imported("data.json", Json) -> ()
+    | _ -> Assert.Fail("Expected Imported node with json format")

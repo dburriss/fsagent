@@ -108,6 +108,60 @@ let ``A: Deterministic output for same agent and options`` () =
     let result2 = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Equal(result1, result2)
 
+[<Fact>]
+let ``A: CodeBlock import inclusion wraps JSON in json fence`` () =
+    let tempFile = Path.GetTempFileName()
+    File.WriteAllText(tempFile, """{"key": "value"}""")
+    let agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Json)]
+    }
+    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    Assert.Contains("```json", result)
+    Assert.Contains("""{"key": "value"}""", result)
+    Assert.Contains("```", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+let ``A: CodeBlock import inclusion wraps YAML in yaml fence`` () =
+    let tempFile = Path.GetTempFileName()
+    File.WriteAllText(tempFile, "key: value")
+    let agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Yaml)]
+    }
+    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    Assert.Contains("```yaml", result)
+    Assert.Contains("key: value", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+let ``A: CodeBlock import inclusion wraps TOON in toon fence`` () =
+    let tempFile = Path.GetTempFileName()
+    File.WriteAllText(tempFile, "toon content here")
+    let agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Toon)]
+    }
+    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    Assert.Contains("```toon", result)
+    Assert.Contains("toon content here", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+let ``A: CodeBlock import inclusion uses plain fence for Unknown format`` () =
+    let tempFile = Path.GetTempFileName()
+    File.WriteAllText(tempFile, "unknown content")
+    let agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Unknown)]
+    }
+    let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.ImportInclusion <- MarkdownWriter.IncludeCodeBlock)
+    // Should have ``` but not ```json or ```yaml etc
+    Assert.Contains("```\n", result)
+    Assert.Contains("unknown content", result)
+    File.Delete(tempFile)
+
 // C - Communication Tests: External boundaries
 
 [<Fact>]
