@@ -129,7 +129,7 @@ let ``AST example constructor creates correct Section`` () =
     | _ -> Assert.Fail("Expected Section node")
 
 [<Fact>]
-let ``AST examples constructor creates correct Section with List`` () =
+let ``AST examples constructor creates correct Section with nested examples`` () =
     let ex1 = AST.example "Upgrading from .NET 6 to .NET 8" "Successfully upgraded project with updated dependencies"
     let ex2 = AST.example "Handling breaking changes in ASP.NET Core" "Modern ASP.NET Core 8 application structure"
     let examplesNode = AST.examples [ex1; ex2]
@@ -137,10 +137,7 @@ let ``AST examples constructor creates correct Section with List`` () =
     | Section(name, content) ->
         Assert.Equal("examples", name)
         match content with
-        | [List examples] ->
-            match examples with
-            | [Section("example", _); Section("example", _)] -> ()
-            | _ -> Assert.Fail("Expected two example sections")
-        | _ -> Assert.Fail("Expected single List node")
+        | [Section("example", _); Section("example", _)] -> ()
+        | _ -> Assert.Fail("Expected two nested example sections")
     | _ -> Assert.Fail("Expected Section node")
 

@@ -43,7 +43,7 @@ module AST =
         Section("example", [Text title; Text content])
 
     let examples (examples: Node list) : Node =
-        Section("examples", [List examples])
+        Section("examples", examples)
 
     let fmStr (value: string) : obj = value :> obj
 
@@ -254,6 +254,11 @@ module MarkdownWriter =
             match node with
             | Text t -> sb.AppendLine(t) |> ignore
             | Section (name, content) ->
+                // Add blank line before level-1 headings if not at document start
+                if level = 1 then
+                    let str = sb.ToString()
+                    if str.Length > 0 && not (str.EndsWith("\n\n")) then
+                        sb.AppendLine() |> ignore
                 let displayName =
                     opts.RenameMap |> Map.tryFind name |> Option.defaultValue name
                     |> (opts.HeadingFormatter |> Option.defaultValue id)
@@ -268,6 +273,11 @@ module MarkdownWriter =
                     sb.AppendLine() |> ignore
             | Imported (path, format, wrapInCodeBlock) ->
                 let shouldWrap = wrapInCodeBlock && not opts.DisableCodeBlockWrapping
+                // Add blank line before code blocks if not at section start
+                if shouldWrap then
+                    let str = sb.ToString()
+                    if str.Length > 0 && not (str.EndsWith("\n\n")) then
+                        sb.AppendLine() |> ignore
                 try
                     let content = System.IO.File.ReadAllText(path)
                     if shouldWrap then

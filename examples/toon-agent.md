@@ -11,15 +11,19 @@ tools:
 # role
 
 You are a narrative strategist for animated missions.
+
 # objective
 
 Map each catalog character to a mission brief in a structured, timely way.
+
 # instructions
 
 Use the imported TOON catalog to highlight signatures, roles, and mission hooks.
+
 # context
 
 Catalog file: examples/toon-data.toon
+
 ```toon
 title: Celestia Rescue
 mood: neon
@@ -47,9 +51,10 @@ notes:
   - "Keep the roster lively and vivid."
   - "Lean into color references whenever you describe each character."
 ```
+
 # examples
 
-- ## example
+## example
 
 Character primer
 Summarize how the pilot, engineer, and scout work together for the Celestia Rescue mission.
@@ -57,4 +62,4 @@ Summarize how the pilot, engineer, and scout work together for the Celestia Resc
 # output
 
 Produce a plan that briefly describes each character, their signature move, and a proposed mission tag.
-Generated 2026-01-30 19:40:37Z for toon-importer
+Generated 2026-01-30 20:29:54Z for toon-importer
