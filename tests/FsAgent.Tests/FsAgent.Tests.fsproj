@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <Compile Include="AstTests.fs" />
+    <Compile Include="PromptTests.fs" />
+    <Compile Include="TemplateTests.fs" />
+    <Compile Include="DslTests.fs" />
+    <Compile Include="AgentPromptIntegrationTests.fs" />
     <Compile Include="MarkdownWriterTests.fs" />
   </ItemGroup>
 

@@ -2,18 +2,21 @@ module MarkdownWriterTests
 
 open Xunit
 open FsAgent
-open FsAgent.DSL
+open FsAgent.Agents
+open FsAgent.Prompts
+open FsAgent.Writers
+open FsAgent.AST
 open System.IO
 
 // A - Acceptance Tests: End-to-end DSL → AST → Writer pipeline
 
 [<Fact>]
 let ``A: Default writeMarkdown produces Markdown with ATX headings and frontmatter`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.ofList ["description", "Test agent" :> obj]
         Sections = [
-            AST.role "You are a test agent"
-            AST.objective "Test objective"
+            Prompt.role "You are a test agent"
+            Prompt.objective "Test objective"
         ]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun _ -> ())
@@ -24,9 +27,9 @@ let ``A: Default writeMarkdown produces Markdown with ATX headings and frontmatt
 
 [<Fact>]
 let ``A: Copilot format includes name and description in frontmatter`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.ofList ["name", "TestAgent" :> obj; "description", "Test desc" :> obj]
-        Sections = [AST.role "Role"]
+        Sections = [Prompt.role "Role"]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.OutputFormat <- MarkdownWriter.Copilot)
     Assert.Contains("name: TestAgent", result)
@@ -36,7 +39,7 @@ let ``A: Copilot format includes name and description in frontmatter`` () =
 let ``A: importRaw embeds file content without code fences`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "Imported content")
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
         Sections = [Imported(tempFile, Yaml, false)]  // wrapInCodeBlock = false
     }
@@ -47,18 +50,18 @@ let ``A: importRaw embeds file content without code fences`` () =
 
 [<Fact>]
 let ``A: Heading rename map applies correctly`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
-        Sections = [AST.role "Role text"]
+        Sections = [Prompt.role "Role text"]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.RenameMap <- Map.ofList ["role", "Agent Role"])
     Assert.Contains("# Agent Role", result)
 
 [<Fact>]
 let ``A: Heading formatter applies after renames`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
-        Sections = [AST.role "Role text"]
+        Sections = [Prompt.role "Role text"]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun opts ->
         opts.RenameMap <- Map.ofList ["role", "agent role"]
@@ -67,9 +70,9 @@ let ``A: Heading formatter applies after renames`` () =
 
 [<Fact>]
 let ``A: Footer generator appends content`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
-        Sections = [AST.role "Role"]
+        Sections = [Prompt.role "Role"]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun opts ->
         opts.GeneratedFooter <- Some (fun ctx -> "Footer text"))
@@ -77,9 +80,9 @@ let ``A: Footer generator appends content`` () =
 
 [<Fact>]
 let ``A: Output type JSON produces JSON`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.ofList ["key", "value" :> obj]
-        Sections = [AST.role "Role"]
+        Sections = [Prompt.role "Role"]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.OutputType <- MarkdownWriter.Json)
     Assert.Contains("\"frontmatter\"", result)
@@ -87,9 +90,9 @@ let ``A: Output type JSON produces JSON`` () =
 
 [<Fact>]
 let ``A: Output type YAML produces YAML`` () =
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.ofList ["key", "value" :> obj]
-        Sections = [AST.role "Role"]
+        Sections = [Prompt.role "Role"]
     }
     let result = MarkdownWriter.writeMarkdown agent (fun opts -> opts.OutputType <- MarkdownWriter.Yaml)
     Assert.Contains("frontmatter:", result)
@@ -97,14 +100,14 @@ let ``A: Output type YAML produces YAML`` () =
 
 [<Fact>]
 let ``A: Custom writer overrides default`` () =
-    let agent = { Frontmatter = Map.empty; Sections = [] }
+    let agent: Agent = { Frontmatter = Map.empty; Sections = [] }
     let result = MarkdownWriter.writeMarkdown agent (fun opts ->
         opts.CustomWriter <- Some (fun _ _ -> "Custom output"))
     Assert.Equal("Custom output", result)
 
 [<Fact>]
 let ``A: Deterministic output for same agent and options`` () =
-    let agent = { Frontmatter = Map.empty; Sections = [AST.role "Role"] }
+    let agent: Agent = { Frontmatter = Map.empty; Sections = [Prompt.role "Role"] }
     let result1 = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     let result2 = MarkdownWriter.writeMarkdown agent (fun _ -> ())
     Assert.Equal(result1, result2)
@@ -113,7 +116,7 @@ let ``A: Deterministic output for same agent and options`` () =
 let ``A: import wraps JSON in json fence by default`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, """{"key": "value"}""")
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
         Sections = [Imported(tempFile, Json, true)]  // wrapInCodeBlock = true
     }
@@ -126,7 +129,7 @@ let ``A: import wraps JSON in json fence by default`` () =
 let ``A: import wraps YAML in yaml fence by default`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "key: value")
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
         Sections = [Imported(tempFile, Yaml, true)]
     }
@@ -139,7 +142,7 @@ let ``A: import wraps YAML in yaml fence by default`` () =
 let ``A: import wraps TOON in toon fence by default`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "toon content here")
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
         Sections = [Imported(tempFile, Toon, true)]
     }
@@ -152,7 +155,7 @@ let ``A: import wraps TOON in toon fence by default`` () =
 let ``A: import uses plain fence for Unknown format`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, "unknown content")
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
         Sections = [Imported(tempFile, Unknown, true)]
     }
@@ -165,7 +168,7 @@ let ``A: import uses plain fence for Unknown format`` () =
 let ``A: DisableCodeBlockWrapping forces raw output even for import`` () =
     let tempFile = Path.GetTempFileName()
     File.WriteAllText(tempFile, """{"key": "value"}""")
-    let agent = {
+    let agent: Agent = {
         Frontmatter = Map.empty
         Sections = [Imported(tempFile, Json, true)]  // wrapInCodeBlock = true
     }
@@ -178,7 +181,7 @@ let ``A: DisableCodeBlockWrapping forces raw output even for import`` () =
 
 [<Fact>]
 let ``C: Copilot format fails without name or description`` () =
-    let agent = { Frontmatter = Map.empty; Sections = [] }
+    let agent: Agent = { Frontmatter = Map.empty; Sections = [] }
     Assert.Throws<System.Exception>(fun () ->
         MarkdownWriter.writeMarkdown agent (fun opts -> opts.OutputFormat <- MarkdownWriter.Copilot) |> ignore)
 
@@ -195,3 +198,52 @@ let ``B: Default options are set correctly`` () =
     Assert.Equal(None, opts.HeadingFormatter)
     Assert.Equal(None, opts.GeneratedFooter)
     Assert.Equal(None, opts.CustomWriter)
+    Assert.True(opts.TemplateVariables.IsEmpty)
+
+[<Fact>]
+let ``B: writeMarkdown is alias to writeAgent for backward compatibility`` () =
+    let agent: Agent = { Frontmatter = Map.empty; Sections = [Section("test", [Text "content"])] }
+    let result1 = MarkdownWriter.writeMarkdown agent (fun _ -> ())
+    let result2 = MarkdownWriter.writeAgent agent (fun _ -> ())
+    Assert.Equal(result1, result2)
+
+[<Fact>]
+let ``A: Template node renders with variable substitution`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Template "Hello {{{name}}}, you are {{{age}}} years old"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.TemplateVariables <- Map.ofList [("name", "Alice" :> obj); ("age", "30" :> obj)])
+    Assert.Contains("Hello Alice, you are 30 years old", result)
+
+[<Fact>]
+let ``A: TemplateFile node renders from file with variables`` () =
+    let tempFile = Path.GetTempFileName()
+    File.WriteAllText(tempFile, "Welcome {{{user}}} to {{{app}}}")
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [TemplateFile tempFile]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.TemplateVariables <- Map.ofList [("user", "Bob" :> obj); ("app", "TestApp" :> obj)])
+    Assert.Contains("Welcome Bob to TestApp", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+let ``A: Template with no variables renders unchanged`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Template "Hello world"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun _ -> ())
+    Assert.Contains("Hello world", result)
+
+[<Fact>]
+let ``C: TemplateFile with missing file returns error message`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [TemplateFile "/nonexistent/file.txt"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun _ -> ())
+    Assert.Contains("[Template file not found:", result)

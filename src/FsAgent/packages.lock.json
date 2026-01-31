@@ -8,6 +8,17 @@
         "resolved": "10.0.102",
         "contentHash": "v91pt3B1ohyxAS0JaxbfsysORgddi2Um+d1M8nfdxzuh5VmGosW2pw6O8ykKatbcL2GjIDSw1aVnAOQ/y3UPew=="
       },
+      "Fue": {
+        "type": "Direct",
+        "requested": "[2.2.0, )",
+        "resolved": "2.2.0",
+        "contentHash": "Xxj064u0DRhCu1zcZqjzdePozuTnGVMP+SuWdXfYXvFXkJm1+z/1u6b2kzj65h9LDZa48KmQ5t56NGxApyUEew==",
+        "dependencies": {
+          "FParsec": "1.1.1",
+          "FSharp.Core": "7.0.200",
+          "HtmlAgilityPack": "1.11.46"
+        }
+      },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
         "requested": "[8.0.0, )",
@@ -47,6 +58,19 @@
         "requested": "[16.3.0, )",
         "resolved": "16.3.0",
         "contentHash": "SgMOdxbz8X65z8hraIs6hOEdnkH6hESTAIUa7viEngHOYaH+6q5XJmwr1+yb9vJpNQ19hCQY69xbFsLtXpobQA=="
+      },
+      "FParsec": {
+        "type": "Transitive",
+        "resolved": "1.1.1",
+        "contentHash": "Wdjf/gCNLEwd+0nUCDh9jAIIcKGwfhRramySTnTcVVgNC6i4Vp5aJklUJJfvFkEZMYNZEDGcI8pCa36/TmwmSg==",
+        "dependencies": {
+          "FSharp.Core": "4.3.4"
+        }
+      },
+      "HtmlAgilityPack": {
+        "type": "Transitive",
+        "resolved": "1.11.46",
+        "contentHash": "dLMn4EVfJBHWmWK4Uh0XGD76FPLHI0qr2Tm0s1m/xmgiHb1JUb9zB8AzO8HtrkBBlMN6JfCUBYddhqC0hZNR+g=="
       },
       "Microsoft.Bcl.AsyncInterfaces": {
         "type": "Transitive",

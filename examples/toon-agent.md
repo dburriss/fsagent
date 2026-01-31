@@ -1,11 +1,20 @@
 ---
+author: Devon Burriss
 description: Imports a TOON catalog and builds mission summaries.
+license: MIT
 model: gpt-4.1
 name: toon-importer
+org: acme-corp
+tags: 
+  - toon
+  - mission
+  - example
+temperature: 0,7
 tools: 
   - read
   - search
   - edit
+version: 1.0.0
 ---
 
 # role
@@ -22,7 +31,7 @@ Use the imported TOON catalog to highlight signatures, roles, and mission hooks.
 
 # context
 
-Catalog file: examples/toon-data.toon
+Catalog file: examples/toon-data.toon contents available below.
 
 ```toon
 title: Celestia Rescue
@@ -62,4 +71,4 @@ Summarize how the pilot, engineer, and scout work together for the Celestia Resc
 # output
 
 Produce a plan that briefly describes each character, their signature move, and a proposed mission tag.
-Generated 2026-01-30 20:29:54Z for toon-importer
+Generated 2026-01-31 19:36:33Z for toon-importer

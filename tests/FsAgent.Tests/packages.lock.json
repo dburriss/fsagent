@@ -41,6 +41,29 @@
         "resolved": "3.1.4",
         "contentHash": "5mj99LvCqrq3CNi06xYdyIAXOEh+5b33F2nErCzI5zWiDdLHXiPXEWFSUAF8zlIv0ZWqjZNCwHTQeAPYbF3pCg=="
       },
+      "FParsec": {
+        "type": "Transitive",
+        "resolved": "1.1.1",
+        "contentHash": "Wdjf/gCNLEwd+0nUCDh9jAIIcKGwfhRramySTnTcVVgNC6i4Vp5aJklUJJfvFkEZMYNZEDGcI8pCa36/TmwmSg==",
+        "dependencies": {
+          "FSharp.Core": "4.3.4"
+        }
+      },
+      "Fue": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "Xxj064u0DRhCu1zcZqjzdePozuTnGVMP+SuWdXfYXvFXkJm1+z/1u6b2kzj65h9LDZa48KmQ5t56NGxApyUEew==",
+        "dependencies": {
+          "FParsec": "1.1.1",
+          "FSharp.Core": "7.0.200",
+          "HtmlAgilityPack": "1.11.46"
+        }
+      },
+      "HtmlAgilityPack": {
+        "type": "Transitive",
+        "resolved": "1.11.46",
+        "contentHash": "dLMn4EVfJBHWmWK4Uh0XGD76FPLHI0qr2Tm0s1m/xmgiHb1JUb9zB8AzO8HtrkBBlMN6JfCUBYddhqC0hZNR+g=="
+      },
       "Microsoft.CodeCoverage": {
         "type": "Transitive",
         "resolved": "17.14.1",
@@ -114,6 +137,7 @@
         "type": "Project",
         "dependencies": {
           "FSharp.Core": "[10.0.102, )",
+          "Fue": "[2.2.0, )",
           "YamlDotNet": "[16.3.0, )"
         }
       }
