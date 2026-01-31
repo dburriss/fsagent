@@ -4,24 +4,29 @@
 TBD - created by archiving change add-markdown-writer. Update Purpose after archive.
 ## Requirements
 ### Requirement: Markdown Writer
-The system SHALL provide a Markdown writer that converts the immutable Agent AST to a Markdown string with configurable options for imported data inclusion and heading renaming/formatting. Output MUST support multiple agent formats.
+The system SHALL provide a Markdown writer that converts the immutable Agent AST to a Markdown string with configurable options for heading renaming/formatting. Output MUST support multiple agent formats.
 
-#### Scenario: Default write succeeds
+#### Scenario: Default write succeeds with imports resolved
 - **WHEN** `writeMarkdown(agent, configure)` is called with no option changes
 - **THEN** the writer returns a Markdown string
 - **AND** headings use ATX style (`#`, `##`, ...)
 - **AND** frontmatter is emitted at the top of the document by default according to the selected `outputFormat`
-- **AND** imported data is not embedded (`importInclusion=none`)
+- **AND** imported data is always resolved and included
+- **AND** imports with `wrapInCodeBlock=true` are wrapped in fenced code blocks
+- **AND** imports with `wrapInCodeBlock=false` are embedded as raw content
 - **AND** output order is deterministic per `agent-ast` traversal
 
-#### Scenario: Raw imported data inclusion
-- **WHEN** options specify `importInclusion=raw`
-- **THEN** imported data is inserted as raw transformed content without automatic code fences
-- **AND** authors can explicitly wrap content in code blocks within the AST sections if desired
+#### Scenario: Import with wrapInCodeBlock true renders as code block
+- **WHEN** an `Imported` node has `wrapInCodeBlock=true`
+- **THEN** the content is wrapped in a fenced code block with language tag derived from DataFormat
 
-#### Scenario: No imported data inclusion
-- **WHEN** options specify `importInclusion=none`
-- **THEN** the writer does not embed imported data content in the output
+#### Scenario: Import with wrapInCodeBlock false renders as raw
+- **WHEN** an `Imported` node has `wrapInCodeBlock=false`
+- **THEN** the content is embedded directly without code fences
+
+#### Scenario: DisableCodeBlockWrapping forces raw output
+- **WHEN** options specify `DisableCodeBlockWrapping=true`
+- **THEN** all imports are embedded as raw content regardless of `wrapInCodeBlock` flag
 
 #### Scenario: ATX-only headings
 - **WHEN** headings are rendered
@@ -41,7 +46,7 @@ The system SHALL provide a Markdown writer that converts the immutable Agent AST
 - **THEN** the exact Markdown output bytes are identical across runs
 
 #### Scenario: Invalid option values
-- **WHEN** options contain unsupported `importInclusion` or a malformed formatter
+- **WHEN** options contain a malformed formatter
 - **THEN** the writer returns an error (exception or error result) describing invalid configuration
 
 ### Requirement: Output Formats
@@ -57,7 +62,7 @@ The system MUST support selecting the agent output format via options with initi
 - **WHEN** options specify `outputFormat=copilot`
 - **THEN** frontmatter includes at minimum `name` and `description` by default
 - **AND** headings use ATX style and sections are rendered according to Copilot agent file conventions
-- **AND** imported data handling follows the configured inclusion (`raw` or `none`)
+- **AND** imported data is resolved and included per the `wrapInCodeBlock` flag on each import
 
 #### Scenario: Missing required Copilot frontmatter
 - **WHEN** `outputFormat=copilot` and required fields (`name`, `description`) are absent from AST frontmatter
@@ -67,12 +72,12 @@ The system MUST support selecting the agent output format via options with initi
 The system SHALL expose a configuration API that uses a function receiving a mutable options object to set writer behavior, consistent with common .NET patterns.
 
 #### Scenario: Configure via function mutation
-- **WHEN** `writeMarkdown(agent, fun opts -> opts.importInclusion <- raw; opts.outputFormat <- opencode)` is used
+- **WHEN** `writeMarkdown(agent, fun opts -> opts.DisableCodeBlockWrapping <- true; opts.outputFormat <- opencode)` is used
 - **THEN** the resulting output reflects the configured options
 
 #### Scenario: Sensible defaults
 - **WHEN** `writeMarkdown(agent, configure)` is called without mutations
-- **THEN** defaults apply: `outputFormat=opencode`, ATX headings, `importInclusion=none`, frontmatter included, no renames, default heading formatter (identity), no footer, deterministic order
+- **THEN** defaults apply: `outputFormat=Opencode`, ATX headings, `DisableCodeBlockWrapping=false`, frontmatter included, no renames, default heading formatter (identity), no footer, deterministic order
 
 #### Scenario: Validation of options
 - **WHEN** configuration sets conflicting or invalid combinations
@@ -88,4 +93,30 @@ The system SHALL provide an optional footer generator function that receives wri
 #### Scenario: No footer generator
 - **WHEN** options omit the footer generator
 - **THEN** no footer is appended
+
+### Requirement: Code-block wrapping based on AST node flag
+The system SHALL wrap imported content in fenced code blocks when the `Imported` node has `wrapInCodeBlock=true`, using format-derived language tags.
+
+#### Scenario: JSON import with wrapInCodeBlock true
+- **WHEN** an `Imported` node has `DataFormat = Json` and `wrapInCodeBlock = true`
+- **THEN** the writer wraps content in ` ```json ... ``` `
+
+#### Scenario: YAML import with wrapInCodeBlock true
+- **WHEN** an `Imported` node has `DataFormat = Yaml` and `wrapInCodeBlock = true`
+- **THEN** the writer wraps content in ` ```yaml ... ``` `
+
+#### Scenario: TOON import with wrapInCodeBlock true
+- **WHEN** an `Imported` node has `DataFormat = Toon` and `wrapInCodeBlock = true`
+- **THEN** the writer wraps content in ` ```toon ... ``` `
+
+#### Scenario: Unknown format with wrapInCodeBlock true
+- **WHEN** an `Imported` node has `DataFormat = Unknown` and `wrapInCodeBlock = true`
+- **THEN** the writer wraps content in ` ``` ... ``` ` (no language tag)
+
+### Requirement: DisableCodeBlockWrapping option
+The system SHALL provide a `DisableCodeBlockWrapping` option that forces all imports to render as raw content.
+
+#### Scenario: DisableCodeBlockWrapping overrides wrapInCodeBlock
+- **WHEN** `DisableCodeBlockWrapping=true` and an `Imported` node has `wrapInCodeBlock=true`
+- **THEN** the content is embedded as raw (no code fences)
 
