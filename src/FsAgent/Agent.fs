@@ -81,7 +81,13 @@ module AgentBuilder =
 
         [<CustomOperation("tools")>]
         member _.Tools(agent, value: obj list) =
-            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmList value) }
+            let toolMap =
+                value
+                |> List.map (fun t ->
+                    let name = match t with :? string as s -> s | _ -> t.ToString()
+                    (name, true :> obj))
+                |> Map.ofList
+            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmMap toolMap) }
 
         [<CustomOperation("toolMap")>]
         member _.ToolMap(agent, value: (string * bool) list) =
@@ -90,40 +96,18 @@ module AgentBuilder =
 
         [<CustomOperation("disallowedTools")>]
         member _.DisallowedTools(agent, value: string list) =
-            // Get existing tools configuration
-            let existingTools = agent.Frontmatter |> Map.tryFind "tools"
+            let existingMap =
+                match agent.Frontmatter |> Map.tryFind "tools" with
+                | Some (:? Map<string, obj> as m) -> m
+                | _ -> Map.empty
 
-            let toolMap =
-                match existingTools with
-                // If existing tools is a list, convert to map with all true, then add disallowed
-                | Some (:? (obj list) as toolList) ->
-                    let allowedMap =
-                        toolList
-                        |> List.map (fun t ->
-                            let name = match t with :? string as s -> s | _ -> t.ToString()
-                            (name, true :> obj))
-                        |> Map.ofList
-                    let disallowedMap =
-                        value
-                        |> List.map (fun name -> (name, false :> obj))
-                        |> Map.ofList
-                    Map.fold (fun acc k v -> Map.add k v acc) allowedMap disallowedMap
+            let disallowedMap =
+                value |> List.map (fun name -> (name, false :> obj)) |> Map.ofList
 
-                // If existing tools is a map, add disallowed tools to it
-                | Some (:? Map<string, obj> as existingMap) ->
-                    let disallowedMap =
-                        value
-                        |> List.map (fun name -> (name, false :> obj))
-                        |> Map.ofList
-                    Map.fold (fun acc k v -> Map.add k v acc) existingMap disallowedMap
+            let mergedMap =
+                Map.fold (fun acc k v -> Map.add k v acc) existingMap disallowedMap
 
-                // If no existing tools, create map with only disallowed
-                | _ ->
-                    value
-                    |> List.map (fun name -> (name, false :> obj))
-                    |> Map.ofList
-
-            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmMap toolMap) }
+            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmMap mergedMap) }
 
         [<CustomOperation("prompt")>]
         member _.Prompt(agent, prompt: Prompt) =

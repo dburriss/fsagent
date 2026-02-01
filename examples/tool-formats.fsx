@@ -7,9 +7,10 @@ open FsAgent.Writers
 printfn "=== Tool Configuration Format Examples ==="
 printfn ""
 
-// Example 1: List format (default)
-printfn "1. List format (allowlist) - Default behavior:"
-printfn "------------------------------------------------"
+// Example 1: List format (default output)
+// Note: Internally stored as map {grep: true, bash: true, read: true}
+printfn "1. List format output (allowlist) - Default behavior:"
+printfn "-------------------------------------------------------"
 let listAgent = agent {
     name "list-agent"
     description "Agent using list format"
@@ -38,17 +39,17 @@ let mapOutput = MarkdownWriter.writeAgent mapAgent (fun opts ->
 printfn "%s" mapOutput
 printfn ""
 
-// Example 3: Convert list to map
-printfn "3. Convert list format to map format:"
-printfn "--------------------------------------"
+// Example 3: Output map format (shows internal storage)
+printfn "3. Output map format (shows internal true/false values):"
+printfn "---------------------------------------------------------"
 let convertedToMap = MarkdownWriter.writeAgent listAgent (fun opts ->
     opts.ToolFormat <- MarkdownWriter.ToolsMap)
 printfn "%s" convertedToMap
 printfn ""
 
-// Example 4: Convert map to list (only enabled tools)
-printfn "4. Convert map format to list format (only enabled):"
-printfn "-----------------------------------------------------"
+// Example 4: Output list format (filters to enabled tools only)
+printfn "4. Output list format from map (only enabled tools shown):"
+printfn "-----------------------------------------------------------"
 let convertedToList = MarkdownWriter.writeAgent mapAgent (fun opts ->
     opts.ToolFormat <- MarkdownWriter.ToolsList)
 printfn "%s" convertedToList
@@ -68,32 +69,33 @@ let copilotOutput = MarkdownWriter.writeAgent copilotAgent (fun opts ->
 printfn "%s" copilotOutput
 printfn ""
 
-// Example 6: Allow/Disallow pattern
-printfn "6. Allow/Disallow pattern (combined):"
-printfn "--------------------------------------"
+// Example 6: Allow/Disallow pattern (merges into internal map)
+printfn "6. Allow/Disallow pattern (merged into map):"
+printfn "---------------------------------------------"
 let allowDisallowAgent = agent {
     name "mixed-agent"
     description "Agent using allow/disallow"
     tools ["grep" :> obj; "bash" :> obj; "read" :> obj; "edit" :> obj]
-    disallowedTools ["bash"; "write"]  // Disable bash (override) and write
+    disallowedTools ["bash"; "write"]  // Sets bash=false (override), write=false (add)
 }
 let allowDisallowOutput = MarkdownWriter.writeAgent allowDisallowAgent (fun opts ->
     opts.ToolFormat <- MarkdownWriter.ToolsMap)
 printfn "%s" allowDisallowOutput
 printfn ""
 
-// Example 7: disallowedTools converts to list (only enabled shown)
-printfn "7. Allow/Disallow as list (only enabled shown):"
-printfn "------------------------------------------------"
+// Example 7: Output list format from allow/disallow (filters enabled)
+printfn "7. Allow/Disallow as list output (only enabled shown):"
+printfn "-------------------------------------------------------"
 let allowDisallowListOutput = MarkdownWriter.writeAgent allowDisallowAgent (fun opts ->
     opts.ToolFormat <- MarkdownWriter.ToolsList)
 printfn "%s" allowDisallowListOutput
 printfn ""
 
 printfn "=== Summary ==="
-printfn "- List format: tools: [\"tool1\", \"tool2\"] - Allowlist of enabled tools"
-printfn "- Map format: tools: { tool1: true, tool2: false } - Fine-grained enable/disable"
-printfn "- Use 'tools' DSL for list, 'toolMap' DSL for map, 'disallowedTools' to disable specific tools"
-printfn "- 'disallowedTools' can be combined with 'tools' for allow/deny pattern"
-printfn "- Writer can convert between formats using ToolFormat option"
-printfn "- Auto format selection based on OutputFormat (Copilot/Opencode)"
+printfn "- Internal storage: Tools are ALWAYS stored as a map with true/false values"
+printfn "- List output: tools: [\"tool1\", \"tool2\"] - Shows only enabled tools"
+printfn "- Map output: tools: { tool1: true, tool2: false } - Shows all with enable/disable state"
+printfn "- Use 'tools' DSL to enable tools, 'toolMap' DSL for explicit control, 'disallowedTools' to disable"
+printfn "- 'disallowedTools' merges with existing tools map, overriding values to false"
+printfn "- Writer outputs to list or map format using ToolFormat option (default: ToolsList)"
+printfn "- Auto format selection based on OutputFormat (Copilot/Opencode both default to list)"

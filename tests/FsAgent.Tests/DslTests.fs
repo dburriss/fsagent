@@ -45,9 +45,12 @@ let ``Agent builder supports tools operation`` () =
     let a = agent {
         tools ["tool1" :> obj; "tool2" :> obj]
     }
-    let toolsList = a.Frontmatter["tools"] :?> obj list
-    Assert.Equal(2, toolsList.Length)
-    Assert.Equal("tool1", toolsList[0] :?> string)
+    let toolsMap = a.Frontmatter["tools"] :?> Map<string, obj>
+    Assert.Equal(2, toolsMap.Count)
+    Assert.True(toolsMap.ContainsKey "tool1")
+    Assert.True(toolsMap.ContainsKey "tool2")
+    Assert.Equal(true, toolsMap["tool1"] :?> bool)
+    Assert.Equal(true, toolsMap["tool2"] :?> bool)
 
 [<Fact>]
 let ``Agent builder supports prompt operation merging sections`` () =

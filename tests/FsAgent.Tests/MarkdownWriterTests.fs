@@ -251,9 +251,9 @@ let ``C: TemplateFile with missing file returns error message`` () =
 // Tool Format Conversion Tests
 
 [<Fact>]
-let ``A: Tools list format outputs as list by default`` () =
+let ``A: Tools map format outputs as list by default`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", (["grep"; "bash"; "read"] |> List.map box) :> obj]
+        Frontmatter = Map.ofList ["tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj); ("read", true :> obj)] :> obj]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
@@ -263,9 +263,9 @@ let ``A: Tools list format outputs as list by default`` () =
     Assert.Contains("  - read", result)
 
 [<Fact>]
-let ``A: Tools list format converts to map when ToolsMap specified`` () =
+let ``A: Tools map format outputs as map when ToolsMap specified`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", (["grep"; "bash"; "read"] |> List.map box) :> obj]
+        Frontmatter = Map.ofList ["tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj); ("read", true :> obj)] :> obj]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
@@ -275,7 +275,7 @@ let ``A: Tools list format converts to map when ToolsMap specified`` () =
     Assert.Contains("  read: true", result)
 
 [<Fact>]
-let ``A: Tools map format outputs as map when ToolsMap specified`` () =
+let ``A: Tools map format with mixed boolean values outputs as map`` () =
     let agent: Agent = {
         Frontmatter = Map.ofList ["tools", Map.ofList [("bash", false :> obj); ("edit", true :> obj); ("read", true :> obj)] :> obj]
         Sections = []
@@ -304,7 +304,7 @@ let ``A: Auto format uses list for Copilot`` () =
         Frontmatter = Map.ofList [
             "name", "TestAgent" :> obj
             "description", "Test desc" :> obj
-            "tools", (["grep"; "bash"] |> List.map box) :> obj
+            "tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj)] :> obj
         ]
         Sections = []
     }
@@ -317,7 +317,7 @@ let ``A: Auto format uses list for Copilot`` () =
 [<Fact>]
 let ``A: Auto format uses list for Opencode by default`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", (["grep"; "bash"] |> List.map box) :> obj]
+        Frontmatter = Map.ofList ["tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj)] :> obj]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun opts ->

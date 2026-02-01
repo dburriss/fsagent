@@ -110,66 +110,43 @@ module MarkdownWriter =
             dict [("templateFile", path :> obj); ("rendered", rendered :> obj)] :> obj
 
     let private formatToolsFrontmatter (value: obj) (opts: Options) : string =
-        // Determine target format
-        let targetFormat =
-            match opts.ToolFormat with
-            | Auto ->
-                match opts.OutputFormat with
-                | Copilot -> ToolsList
-                | Opencode -> ToolsList  // Default to list, user can override
-            | explicit -> explicit
+        match value with
+        | :? Map<string, obj> as toolMap ->
+            let targetFormat =
+                match opts.ToolFormat with
+                | Auto ->
+                    match opts.OutputFormat with
+                    | Copilot -> ToolsList
+                    | Opencode -> ToolsList  // Default to list, user can override
+                | explicit -> explicit
 
-        // Convert based on storage format and target format
-        match value, targetFormat with
-        // List → List (pass through)
-        | :? (obj list) as tools, ToolsList ->
-            tools
-            |> List.map (fun o ->
-                match o with
-                | :? string as s -> s
-                | _ -> o.ToString())
-            |> String.concat "\n  - "
-            |> sprintf "\n  - %s"
-
-        // List → Map (all enabled)
-        | :? (obj list) as tools, ToolsMap ->
-            tools
-            |> List.map (fun t ->
-                let toolName =
-                    match t with
-                    | :? string as s -> s
-                    | _ -> t.ToString()
-                sprintf "  %s: true" toolName)
-            |> String.concat "\n"
-            |> sprintf "\n%s"
-
-        // Map → List (only enabled)
-        | :? Map<string, obj> as toolMap, ToolsList ->
-            toolMap
-            |> Map.filter (fun _ v ->
-                match v with
-                | :? bool as b -> b
-                | _ -> true)  // Include non-boolean values
-            |> Map.keys
-            |> Seq.map string
-            |> String.concat "\n  - "
-            |> sprintf "\n  - %s"
-
-        // Map → Map (pass through)
-        | :? Map<string, obj> as toolMap, ToolsMap ->
-            toolMap
-            |> Map.toSeq
-            |> Seq.map (fun (k, v) ->
-                let valueStr =
+            match targetFormat with
+            | ToolsList ->
+                // Map → List (only enabled)
+                toolMap
+                |> Map.filter (fun _ v ->
                     match v with
-                    | :? bool as b -> b.ToString().ToLower()
-                    | _ -> v.ToString().ToLower()
-                sprintf "  %s: %s" k valueStr)
-            |> String.concat "\n"
-            |> sprintf "\n%s"
+                    | :? bool as b -> b
+                    | _ -> true)  // Include non-boolean values
+                |> Map.keys
+                |> Seq.map string
+                |> String.concat "\n  - "
+                |> sprintf "\n  - %s"
 
-        // Fallback for other types
-        | _ -> value.ToString()
+            | ToolsMap ->
+                // Map → Map (format values)
+                toolMap
+                |> Map.toSeq
+                |> Seq.map (fun (k, v) ->
+                    let valueStr =
+                        match v with
+                        | :? bool as b -> b.ToString().ToLower()
+                        | _ -> v.ToString().ToLower()
+                    sprintf "  %s: %s" k valueStr)
+                |> String.concat "\n"
+                |> sprintf "\n%s"
+
+        | _ -> value.ToString()  // Fallback
 
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
