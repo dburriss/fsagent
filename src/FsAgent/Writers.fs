@@ -46,6 +46,11 @@ module MarkdownWriter =
         | Json
         | Yaml
 
+    type ToolFormat =
+        | ToolsList        // ["tool1", "tool2"]
+        | ToolsMap         // { tool1: true, tool2: false }
+        | Auto             // Based on OutputFormat (default)
+
     type WriterContext = {
         Format: AgentFormat
         OutputType: OutputType
@@ -64,6 +69,7 @@ module MarkdownWriter =
         mutable IncludeFrontmatter: bool
         mutable CustomWriter: (Agent -> Options -> string) option
         mutable TemplateVariables: Template.TemplateVariables
+        mutable ToolFormat: ToolFormat
     }
 
     let formatToLanguageTag (format: DataFormat) : string =
@@ -83,6 +89,7 @@ module MarkdownWriter =
         IncludeFrontmatter = true
         CustomWriter = None
         TemplateVariables = Map.empty
+        ToolFormat = Auto
     }
 
     let rec nodeToObj (node: Node) (templateVars: Template.TemplateVariables) : obj =
@@ -102,6 +109,68 @@ module MarkdownWriter =
             let rendered = Template.renderFile path templateVars
             dict [("templateFile", path :> obj); ("rendered", rendered :> obj)] :> obj
 
+    let private formatToolsFrontmatter (value: obj) (opts: Options) : string =
+        // Determine target format
+        let targetFormat =
+            match opts.ToolFormat with
+            | Auto ->
+                match opts.OutputFormat with
+                | Copilot -> ToolsList
+                | Opencode -> ToolsList  // Default to list, user can override
+            | explicit -> explicit
+
+        // Convert based on storage format and target format
+        match value, targetFormat with
+        // List → List (pass through)
+        | :? (obj list) as tools, ToolsList ->
+            tools
+            |> List.map (fun o ->
+                match o with
+                | :? string as s -> s
+                | _ -> o.ToString())
+            |> String.concat "\n  - "
+            |> sprintf "\n  - %s"
+
+        // List → Map (all enabled)
+        | :? (obj list) as tools, ToolsMap ->
+            tools
+            |> List.map (fun t ->
+                let toolName =
+                    match t with
+                    | :? string as s -> s
+                    | _ -> t.ToString()
+                sprintf "  %s: true" toolName)
+            |> String.concat "\n"
+            |> sprintf "\n%s"
+
+        // Map → List (only enabled)
+        | :? Map<string, obj> as toolMap, ToolsList ->
+            toolMap
+            |> Map.filter (fun _ v ->
+                match v with
+                | :? bool as b -> b
+                | _ -> true)  // Include non-boolean values
+            |> Map.keys
+            |> Seq.map string
+            |> String.concat "\n  - "
+            |> sprintf "\n  - %s"
+
+        // Map → Map (pass through)
+        | :? Map<string, obj> as toolMap, ToolsMap ->
+            toolMap
+            |> Map.toSeq
+            |> Seq.map (fun (k, v) ->
+                let valueStr =
+                    match v with
+                    | :? bool as b -> b.ToString().ToLower()
+                    | _ -> v.ToString().ToLower()
+                sprintf "  %s: %s" k valueStr)
+            |> String.concat "\n"
+            |> sprintf "\n%s"
+
+        // Fallback for other types
+        | _ -> value.ToString()
+
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
 
@@ -113,6 +182,33 @@ module MarkdownWriter =
                     sb.AppendLine("---") |> ignore
                     for kv in agent.Frontmatter do
                         let valueStr =
+                            if kv.Key = "tools" then
+                                formatToolsFrontmatter kv.Value opts
+                            else
+                                match kv.Value with
+                                | :? string as s -> s
+                                | :? float as f -> f.ToString()
+                                | :? bool as b -> b.ToString().ToLower()
+                                | :? (obj list) as l ->
+                                    l |> List.map (fun o ->
+                                        match o with
+                                        | :? string as s -> s
+                                        | _ -> o.ToString()
+                                    ) |> String.concat "\n  - "
+                                    |> sprintf "\n  - %s"
+                                | :? Map<string, obj> as m ->
+                                    m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
+                                | _ -> kv.Value.ToString()
+                        sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
+                    sb.AppendLine("---") |> ignore
+                    sb.AppendLine() |> ignore
+            | Copilot ->
+                sb.AppendLine("---") |> ignore
+                for kv in agent.Frontmatter do
+                    let valueStr =
+                        if kv.Key = "tools" then
+                            formatToolsFrontmatter kv.Value opts
+                        else
                             match kv.Value with
                             | :? string as s -> s
                             | :? float as f -> f.ToString()
@@ -127,27 +223,6 @@ module MarkdownWriter =
                             | :? Map<string, obj> as m ->
                                 m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
                             | _ -> kv.Value.ToString()
-                        sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
-                    sb.AppendLine("---") |> ignore
-                    sb.AppendLine() |> ignore
-            | Copilot ->
-                sb.AppendLine("---") |> ignore
-                for kv in agent.Frontmatter do
-                    let valueStr =
-                        match kv.Value with
-                        | :? string as s -> s
-                        | :? float as f -> f.ToString()
-                        | :? bool as b -> b.ToString().ToLower()
-                        | :? (obj list) as l ->
-                            l |> List.map (fun o ->
-                                match o with
-                                | :? string as s -> s
-                                | _ -> o.ToString()
-                            ) |> String.concat "\n  - "
-                            |> sprintf "\n  - %s"
-                        | :? Map<string, obj> as m ->
-                            m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
-                        | _ -> kv.Value.ToString()
                     sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
                 sb.AppendLine("---") |> ignore
                 sb.AppendLine() |> ignore

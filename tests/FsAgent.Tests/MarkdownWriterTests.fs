@@ -247,3 +247,165 @@ let ``C: TemplateFile with missing file returns error message`` () =
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
     Assert.Contains("[Template file not found:", result)
+
+// Tool Format Conversion Tests
+
+[<Fact>]
+let ``A: Tools list format outputs as list by default`` () =
+    let agent: Agent = {
+        Frontmatter = Map.ofList ["tools", (["grep"; "bash"; "read"] |> List.map box) :> obj]
+        Sections = []
+    }
+    let result = MarkdownWriter.writeAgent agent (fun _ -> ())
+    Assert.Contains("tools:", result)
+    Assert.Contains("  - grep", result)
+    Assert.Contains("  - bash", result)
+    Assert.Contains("  - read", result)
+
+[<Fact>]
+let ``A: Tools list format converts to map when ToolsMap specified`` () =
+    let agent: Agent = {
+        Frontmatter = Map.ofList ["tools", (["grep"; "bash"; "read"] |> List.map box) :> obj]
+        Sections = []
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("tools:", result)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  bash: true", result)
+    Assert.Contains("  read: true", result)
+
+[<Fact>]
+let ``A: Tools map format outputs as map when ToolsMap specified`` () =
+    let agent: Agent = {
+        Frontmatter = Map.ofList ["tools", Map.ofList [("bash", false :> obj); ("edit", true :> obj); ("read", true :> obj)] :> obj]
+        Sections = []
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("tools:", result)
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  edit: true", result)
+    Assert.Contains("  read: true", result)
+
+[<Fact>]
+let ``A: Tools map format converts to list when ToolsList specified (only enabled)`` () =
+    let agent: Agent = {
+        Frontmatter = Map.ofList ["tools", Map.ofList [("bash", false :> obj); ("edit", true :> obj); ("read", true :> obj)] :> obj]
+        Sections = []
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("tools:", result)
+    Assert.Contains("  - edit", result)
+    Assert.Contains("  - read", result)
+    Assert.DoesNotContain("  - bash", result)  // bash is false, should be excluded
+
+[<Fact>]
+let ``A: Auto format uses list for Copilot`` () =
+    let agent: Agent = {
+        Frontmatter = Map.ofList [
+            "name", "TestAgent" :> obj
+            "description", "Test desc" :> obj
+            "tools", (["grep"; "bash"] |> List.map box) :> obj
+        ]
+        Sections = []
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.Auto)
+    Assert.Contains("  - grep", result)
+    Assert.Contains("  - bash", result)
+
+[<Fact>]
+let ``A: Auto format uses list for Opencode by default`` () =
+    let agent: Agent = {
+        Frontmatter = Map.ofList ["tools", (["grep"; "bash"] |> List.map box) :> obj]
+        Sections = []
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode
+        opts.ToolFormat <- MarkdownWriter.Auto)
+    Assert.Contains("  - grep", result)
+    Assert.Contains("  - bash", result)
+
+[<Fact>]
+let ``A: toolMap DSL operation creates map format`` () =
+    let agent = agent {
+        toolMap [
+            ("bash", false)
+            ("edit", true)
+            ("read", true)
+        ]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  edit: true", result)
+    Assert.Contains("  read: true", result)
+
+[<Fact>]
+let ``A: tools DSL operation creates list format`` () =
+    let agent = agent {
+        tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun _ -> ())
+    Assert.Contains("  - grep", result)
+    Assert.Contains("  - bash", result)
+    Assert.Contains("  - read", result)
+
+[<Fact>]
+let ``B: Default options include ToolFormat Auto`` () =
+    let opts = MarkdownWriter.defaultOptions()
+    Assert.Equal(MarkdownWriter.Auto, opts.ToolFormat)
+
+[<Fact>]
+let ``A: disallowedTools alone creates map with disabled tools`` () =
+    let agent = agent {
+        disallowedTools ["bash"; "write"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  write: false", result)
+
+[<Fact>]
+let ``A: disallowedTools combined with tools creates merged map`` () =
+    let agent = agent {
+        tools ["grep" :> obj; "read" :> obj]
+        disallowedTools ["bash"; "write"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  read: true", result)
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  write: false", result)
+
+[<Fact>]
+let ``A: disallowedTools combined with toolMap merges correctly`` () =
+    let agent = agent {
+        toolMap [("edit", true); ("read", true)]
+        disallowedTools ["bash"; "write"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("  edit: true", result)
+    Assert.Contains("  read: true", result)
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  write: false", result)
+
+[<Fact>]
+let ``A: disallowedTools can override previously allowed tools`` () =
+    let agent = agent {
+        tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
+        disallowedTools ["bash"]  // Disable bash
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  read: true", result)
+    Assert.Contains("  bash: false", result)  // Should be false, overriding the allowed list
+
+[<Fact>]
+let ``A: disallowedTools with ToolsList output shows only enabled tools`` () =
+    let agent = agent {
+        tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
+        disallowedTools ["bash"]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - grep", result)
+    Assert.Contains("  - read", result)
+    Assert.DoesNotContain("  - bash", result)  // bash is disabled, shouldn't appear in list
