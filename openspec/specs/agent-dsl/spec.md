@@ -149,3 +149,32 @@ The `Imported` node SHALL include a `wrapInCodeBlock` boolean field to indicate 
 - **WHEN** an `Imported` node is created
 - **THEN** it contains `sourcePath: string`, `format: DataFormat`, and `wrapInCodeBlock: bool`
 
+### Requirement: Tool Configuration Operations
+The system SHALL provide three DSL operations for configuring tools: `tools` (enable list), `toolMap` (explicit enable/disable map), and `disallowedTools` (disable specific tools). All operations SHALL store tools internally as a map with boolean enable/disable values.
+
+#### Scenario: Enable tools with list operation
+- **WHEN** `tools ["grep" :> obj; "bash" :> obj; "read" :> obj]` is used in agent builder
+- **THEN** system SHALL store in frontmatter as map: `{grep: true, bash: true, read: true}`
+- **AND** internal storage is always `Map<string, obj>` format
+
+#### Scenario: Configure tools with explicit enable/disable
+- **WHEN** `toolMap [("bash", false); ("edit", true); ("read", true)]` is used in agent builder
+- **THEN** system SHALL store in frontmatter as map: `{bash: false, edit: true, read: true}`
+- **AND** map keys are tool names, values are boolean enable/disable flags
+
+#### Scenario: Disable specific tools
+- **WHEN** `disallowedTools ["bash"; "write"]` is used in agent builder
+- **THEN** system SHALL merge into existing tools map, setting bash and write to false
+- **AND** if no existing tools map exists, create new map with only disabled tools
+
+#### Scenario: Combine tools and disallowedTools
+- **WHEN** `tools ["grep" :> obj; "bash" :> obj]` followed by `disallowedTools ["bash"; "write"]`
+- **THEN** resulting map SHALL be `{grep: true, bash: false, write: false}`
+- **AND** disallowedTools overrides previous values
+
+#### Scenario: Internal storage is always map
+- **WHEN** any tool operation is used (tools, toolMap, or disallowedTools)
+- **THEN** frontmatter["tools"] SHALL always be `Map<string, obj>` type
+- **AND** list format is never stored internally
+- **AND** output format (list vs map) is determined by writer, not storage
+

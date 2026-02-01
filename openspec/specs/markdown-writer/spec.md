@@ -120,3 +120,26 @@ The system SHALL provide a `DisableCodeBlockWrapping` option that forces all imp
 - **WHEN** `DisableCodeBlockWrapping=true` and an `Imported` node has `wrapInCodeBlock=true`
 - **THEN** the content is embedded as raw (no code fences)
 
+### Requirement: Tool Format Options
+The system SHALL provide a `ToolFormat` option to control how tools are rendered in frontmatter. Tools are always stored internally as `Map<string, obj>` with boolean values, but can be output as either list format (enabled tools only) or map format (all tools with true/false values).
+
+#### Scenario: ToolsList format outputs enabled tools only
+- **WHEN** options specify `ToolFormat=ToolsList` and frontmatter contains tools map `{grep: true, bash: false, read: true}`
+- **THEN** the writer outputs tools as YAML list containing only enabled tools: `tools:\n  - grep\n  - read`
+- **AND** disabled tools (bash: false) are excluded from output
+
+#### Scenario: ToolsMap format outputs all tools with values
+- **WHEN** options specify `ToolFormat=ToolsMap` and frontmatter contains tools map `{grep: true, bash: false, read: true}`
+- **THEN** the writer outputs tools as YAML map: `tools:\n  grep: true\n  bash: false\n  read: true`
+- **AND** all tools are shown with their enable/disable state
+
+#### Scenario: Auto format selects appropriate default
+- **WHEN** options specify `ToolFormat=Auto`
+- **THEN** the writer selects `ToolsList` format by default for both Opencode and Copilot output formats
+- **AND** user can override by explicitly setting ToolFormat
+
+#### Scenario: Internal storage is always map
+- **WHEN** writer processes tools frontmatter
+- **THEN** it expects frontmatter["tools"] to be `Map<string, obj>` type
+- **AND** list format is never stored internally, only used for output
+

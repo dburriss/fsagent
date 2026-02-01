@@ -61,7 +61,8 @@ printfn "----------------------------------------------"
 let copilotAgent = agent {
     name "copilot-agent"
     description "Agent for Copilot"
-    tools ["grep"; "bash"]
+    tools ["grep"; "webfetch"; "bash"]
+    disallowedTools ["bash"]
 }
 let copilotOutput = MarkdownWriter.writeAgent copilotAgent (fun opts ->
     opts.OutputFormat <- MarkdownWriter.Copilot
