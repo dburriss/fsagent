@@ -6,7 +6,7 @@
 
     <!-- Core package identity -->
     <PackageId>FsAgent</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Devon Burriss</Authors>
     <Description>A small F# DSL and library for generating custom agent files for popular agent tools. Provides an immutable Agent AST, a Markdown writer, and a top-level computation expression DSL for ergonomic agent authoring.</Description>
     <Title>FsAgent</Title>
@@ -24,7 +24,7 @@
 
     <!-- Discoverability & docs -->
     <PackageTags>fsharp agent dsl markdown</PackageTags>
-    <PackageReleaseNotes>Constructors for `instructions`, `context`, `result`, `example`, `examples`; Markdown writer with configurable options for output format, type, import inclusion, heading renames, and custom writers; Agent DSL: Top-level F# computation expression `agent { ... }` for ergonomic agent authoring; Frontmatter helpers: `fmStr`, `fmNum`, `fmBool`, `fmList`, `fmMap` for generic metadata; Import inference: `importRef` infers format from file extensions (.yml/.yaml/.json/.toon)</PackageReleaseNotes>
+    <PackageReleaseNotes>**Tool discriminated union**: Type-safe tool configuration with `Write`, `Edit`, `Bash`, `WebFetch`, `Todo`, and `Custom of string` cases; **ClaudeCode harness**: New `AgentHarness` case for Claude Code platform with capitalized tool names; **Harness-specific tool name mapping**: Tools automatically map to correct names based on target platform (e.g., `Write` → "write" for Opencode, "Write" for ClaudeCode); **Typed tools operation**: Agent builder `tools` operation now accepts `Tool list` for compile-time safety and IDE autocomplete; **Typed disallowedTools operation**: Agent builder `disallowedTools` operation now accepts `Tool list` instead of `string list`; **FsAgent.Tools namespace**: New dedicated namespace for Tool type and related tool functionality; **BREAKING**: `Tool` type moved from `FsAgent.AST` to `FsAgent.Tools` namespace - users must update imports from `open FsAgent.AST` to `open FsAgent.Tools`; **BREAKING**: `AgentFormat` type renamed to `AgentHarness` throughout codebase to better represent execution platform; **BREAKING**: `tools` operation signature changed from `obj list` to `Tool list`; **BREAKING**: `disallowedTools` operation signature changed from `string list` to `Tool list`; **BREAKING**: Frontmatter storage changed - tools stored as `Tool list` objects, not string maps; Tool name resolution moved from agent definition time to write time, enabling harness-agnostic agent definitions; Tools are now always output as a list format, with disabled tools omitted from the output; **BREAKING**: `toolMap` operation removed from agent builder - use `tools` + `disallowedTools` instead; **BREAKING**: `ToolFormat` option removed from `MarkdownWriter.Options` - tools are now always output as a list (equivalent to the old `ToolsList` format). The `ToolFormat` option (`ToolsList`, `ToolsMap`, `Auto`) has been removed to simplify the API. Since `Auto` defaulted to `ToolsList` for all harnesses, the format option was redundant. Disabled tools are simply omitted from the output list.; Quick migration examples:**; </PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- SourceLink / reproducible builds -->

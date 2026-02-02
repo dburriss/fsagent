@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-02
+
 ### Added
 - **Tool discriminated union**: Type-safe tool configuration with `Write`, `Edit`, `Bash`, `WebFetch`, `Todo`, and `Custom of string` cases
 - **ClaudeCode harness**: New `AgentHarness` case for Claude Code platform with capitalized tool names
