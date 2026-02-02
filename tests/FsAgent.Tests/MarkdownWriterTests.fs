@@ -490,3 +490,156 @@ let ``B: Same Tool list produces different strings for different harnesses`` () 
     // ClaudeCode uses capitalized
     Assert.Contains("  - Write", claudeResult)
     Assert.Contains("  - Bash", claudeResult)
+
+// Tests for one-to-many tool mappings
+[<Fact>]
+let ``B: ClaudeCode TodoWrite maps to TaskCreate and TaskUpdate`` () =
+    let agent = agent {
+        tools [TodoWrite]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - TaskCreate", result)
+    Assert.Contains("  - TaskUpdate", result)
+
+[<Fact>]
+let ``B: ClaudeCode TodoRead maps to TaskList, TaskGet, and TaskUpdate`` () =
+    let agent = agent {
+        tools [TodoRead]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - TaskList", result)
+    Assert.Contains("  - TaskGet", result)
+    Assert.Contains("  - TaskUpdate", result)
+
+// Tests for tool deduplication
+[<Fact>]
+let ``B: Copilot deduplicates Glob and List both mapping to search`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent"
+        tools [Tool.Glob; Tool.List]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    // Count occurrences of "search"
+    let searchCount =
+        result.Split([|'\n'|])
+        |> Array.filter (fun line -> line.Trim() = "- search")
+        |> Array.length
+    Assert.Equal(1, searchCount)
+
+[<Fact>]
+let ``B: ClaudeCode deduplicates Glob and List both mapping to Glob`` () =
+    let agent = agent {
+        tools [Tool.Glob; Tool.List]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    // Count occurrences of "Glob"
+    let globCount =
+        result.Split([|'\n'|])
+        |> Array.filter (fun line -> line.Trim() = "- Glob")
+        |> Array.length
+    Assert.Equal(1, globCount)
+
+[<Fact>]
+let ``B: ClaudeCode deduplicates TaskUpdate from TodoWrite and TodoRead`` () =
+    let agent = agent {
+        tools [TodoWrite; TodoRead]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    // TaskUpdate should appear only once despite being in both mappings
+    let taskUpdateCount =
+        result.Split([|'\n'|])
+        |> Array.filter (fun line -> line.Trim() = "- TaskUpdate")
+        |> Array.length
+    Assert.Equal(1, taskUpdateCount)
+    // But all unique tools should be present
+    Assert.Contains("  - TaskCreate", result)
+    Assert.Contains("  - TaskList", result)
+    Assert.Contains("  - TaskGet", result)
+
+// Tests for missing tool handling
+[<Fact>]
+let ``B: Opencode omits WebSearch when not supported`` () =
+    let agent = agent {
+        tools [Write; WebSearch; Edit]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - write", result)
+    Assert.Contains("  - edit", result)
+    Assert.DoesNotContain("WebSearch", result)
+    Assert.DoesNotContain("websearch", result)
+
+[<Fact>]
+let ``B: Copilot omits LSP when not supported`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent"
+        tools [Write; LSP; Edit]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - write", result)
+    Assert.Contains("  - edit", result)
+    Assert.DoesNotContain("LSP", result)
+    Assert.DoesNotContain("lsp", result)
+
+[<Fact>]
+let ``B: Copilot omits Question when not supported`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent"
+        tools [Write; Question; Edit]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - write", result)
+    Assert.Contains("  - edit", result)
+    Assert.DoesNotContain("Question", result)
+    Assert.DoesNotContain("question", result)
+
+// Test for Custom tool pass-through across all harnesses
+[<Fact>]
+let ``B: Custom tools with special names pass through unchanged for all harnesses`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent"
+        tools [Custom "mcp_database"; Custom "github_api"; Custom "slack_api"]
+    }
+
+    // Test Opencode
+    let opencodeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - mcp_database", opencodeResult)
+    Assert.Contains("  - github_api", opencodeResult)
+    Assert.Contains("  - slack_api", opencodeResult)
+
+    // Test Copilot
+    let copilotResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - mcp_database", copilotResult)
+    Assert.Contains("  - github_api", copilotResult)
+    Assert.Contains("  - slack_api", copilotResult)
+
+    // Test ClaudeCode
+    let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - mcp_database", claudeResult)
+    Assert.Contains("  - github_api", claudeResult)
+    Assert.Contains("  - slack_api", claudeResult)

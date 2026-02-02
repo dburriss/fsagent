@@ -112,7 +112,7 @@ printfn ""
 printfn "8. Custom tools for MCP (Model Context Protocol):"
 printfn "--------------------------------------------------"
 let mcpAgent = agent {
-    name "mcp-agent"
+    name "mcp-claude-agent"
     description "Agent with MCP tools"
     tools [
         Write
@@ -136,6 +136,7 @@ let disabledOnlyAgent = agent {
     disallowedTools [Write; Edit; Bash]
 }
 let disabledOutput = MarkdownWriter.writeAgent disabledOnlyAgent (fun opts ->
+    opts.OutputFormat <- MarkdownWriter.ClaudeCode
     opts.ToolFormat <- MarkdownWriter.ToolsMap)
 printfn "%s" disabledOutput
 printfn ""

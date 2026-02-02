@@ -110,31 +110,61 @@ module MarkdownWriter =
             let rendered = Template.renderFile path templateVars
             dict [("templateFile", path :> obj); ("rendered", rendered :> obj)] :> obj
 
-    let private toolToString (harness: AgentHarness) (tool: Tool) : string =
+    let private toolToString (harness: AgentHarness) (tool: Tool) : string list =
         match harness, tool with
         // Opencode tools (lowercase)
-        | Opencode, Tool.Write -> "write"
-        | Opencode, Tool.Edit -> "edit"
-        | Opencode, Tool.Bash -> "bash"
-        | Opencode, Tool.WebFetch -> "webfetch"
-        | Opencode, Tool.Todo -> "todo"
+        | Opencode, Tool.Write -> ["write"]
+        | Opencode, Tool.Edit -> ["edit"]
+        | Opencode, Tool.Bash -> ["bash"]
+        | Opencode, Tool.Shell -> ["bash"]
+        | Opencode, Tool.Read -> ["read"]
+        | Opencode, Tool.Glob -> ["grep"]
+        | Opencode, Tool.List -> ["list"]
+        | Opencode, Tool.LSP -> ["lsp"]
+        | Opencode, Tool.Skill -> ["skill"]
+        | Opencode, Tool.TodoWrite -> ["todowrite"]
+        | Opencode, Tool.TodoRead -> ["todoread"]
+        | Opencode, Tool.WebFetch -> ["webfetch"]
+        | Opencode, Tool.WebSearch -> []  // Not supported
+        | Opencode, Tool.Question -> ["question"]
+        | Opencode, Tool.Todo -> ["todo"]
 
-        // Copilot tools (same as Opencode for now - verify from documentation)
-        | Copilot, Tool.Write -> "write"
-        | Copilot, Tool.Edit -> "edit"
-        | Copilot, Tool.Bash -> "bash"
-        | Copilot, Tool.WebFetch -> "webfetch"
-        | Copilot, Tool.Todo -> "todo"
+        // Copilot tools
+        | Copilot, Tool.Write -> ["write"]
+        | Copilot, Tool.Edit -> ["edit"]
+        | Copilot, Tool.Bash -> ["bash"]
+        | Copilot, Tool.Shell -> ["execute"]
+        | Copilot, Tool.Read -> ["read"]
+        | Copilot, Tool.Glob -> ["search"]
+        | Copilot, Tool.List -> ["search"]
+        | Copilot, Tool.LSP -> []  // Not supported
+        | Copilot, Tool.Skill -> ["skill"]
+        | Copilot, Tool.TodoWrite -> ["todo"]
+        | Copilot, Tool.TodoRead -> ["todo"]
+        | Copilot, Tool.WebFetch -> ["web"]
+        | Copilot, Tool.WebSearch -> ["web"]
+        | Copilot, Tool.Question -> []  // Not supported
+        | Copilot, Tool.Todo -> ["todo"]
 
-        // ClaudeCode tools (capitalized - verify from documentation)
-        | ClaudeCode, Tool.Write -> "Write"
-        | ClaudeCode, Tool.Edit -> "Edit"
-        | ClaudeCode, Tool.Bash -> "Bash"
-        | ClaudeCode, Tool.WebFetch -> "WebFetch"
-        | ClaudeCode, Tool.Todo -> "Todo"
+        // ClaudeCode tools (capitalized)
+        | ClaudeCode, Tool.Write -> ["Write"]
+        | ClaudeCode, Tool.Edit -> ["Edit"]
+        | ClaudeCode, Tool.Bash -> ["Bash"]
+        | ClaudeCode, Tool.Shell -> ["Bash"]
+        | ClaudeCode, Tool.Read -> ["Read"]
+        | ClaudeCode, Tool.Glob -> ["Glob"]
+        | ClaudeCode, Tool.List -> ["Glob"]
+        | ClaudeCode, Tool.LSP -> ["LSP"]
+        | ClaudeCode, Tool.Skill -> ["skill"]
+        | ClaudeCode, Tool.TodoWrite -> ["TaskCreate"; "TaskUpdate"]
+        | ClaudeCode, Tool.TodoRead -> ["TaskList"; "TaskGet"; "TaskUpdate"]
+        | ClaudeCode, Tool.WebFetch -> ["WebFetch"]
+        | ClaudeCode, Tool.WebSearch -> ["WebSearch"]
+        | ClaudeCode, Tool.Question -> ["AskUserQuestion"]
+        | ClaudeCode, Tool.Todo -> ["Todo"]
 
         // Custom tools pass through unchanged for all harnesses
-        | _, Tool.Custom s -> s
+        | _, Tool.Custom s -> [s]
 
     let private formatToolsFrontmatter (frontmatter: Map<string, obj>) (harness: AgentHarness) (opts: Options) : string =
         // Extract Tool lists from frontmatter
@@ -161,12 +191,16 @@ module MarkdownWriter =
         // Convert to string maps using harness-specific names
         let enabledMap =
             enabledTools
-            |> List.map (fun t -> (toolToString harness t, true :> obj))
+            |> List.collect (toolToString harness)
+            |> List.distinct
+            |> List.map (fun t -> (t, true :> obj))
             |> Map.ofList
 
         let disabledMap =
             disabledTools
-            |> List.map (fun t -> (toolToString harness t, false :> obj))
+            |> List.collect (toolToString harness)
+            |> List.distinct
+            |> List.map (fun t -> (t, false :> obj))
             |> Map.ofList
 
         // Merge: disabled tools override enabled ones

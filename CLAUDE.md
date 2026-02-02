@@ -37,7 +37,7 @@ The library is organized across multiple files:
 
 **src/FsAgent/AST.fs**
 - **`Node`** - Discriminated union representing AST nodes: `Text`, `Section`, `List`, `Imported`, `Template`, `TemplateFile`
-- **`Tool`** - Discriminated union for type-safe tool references: `Write`, `Edit`, `Bash`, `WebFetch`, `Todo`, `Custom of string`
+- **`Tool`** - Discriminated union for type-safe tool references: `Write`, `Edit`, `Bash`, `Shell`, `Read`, `Glob`, `List`, `LSP`, `Skill`, `TodoWrite`, `TodoRead`, `WebFetch`, `WebSearch`, `Question`, `Todo`, `Custom of string`
 - **`AST` module** - Constructor functions (`role`, `objective`, `instructions`, etc.) and frontmatter helpers (`fmStr`, `fmNum`, `fmBool`, `fmList`, `fmMap`)
 
 **src/FsAgent/Prompts.fs**
@@ -74,11 +74,21 @@ The `Tool` discriminated union provides type-safe tool references with IDE autoc
 
 ```fsharp
 type Tool =
-    | Write      // File writing capability
-    | Edit       // File editing capability
-    | Bash       // Shell command execution
-    | WebFetch   // HTTP fetching capability
-    | Todo       // Task management
+    | Write       // File writing capability
+    | Edit        // File editing capability
+    | Bash        // Shell command execution (legacy, use Shell)
+    | Shell       // Shell command execution (preferred)
+    | Read        // File reading capability
+    | Glob        // File pattern matching capability
+    | List        // Directory listing capability
+    | LSP         // Language Server Protocol capability
+    | Skill       // Execute predefined skills
+    | TodoWrite   // Task management write operations
+    | TodoRead    // Task management read operations
+    | WebFetch    // HTTP fetching capability
+    | WebSearch   // Web search capability
+    | Question    // Ask user questions capability
+    | Todo        // Task management (legacy, use TodoWrite/TodoRead)
     | Custom of string  // MCP tools or platform-specific tools
 ```
 
@@ -87,13 +97,18 @@ type Tool =
 ```fsharp
 // Basic tool configuration
 let agent = agent {
-    tools [Write; Edit; Bash]
+    tools [Write; Edit; Shell; Read]
 }
 
 // Disable specific tools
 let agent = agent {
-    tools [Write; Edit; Bash; WebFetch]
-    disallowedTools [Bash]  // Bash will be disabled
+    tools [Write; Edit; Shell; WebFetch]
+    disallowedTools [Shell]  // Shell will be disabled
+}
+
+// Task management tools
+let agent = agent {
+    tools [TodoWrite; TodoRead]  // Fine-grained control
 }
 
 // Custom tools (MCP, platform-specific)
@@ -104,16 +119,43 @@ let agent = agent {
 
 **Harness-specific tool names:**
 
-Tool names are automatically mapped based on the target harness:
+Tool names are automatically mapped based on the target harness. Some tools map to multiple harness tools (one-to-many), and duplicates are automatically deduplicated:
 
 | Tool | Opencode | Copilot | ClaudeCode |
 |------|----------|---------|------------|
 | Write | write | write | Write |
 | Edit | edit | edit | Edit |
 | Bash | bash | bash | Bash |
-| WebFetch | webfetch | webfetch | WebFetch |
+| Shell | bash | execute | Bash |
+| Read | read | read | Read |
+| Glob | grep | search | Glob |
+| List | list | search | Glob |
+| LSP | lsp | *(not supported)* | LSP |
+| Skill | skill | skill | skill |
+| TodoWrite | todowrite | todo | TaskCreate, TaskUpdate |
+| TodoRead | todoread | todo | TaskList, TaskGet, TaskUpdate |
+| WebFetch | webfetch | web | WebFetch |
+| WebSearch | *(not supported)* | web | WebSearch |
+| Question | question | *(not supported)* | AskUserQuestion |
 | Todo | todo | todo | Todo |
 | Custom "x" | x | x | x |
+
+**One-to-many mappings and deduplication:**
+
+Some FsAgent tools map to multiple harness tools:
+- **ClaudeCode**: `TodoWrite` → `["TaskCreate", "TaskUpdate"]` and `TodoRead` → `["TaskList", "TaskGet", "TaskUpdate"]`
+- When you use both `TodoWrite` and `TodoRead`, the duplicate `TaskUpdate` is automatically deduplicated
+
+When multiple FsAgent tools map to the same harness tool, duplicates are removed:
+- **Copilot**: Both `Glob` and `List` map to `search` - only one `search` appears in output
+- **Copilot**: Both `WebFetch` and `WebSearch` map to `web` - only one `web` appears in output
+- **ClaudeCode**: Both `Glob` and `List` map to `Glob` - only one `Glob` appears in output
+
+**Missing tool handling:**
+
+Tools not supported by a harness are silently omitted from output:
+- `WebSearch` is not available for Opencode
+- `LSP` and `Question` are not available for Copilot
 
 This allows you to write harness-agnostic agent definitions and generate output for any platform.
 

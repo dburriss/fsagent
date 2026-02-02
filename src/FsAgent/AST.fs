@@ -15,10 +15,30 @@ type Tool =
     | Write
     /// <summary>File editing capability. Maps to "edit" (Opencode/Copilot) or "Edit" (ClaudeCode).</summary>
     | Edit
-    /// <summary>Shell command execution capability. Maps to "bash" (Opencode/Copilot) or "Bash" (ClaudeCode).</summary>
+    /// <summary>Shell command execution capability. Maps to "bash" (Opencode), "Bash" (ClaudeCode), or "execute" (Copilot).</summary>
     | Bash
-    /// <summary>HTTP fetching capability. Maps to "webfetch" (Opencode/Copilot) or "WebFetch" (ClaudeCode).</summary>
+    /// <summary>Shell command execution capability (preferred name). Maps to "bash" (Opencode), "Bash" (ClaudeCode), or "execute" (Copilot).</summary>
+    | Shell
+    /// <summary>File reading capability. Maps to "read" (Opencode/Copilot) or "Read" (ClaudeCode).</summary>
+    | Read
+    /// <summary>File pattern matching capability. Maps to "grep" (Opencode), "Glob" (ClaudeCode), or "search" (Copilot).</summary>
+    | Glob
+    /// <summary>Directory listing capability. Maps to "list" (Opencode), "Glob" (ClaudeCode), or "search" (Copilot).</summary>
+    | List
+    /// <summary>Language Server Protocol capability. Maps to "lsp" (Opencode), "LSP" (ClaudeCode), or not supported (Copilot).</summary>
+    | LSP
+    /// <summary>Execute predefined skills. Maps to "skill" for all harnesses.</summary>
+    | Skill
+    /// <summary>Task management write operations. Maps to "todowrite" (Opencode), ["TaskCreate", "TaskUpdate"] (ClaudeCode), or "todo" (Copilot).</summary>
+    | TodoWrite
+    /// <summary>Task management read operations. Maps to "todoread" (Opencode), ["TaskList", "TaskGet", "TaskUpdate"] (ClaudeCode), or "todo" (Copilot).</summary>
+    | TodoRead
+    /// <summary>HTTP fetching capability. Maps to "webfetch" (Opencode), "WebFetch" (ClaudeCode), or "web" (Copilot).</summary>
     | WebFetch
+    /// <summary>Web search capability. Maps to not supported (Opencode), "WebSearch" (ClaudeCode), or "web" (Copilot).</summary>
+    | WebSearch
+    /// <summary>Ask user questions capability. Maps to "question" (Opencode), "AskUserQuestion" (ClaudeCode), or not supported (Copilot).</summary>
+    | Question
     /// <summary>Task management capability. Maps to "todo" (Opencode/Copilot) or "Todo" (ClaudeCode).</summary>
     | Todo
     /// <summary>
