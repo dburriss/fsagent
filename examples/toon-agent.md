@@ -1,4 +1,8 @@
 ---
+tools: 
+  - edit
+  - read
+  - search
 author: Devon Burriss
 description: Imports a TOON catalog and builds mission summaries.
 license: MIT
@@ -10,10 +14,6 @@ tags:
   - mission
   - example
 temperature: 0,7
-tools: 
-  - read
-  - search
-  - edit
 version: 1.0.0
 ---
 
@@ -71,4 +71,4 @@ Summarize how the pilot, engineer, and scout work together for the Celestia Resc
 # output
 
 Produce a plan that briefly describes each character, their signature move, and a proposed mission tag.
-Generated 2026-01-31 19:36:33Z for toon-importer
+Generated 2026-02-01 23:08:07Z for toon-importer

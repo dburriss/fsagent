@@ -80,34 +80,12 @@ module AgentBuilder =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "maxTokens" (AST.fmNum value) }
 
         [<CustomOperation("tools")>]
-        member _.Tools(agent, value: obj list) =
-            let toolMap =
-                value
-                |> List.map (fun t ->
-                    let name = match t with :? string as s -> s | _ -> t.ToString()
-                    (name, true :> obj))
-                |> Map.ofList
-            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmMap toolMap) }
-
-        [<CustomOperation("toolMap")>]
-        member _.ToolMap(agent, value: (string * bool) list) =
-            let toolMap = value |> List.map (fun (k, v) -> (k, v :> obj)) |> Map.ofList
-            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmMap toolMap) }
+        member _.Tools(agent, value: Tool list) =
+            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (value :> obj) }
 
         [<CustomOperation("disallowedTools")>]
-        member _.DisallowedTools(agent, value: string list) =
-            let existingMap =
-                match agent.Frontmatter |> Map.tryFind "tools" with
-                | Some (:? Map<string, obj> as m) -> m
-                | _ -> Map.empty
-
-            let disallowedMap =
-                value |> List.map (fun name -> (name, false :> obj)) |> Map.ofList
-
-            let mergedMap =
-                Map.fold (fun acc k v -> Map.add k v acc) existingMap disallowedMap
-
-            { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (AST.fmMap mergedMap) }
+        member _.DisallowedTools(agent, value: Tool list) =
+            { agent with Frontmatter = agent.Frontmatter |> Map.add "disallowedTools" (value :> obj) }
 
         [<CustomOperation("prompt")>]
         member _.Prompt(agent, prompt: Prompt) =

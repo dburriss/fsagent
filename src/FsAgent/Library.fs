@@ -2,6 +2,7 @@ namespace FsAgent
 
 // Type aliases for backward compatibility
 type DataFormat = AST.DataFormat
+type Tool = AST.Tool
 type Node = AST.Node
 type Agent = Agents.Agent
 type Prompt = Prompts.Prompt

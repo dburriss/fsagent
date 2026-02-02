@@ -37,9 +37,10 @@ module Template =
 
 module MarkdownWriter =
 
-    type AgentFormat =
+    type AgentHarness =
         | Opencode
         | Copilot
+        | ClaudeCode
 
     type OutputType =
         | Md
@@ -52,7 +53,7 @@ module MarkdownWriter =
         | Auto             // Based on OutputFormat (default)
 
     type WriterContext = {
-        Format: AgentFormat
+        Format: AgentHarness
         OutputType: OutputType
         Timestamp: DateTime
         AgentName: string option
@@ -60,7 +61,7 @@ module MarkdownWriter =
     }
 
     type Options = {
-        mutable OutputFormat: AgentFormat
+        mutable OutputFormat: AgentHarness
         mutable OutputType: OutputType
         mutable DisableCodeBlockWrapping: bool
         mutable RenameMap: Map<string, string>
@@ -109,44 +110,105 @@ module MarkdownWriter =
             let rendered = Template.renderFile path templateVars
             dict [("templateFile", path :> obj); ("rendered", rendered :> obj)] :> obj
 
-    let private formatToolsFrontmatter (value: obj) (opts: Options) : string =
-        match value with
-        | :? Map<string, obj> as toolMap ->
-            let targetFormat =
-                match opts.ToolFormat with
-                | Auto ->
-                    match opts.OutputFormat with
-                    | Copilot -> ToolsList
-                    | Opencode -> ToolsList  // Default to list, user can override
-                | explicit -> explicit
+    let private toolToString (harness: AgentHarness) (tool: Tool) : string =
+        match harness, tool with
+        // Opencode tools (lowercase)
+        | Opencode, Tool.Write -> "write"
+        | Opencode, Tool.Edit -> "edit"
+        | Opencode, Tool.Bash -> "bash"
+        | Opencode, Tool.WebFetch -> "webfetch"
+        | Opencode, Tool.Todo -> "todo"
 
-            match targetFormat with
-            | ToolsList ->
-                // Map → List (only enabled)
-                toolMap
-                |> Map.filter (fun _ v ->
+        // Copilot tools (same as Opencode for now - verify from documentation)
+        | Copilot, Tool.Write -> "write"
+        | Copilot, Tool.Edit -> "edit"
+        | Copilot, Tool.Bash -> "bash"
+        | Copilot, Tool.WebFetch -> "webfetch"
+        | Copilot, Tool.Todo -> "todo"
+
+        // ClaudeCode tools (capitalized - verify from documentation)
+        | ClaudeCode, Tool.Write -> "Write"
+        | ClaudeCode, Tool.Edit -> "Edit"
+        | ClaudeCode, Tool.Bash -> "Bash"
+        | ClaudeCode, Tool.WebFetch -> "WebFetch"
+        | ClaudeCode, Tool.Todo -> "Todo"
+
+        // Custom tools pass through unchanged for all harnesses
+        | _, Tool.Custom s -> s
+
+    let private formatToolsFrontmatter (frontmatter: Map<string, obj>) (harness: AgentHarness) (opts: Options) : string =
+        // Extract Tool lists from frontmatter
+        let enabledTools =
+            match frontmatter |> Map.tryFind "tools" with
+            | Some value ->
+                match value with
+                | :? (Tool list) as tools -> tools
+                | :? (obj list) as lst ->
+                    lst |> List.choose (function :? Tool as t -> Some t | _ -> None)
+                | _ -> []
+            | None -> []
+
+        let disabledTools =
+            match frontmatter |> Map.tryFind "disallowedTools" with
+            | Some value ->
+                match value with
+                | :? (Tool list) as tools -> tools
+                | :? (obj list) as lst ->
+                    lst |> List.choose (function :? Tool as t -> Some t | _ -> None)
+                | _ -> []
+            | None -> []
+
+        // Convert to string maps using harness-specific names
+        let enabledMap =
+            enabledTools
+            |> List.map (fun t -> (toolToString harness t, true :> obj))
+            |> Map.ofList
+
+        let disabledMap =
+            disabledTools
+            |> List.map (fun t -> (toolToString harness t, false :> obj))
+            |> Map.ofList
+
+        // Merge: disabled tools override enabled ones
+        let toolMap =
+            Map.fold (fun acc k v -> Map.add k v acc) enabledMap disabledMap
+
+        // Determine target format
+        let targetFormat =
+            match opts.ToolFormat with
+            | Auto ->
+                match harness with
+                | Copilot -> ToolsList
+                | Opencode -> ToolsList
+                | ClaudeCode -> ToolsList
+            | explicit -> explicit
+
+        // Format based on target
+        match targetFormat with
+        | ToolsList ->
+            // Only include enabled tools
+            toolMap
+            |> Map.filter (fun _ v ->
+                match v with
+                | :? bool as b -> b
+                | _ -> true)
+            |> Map.keys
+            |> Seq.map string
+            |> String.concat "\n  - "
+            |> sprintf "\n  - %s"
+
+        | ToolsMap ->
+            // Include all tools with status
+            toolMap
+            |> Map.toSeq
+            |> Seq.map (fun (k, v) ->
+                let valueStr =
                     match v with
-                    | :? bool as b -> b
-                    | _ -> true)  // Include non-boolean values
-                |> Map.keys
-                |> Seq.map string
-                |> String.concat "\n  - "
-                |> sprintf "\n  - %s"
-
-            | ToolsMap ->
-                // Map → Map (format values)
-                toolMap
-                |> Map.toSeq
-                |> Seq.map (fun (k, v) ->
-                    let valueStr =
-                        match v with
-                        | :? bool as b -> b.ToString().ToLower()
-                        | _ -> v.ToString().ToLower()
-                    sprintf "  %s: %s" k valueStr)
-                |> String.concat "\n"
-                |> sprintf "\n%s"
-
-        | _ -> value.ToString()  // Fallback
+                    | :? bool as b -> b.ToString().ToLower()
+                    | _ -> v.ToString().ToLower()
+                sprintf "  %s: %s" k valueStr)
+            |> String.concat "\n"
+            |> sprintf "\n%s"
 
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
@@ -157,11 +219,17 @@ module MarkdownWriter =
             | Opencode ->
                 if agent.Frontmatter.Count > 0 then
                     sb.AppendLine("---") |> ignore
+
+                    // Handle tools section first (if tools or disallowedTools exist)
+                    let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
+                    if hasTools then
+                        let toolsStr = formatToolsFrontmatter agent.Frontmatter Opencode opts
+                        sb.AppendLine($"tools: {toolsStr}") |> ignore
+
+                    // Handle other frontmatter keys
                     for kv in agent.Frontmatter do
-                        let valueStr =
-                            if kv.Key = "tools" then
-                                formatToolsFrontmatter kv.Value opts
-                            else
+                        if kv.Key <> "tools" && kv.Key <> "disallowedTools" then
+                            let valueStr =
                                 match kv.Value with
                                 | :? string as s -> s
                                 | :? float as f -> f.ToString()
@@ -176,16 +244,22 @@ module MarkdownWriter =
                                 | :? Map<string, obj> as m ->
                                     m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
                                 | _ -> kv.Value.ToString()
-                        sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
+                            sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
                     sb.AppendLine("---") |> ignore
                     sb.AppendLine() |> ignore
             | Copilot ->
                 sb.AppendLine("---") |> ignore
+
+                // Handle tools section first (if tools or disallowedTools exist)
+                let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
+                if hasTools then
+                    let toolsStr = formatToolsFrontmatter agent.Frontmatter Copilot opts
+                    sb.AppendLine($"tools: {toolsStr}") |> ignore
+
+                // Handle other frontmatter keys
                 for kv in agent.Frontmatter do
-                    let valueStr =
-                        if kv.Key = "tools" then
-                            formatToolsFrontmatter kv.Value opts
-                        else
+                    if kv.Key <> "tools" && kv.Key <> "disallowedTools" then
+                        let valueStr =
                             match kv.Value with
                             | :? string as s -> s
                             | :? float as f -> f.ToString()
@@ -200,9 +274,40 @@ module MarkdownWriter =
                             | :? Map<string, obj> as m ->
                                 m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
                             | _ -> kv.Value.ToString()
-                    sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
+                        sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
                 sb.AppendLine("---") |> ignore
                 sb.AppendLine() |> ignore
+            | ClaudeCode ->
+                if agent.Frontmatter.Count > 0 then
+                    sb.AppendLine("---") |> ignore
+
+                    // Handle tools section first (if tools or disallowedTools exist)
+                    let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
+                    if hasTools then
+                        let toolsStr = formatToolsFrontmatter agent.Frontmatter ClaudeCode opts
+                        sb.AppendLine($"tools: {toolsStr}") |> ignore
+
+                    // Handle other frontmatter keys
+                    for kv in agent.Frontmatter do
+                        if kv.Key <> "tools" && kv.Key <> "disallowedTools" then
+                            let valueStr =
+                                match kv.Value with
+                                | :? string as s -> s
+                                | :? float as f -> f.ToString()
+                                | :? bool as b -> b.ToString().ToLower()
+                                | :? (obj list) as l ->
+                                    l |> List.map (fun o ->
+                                        match o with
+                                        | :? string as s -> s
+                                        | _ -> o.ToString()
+                                    ) |> String.concat "\n  - "
+                                    |> sprintf "\n  - %s"
+                                | :? Map<string, obj> as m ->
+                                    m |> Map.toSeq |> Seq.map (fun (k,v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
+                                | _ -> kv.Value.ToString()
+                            sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
+                    sb.AppendLine("---") |> ignore
+                    sb.AppendLine() |> ignore
 
         // Sections
         let rec writeNode (node: Node) (level: int) =

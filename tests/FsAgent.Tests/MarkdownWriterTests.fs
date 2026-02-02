@@ -253,7 +253,7 @@ let ``C: TemplateFile with missing file returns error message`` () =
 [<Fact>]
 let ``A: Tools map format outputs as list by default`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj); ("read", true :> obj)] :> obj]
+        Frontmatter = Map.ofList ["tools", ([Custom "grep"; Bash; Custom "read"] :> obj)]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
@@ -265,7 +265,7 @@ let ``A: Tools map format outputs as list by default`` () =
 [<Fact>]
 let ``A: Tools map format outputs as map when ToolsMap specified`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj); ("read", true :> obj)] :> obj]
+        Frontmatter = Map.ofList ["tools", ([Custom "grep"; Bash; Custom "read"] :> obj)]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
@@ -277,7 +277,10 @@ let ``A: Tools map format outputs as map when ToolsMap specified`` () =
 [<Fact>]
 let ``A: Tools map format with mixed boolean values outputs as map`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", Map.ofList [("bash", false :> obj); ("edit", true :> obj); ("read", true :> obj)] :> obj]
+        Frontmatter = Map.ofList [
+            "tools", ([Edit; Custom "read"] :> obj)
+            "disallowedTools", ([Bash] :> obj)
+        ]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
@@ -289,7 +292,10 @@ let ``A: Tools map format with mixed boolean values outputs as map`` () =
 [<Fact>]
 let ``A: Tools map format converts to list when ToolsList specified (only enabled)`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", Map.ofList [("bash", false :> obj); ("edit", true :> obj); ("read", true :> obj)] :> obj]
+        Frontmatter = Map.ofList [
+            "tools", ([Edit; Custom "read"] :> obj)
+            "disallowedTools", ([Bash] :> obj)
+        ]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsList)
@@ -304,7 +310,7 @@ let ``A: Auto format uses list for Copilot`` () =
         Frontmatter = Map.ofList [
             "name", "TestAgent" :> obj
             "description", "Test desc" :> obj
-            "tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj)] :> obj
+            "tools", ([Custom "grep"; Bash] :> obj)
         ]
         Sections = []
     }
@@ -317,7 +323,7 @@ let ``A: Auto format uses list for Copilot`` () =
 [<Fact>]
 let ``A: Auto format uses list for Opencode by default`` () =
     let agent: Agent = {
-        Frontmatter = Map.ofList ["tools", Map.ofList [("grep", true :> obj); ("bash", true :> obj)] :> obj]
+        Frontmatter = Map.ofList ["tools", ([Custom "grep"; Bash] :> obj)]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun opts ->
@@ -327,23 +333,9 @@ let ``A: Auto format uses list for Opencode by default`` () =
     Assert.Contains("  - bash", result)
 
 [<Fact>]
-let ``A: toolMap DSL operation creates map format`` () =
-    let agent = agent {
-        toolMap [
-            ("bash", false)
-            ("edit", true)
-            ("read", true)
-        ]
-    }
-    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
-    Assert.Contains("  bash: false", result)
-    Assert.Contains("  edit: true", result)
-    Assert.Contains("  read: true", result)
-
-[<Fact>]
 let ``A: tools DSL operation creates list format`` () =
     let agent = agent {
-        tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
+        tools [Custom "grep"; Bash; Custom "read"]
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
     Assert.Contains("  - grep", result)
@@ -358,7 +350,7 @@ let ``B: Default options include ToolFormat Auto`` () =
 [<Fact>]
 let ``A: disallowedTools alone creates map with disabled tools`` () =
     let agent = agent {
-        disallowedTools ["bash"; "write"]
+        disallowedTools [Bash; Write]
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
     Assert.Contains("  bash: false", result)
@@ -367,8 +359,8 @@ let ``A: disallowedTools alone creates map with disabled tools`` () =
 [<Fact>]
 let ``A: disallowedTools combined with tools creates merged map`` () =
     let agent = agent {
-        tools ["grep" :> obj; "read" :> obj]
-        disallowedTools ["bash"; "write"]
+        tools [Custom "grep"; Custom "read"]
+        disallowedTools [Bash; Write]
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
     Assert.Contains("  grep: true", result)
@@ -377,10 +369,10 @@ let ``A: disallowedTools combined with tools creates merged map`` () =
     Assert.Contains("  write: false", result)
 
 [<Fact>]
-let ``A: disallowedTools combined with toolMap merges correctly`` () =
+let ``A: disallowedTools combined with tools using universal Tool types`` () =
     let agent = agent {
-        toolMap [("edit", true); ("read", true)]
-        disallowedTools ["bash"; "write"]
+        tools [Edit; Custom "read"]
+        disallowedTools [Bash; Write]
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
     Assert.Contains("  edit: true", result)
@@ -391,8 +383,8 @@ let ``A: disallowedTools combined with toolMap merges correctly`` () =
 [<Fact>]
 let ``A: disallowedTools can override previously allowed tools`` () =
     let agent = agent {
-        tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
-        disallowedTools ["bash"]  // Disable bash
+        tools [Custom "grep"; Bash; Custom "read"]
+        disallowedTools [Bash]  // Disable bash
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsMap)
     Assert.Contains("  grep: true", result)
@@ -402,10 +394,99 @@ let ``A: disallowedTools can override previously allowed tools`` () =
 [<Fact>]
 let ``A: disallowedTools with ToolsList output shows only enabled tools`` () =
     let agent = agent {
-        tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
-        disallowedTools ["bash"]
+        tools [Custom "grep"; Bash; Custom "read"]
+        disallowedTools [Bash]
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.ToolFormat <- MarkdownWriter.ToolsList)
     Assert.Contains("  - grep", result)
     Assert.Contains("  - read", result)
     Assert.DoesNotContain("  - bash", result)  // bash is disabled, shouldn't appear in list
+// B - Building Tests: Harness-specific tool name mapping
+
+[<Fact>]
+let ``B: Opencode harness uses lowercase tool names`` () =
+    let agent = agent {
+        tools [Write; Edit; Bash]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - write", result)
+    Assert.Contains("  - edit", result)
+    Assert.Contains("  - bash", result)
+
+[<Fact>]
+let ``B: Copilot harness uses correct tool names`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent for Copilot"
+        tools [Write; Edit; Bash]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - write", result)
+    Assert.Contains("  - edit", result)
+    Assert.Contains("  - bash", result)
+
+[<Fact>]
+let ``B: ClaudeCode harness uses capitalized tool names`` () =
+    let agent = agent {
+        tools [Write; Edit; Bash]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - Write", result)
+    Assert.Contains("  - Edit", result)
+    Assert.Contains("  - Bash", result)
+
+[<Fact>]
+let ``B: Custom tools passthrough unchanged for all harnesses`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent for custom tools"
+        tools [Custom "mcp_special"; Custom "my_tool"]
+    }
+    // Test Opencode
+    let opencodeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - mcp_special", opencodeResult)
+    Assert.Contains("  - my_tool", opencodeResult)
+
+    // Test Copilot
+    let copilotResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - mcp_special", copilotResult)
+    Assert.Contains("  - my_tool", copilotResult)
+
+    // Test ClaudeCode
+    let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    Assert.Contains("  - mcp_special", claudeResult)
+    Assert.Contains("  - my_tool", claudeResult)
+
+[<Fact>]
+let ``B: Same Tool list produces different strings for different harnesses`` () =
+    let agent = agent {
+        tools [Write; Bash]
+    }
+    
+    let opencodeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    
+    let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode
+        opts.ToolFormat <- MarkdownWriter.ToolsList)
+    
+    // Opencode uses lowercase
+    Assert.Contains("  - write", opencodeResult)
+    Assert.Contains("  - bash", opencodeResult)
+    
+    // ClaudeCode uses capitalized
+    Assert.Contains("  - Write", claudeResult)
+    Assert.Contains("  - Bash", claudeResult)

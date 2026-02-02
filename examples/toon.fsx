@@ -6,6 +6,7 @@ open System.IO
 open FsAgent.Agents
 open FsAgent.Prompts
 open FsAgent.Writers
+open FsAgent.AST  // For Tool type
 
 let scriptDir = __SOURCE_DIRECTORY__
 let repoRoot = Path.GetFullPath(Path.Combine(scriptDir, ".."))
@@ -42,7 +43,7 @@ let toonAgent =
         name "toon-importer"
         description "Imports a TOON catalog and builds mission summaries."
         model "gpt-4.1"
-        tools [ "read"; "search"; "edit" ]
+        tools [ Custom "read"; Custom "search"; Edit ]
         author "Devon Burriss"
         version "1.0.0"
         license "MIT"

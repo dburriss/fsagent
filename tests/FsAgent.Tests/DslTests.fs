@@ -43,14 +43,12 @@ let ``Agent builder supports maxTokens operation`` () =
 [<Fact>]
 let ``Agent builder supports tools operation`` () =
     let a = agent {
-        tools ["tool1" :> obj; "tool2" :> obj]
+        tools [Custom "tool1"; Custom "tool2"]
     }
-    let toolsMap = a.Frontmatter["tools"] :?> Map<string, obj>
-    Assert.Equal(2, toolsMap.Count)
-    Assert.True(toolsMap.ContainsKey "tool1")
-    Assert.True(toolsMap.ContainsKey "tool2")
-    Assert.Equal(true, toolsMap["tool1"] :?> bool)
-    Assert.Equal(true, toolsMap["tool2"] :?> bool)
+    let toolsList = a.Frontmatter["tools"] :?> Tool list
+    Assert.Equal(2, toolsList.Length)
+    Assert.Contains(Custom "tool1", toolsList)
+    Assert.Contains(Custom "tool2", toolsList)
 
 [<Fact>]
 let ``Agent builder supports prompt operation merging sections`` () =

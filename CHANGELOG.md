@@ -3,6 +3,44 @@
 ## [Unreleased]
 
 ### Added
+- **Tool discriminated union**: Type-safe tool configuration with `Write`, `Edit`, `Bash`, `WebFetch`, `Todo`, and `Custom of string` cases
+- **ClaudeCode harness**: New `AgentHarness` case for Claude Code platform with capitalized tool names
+- **Harness-specific tool name mapping**: Tools automatically map to correct names based on target platform (e.g., `Write` → "write" for Opencode, "Write" for ClaudeCode)
+- **Typed tools operation**: Agent builder `tools` operation now accepts `Tool list` for compile-time safety and IDE autocomplete
+- **Typed disallowedTools operation**: Agent builder `disallowedTools` operation now accepts `Tool list` instead of `string list`
+- **ToolFormat option**: Writer option to control tools output format (`ToolsList`, `ToolsMap`, or `Auto`)
+
+### Changed
+- **BREAKING**: `AgentFormat` type renamed to `AgentHarness` throughout codebase to better represent execution platform
+- **BREAKING**: `tools` operation signature changed from `obj list` to `Tool list`
+- **BREAKING**: `disallowedTools` operation signature changed from `string list` to `Tool list`
+- **BREAKING**: Frontmatter storage changed - tools stored as `Tool list` objects, not string maps
+- Tool name resolution moved from agent definition time to write time, enabling harness-agnostic agent definitions
+
+### Removed
+- **BREAKING**: `toolMap` operation removed from agent builder - use `tools` + `disallowedTools` instead
+
+### Migration
+See [MIGRATION.md](MIGRATION.md) for complete migration guide from v1.x to v2.0.
+
+**Quick migration examples:**
+```fsharp
+// Before (v1.x)
+tools ["write" :> obj; "bash" :> obj]
+disallowedTools ["bash"]
+opts.OutputFormat <- MarkdownWriter.AgentFormat.Opencode
+
+// After (v2.0)
+tools [Write; Bash]
+disallowedTools [Bash]
+opts.OutputFormat <- Opencode
+```
+
+---
+
+## [0.2.0] - Previous Release
+
+### Added
 - **Prompt as first-class type**: New `Prompt` type with `prompt { ... }` computation expression builder for creating reusable prompts
 - **Template support**: Added `Template` and `TemplateFile` node cases with Fue-based variable substitution (`{{{variable}}}` syntax)
 - **Namespace organization**: Domain-focused namespaces (`FsAgent.AST`, `FsAgent.Prompts`, `FsAgent.Agents`, `FsAgent.Writers`)
