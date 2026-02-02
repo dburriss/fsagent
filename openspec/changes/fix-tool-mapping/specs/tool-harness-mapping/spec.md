@@ -63,17 +63,6 @@ The system SHALL gracefully handle tools that are not available for specific har
 - **WHEN** Question tool is specified for Copilot harness
 - **THEN** it SHALL be omitted from the output (no tool added)
 
-### Requirement: Backward compatibility for legacy tool names
-The system SHALL maintain backward compatibility by supporting legacy Tool variants (Todo, Bash) that map to their replacements.
-
-#### Scenario: Todo maps to all todo tools
-- **WHEN** Todo tool is specified
-- **THEN** it SHALL map to all TodoWrite and TodoRead harness tools (e.g., for Claude: TaskCreate, TaskUpdate, TaskList, TaskGet)
-
-#### Scenario: Bash is alias for Shell
-- **WHEN** Bash tool is specified
-- **THEN** it SHALL behave identically to Shell tool for all harnesses
-
 ### Requirement: Custom tool pass-through
 The system SHALL pass through Custom tool names unchanged to all harnesses.
 

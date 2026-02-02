@@ -13,7 +13,6 @@ The existing implementation in `Writers.fs` uses pattern matching on `(harness, 
 - Support all 13+ tools available across the three major agent harnesses
 - Implement one-to-many tool mappings (one FsAgent tool → multiple harness tools)
 - Deduplicate harness tools when multiple FsAgent tools map to the same underlying tool
-- Maintain backward compatibility - existing agents continue to work unchanged
 - Preserve type safety - all tools remain strongly typed with IDE autocomplete
 
 **Non-Goals:**
@@ -89,19 +88,7 @@ let toolNames =
 - Deduplicate at DSL level when tools are added → Wrong abstraction, harness-specific logic shouldn't leak to DSL
 - Use Set instead of List → Doesn't preserve user ordering preference
 
-### Decision 4: Keep backward compatibility for existing Todo and Bash
-
-**Approach**:
-- `Todo` maps to both TodoWrite and TodoRead capabilities (all harness tools)
-- `Bash` is an alias for `Shell`
-- Both are marked with `[<Obsolete>]` in a future version but work for now
-
-**Rationale**:
-- Zero breaking changes for existing users
-- Clear migration path (Todo → TodoWrite/TodoRead, Bash → Shell)
-- Obsolete warnings guide users to new API without forcing immediate changes
-
-### Decision 5: Handle missing tools gracefully for harness-specific gaps
+### Decision 4: Handle missing tools gracefully for harness-specific gaps
 
 **Missing tool mappings** (from harness tools matrix):
 - Opencode: `WebSearch` not available
@@ -145,9 +132,6 @@ let private toolToString (harness: AgentHarness) (tool: Tool) : string list =
 
 **[Risk]** Returning `string list` from `toolToString` is a breaking change for any code calling it
 → **Mitigation**: `toolToString` is private, so this is not a breaking change to the public API
-
-**[Trade-off]** Keeping `Todo` and `Bash` for backward compatibility increases the size of the Tool DU
-→ **Acceptable**: Two extra variants is minimal cost for avoiding breaking changes
 
 **[Trade-off]** Claude's TodoRead mapping to TaskList + TaskGet + TaskUpdate feels "heavy"
 → **Acceptable**: Reflects Claude's actual API - all three tools work together for todo functionality

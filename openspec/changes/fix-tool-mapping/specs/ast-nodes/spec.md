@@ -5,7 +5,7 @@ The system SHALL define a Tool discriminated union in FsAgent.AST namespace with
 
 #### Scenario: Tool type structure
 - **WHEN** the Tool type is defined
-- **THEN** it SHALL include the following variants: Write, Edit, Shell, Read, Glob, List, LSP, Skill, TodoWrite, TodoRead, WebFetch, WebSearch, Question, Bash (legacy), Todo (legacy), and Custom of string
+- **THEN** it SHALL include the following variants: Write, Edit, Shell, Read, Glob, List, LSP, Skill, TodoWrite, TodoRead, WebFetch, WebSearch, Question, and Custom of string
 
 ### Requirement: Read tool variant
 The system SHALL provide Read tool variant for file reading capability.
@@ -76,20 +76,6 @@ The system SHALL provide Shell tool variant as the primary name for shell comman
 #### Scenario: Shell tool is available
 - **WHEN** Tool.Shell is referenced in code
 - **THEN** it SHALL compile successfully and be a valid Tool variant
-
-### Requirement: Legacy Bash tool variant for backward compatibility
-The system SHALL maintain Bash tool variant as a legacy alias for Shell to preserve backward compatibility.
-
-#### Scenario: Bash tool remains available
-- **WHEN** Tool.Bash is referenced in existing code
-- **THEN** it SHALL compile successfully and behave identically to Tool.Shell
-
-### Requirement: Legacy Todo tool variant for backward compatibility
-The system SHALL maintain Todo tool variant as a legacy alias that encompasses both TodoWrite and TodoRead capabilities.
-
-#### Scenario: Todo tool remains available
-- **WHEN** Tool.Todo is referenced in existing code
-- **THEN** it SHALL compile successfully and map to both TodoWrite and TodoRead harness tools
 
 ### Requirement: Tool type documentation
 The system SHALL provide XML documentation for each Tool variant describing its purpose and harness mapping behavior.

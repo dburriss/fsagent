@@ -58,31 +58,21 @@
 - [ ] 5.10 Add WebFetch → ["web"] mapping for Copilot
 - [ ] 5.11 Add Question → [] (empty, not supported) mapping for Copilot
 
-## 6. Implement Backward Compatibility for Legacy Tools
+## 6. Update Tool Collection and Deduplication Logic
 
-- [ ] 6.1 Add Bash tool mapping to behave identically to Shell for all harnesses
-- [ ] 6.2 Add Todo tool mapping to return all TodoWrite + TodoRead tools for Opencode
-- [ ] 6.3 Add Todo tool mapping to return all TodoWrite + TodoRead tools for ClaudeCode
-- [ ] 6.4 Add Todo tool mapping to return all TodoWrite + TodoRead tools for Copilot
+- [ ] 6.1 Update formatToolsFrontmatter to use List.collect instead of List.map
+- [ ] 6.2 Add List.distinct after List.collect to deduplicate tool names
+- [ ] 6.3 Verify that empty lists from unsupported tools are filtered out automatically
 
-## 7. Update Tool Collection and Deduplication Logic
+## 7. Testing
 
-- [ ] 7.1 Update formatToolsFrontmatter to use List.collect instead of List.map
-- [ ] 7.2 Add List.distinct after List.collect to deduplicate tool names
-- [ ] 7.3 Verify that empty lists from unsupported tools are filtered out automatically
+- [ ] 7.1 Add unit tests for one-to-many mappings (TodoWrite, TodoRead for ClaudeCode)
+- [ ] 7.2 Add unit tests for deduplication (Glob + List → single "search" for Copilot)
+- [ ] 7.3 Add unit tests for missing tool handling (WebSearch for Opencode returns empty)
+- [ ] 7.4 Add unit tests for Custom tool pass-through across all harnesses
+- [ ] 7.5 Verify all existing tests still pass with string list return type
 
-## 8. Testing
+## 8. Documentation
 
-- [ ] 8.1 Add unit tests for one-to-many mappings (TodoWrite, TodoRead for ClaudeCode)
-- [ ] 8.2 Add unit tests for deduplication (Glob + List → single "search" for Copilot)
-- [ ] 8.3 Add unit tests for missing tool handling (WebSearch for Opencode returns empty)
-- [ ] 8.4 Add unit tests for backward compatibility (Todo maps to all todo tools)
-- [ ] 8.5 Add unit tests for Bash alias (Bash behaves same as Shell)
-- [ ] 8.6 Add unit tests for Custom tool pass-through across all harnesses
-- [ ] 8.7 Verify all existing tests still pass with string list return type
-
-## 9. Documentation
-
-- [ ] 9.1 Update CLAUDE.md tool mapping table with all new tool variants
-- [ ] 9.2 Document one-to-many mapping behavior and deduplication in CLAUDE.md
-- [ ] 9.3 Add migration guidance for Todo → TodoWrite/TodoRead and Bash → Shell
+- [ ] 8.1 Update CLAUDE.md tool mapping table with all new tool variants
+- [ ] 8.2 Document one-to-many mapping behavior and deduplication in CLAUDE.md
