@@ -48,11 +48,6 @@ module MarkdownWriter =
         | Json
         | Yaml
 
-    type ToolFormat =
-        | ToolsList        // ["tool1", "tool2"]
-        | ToolsMap         // { tool1: true, tool2: false }
-        | Auto             // Based on OutputFormat (default)
-
     type WriterContext = {
         Format: AgentHarness
         OutputType: OutputType
@@ -71,7 +66,6 @@ module MarkdownWriter =
         mutable IncludeFrontmatter: bool
         mutable CustomWriter: (Agent -> Options -> string) option
         mutable TemplateVariables: Template.TemplateVariables
-        mutable ToolFormat: ToolFormat
     }
 
     let formatToLanguageTag (format: DataFormat) : string =
@@ -91,7 +85,6 @@ module MarkdownWriter =
         IncludeFrontmatter = true
         CustomWriter = None
         TemplateVariables = Map.empty
-        ToolFormat = Auto
     }
 
     let rec nodeToObj (node: Node) (templateVars: Template.TemplateVariables) : obj =
@@ -167,7 +160,7 @@ module MarkdownWriter =
         // Custom tools pass through unchanged for all harnesses
         | _, Tool.Custom s -> [s]
 
-    let private formatToolsFrontmatter (frontmatter: Map<string, obj>) (harness: AgentHarness) (opts: Options) : string =
+    let private formatToolsFrontmatter (frontmatter: Map<string, obj>) (harness: AgentHarness) : string =
         // Extract Tool lists from frontmatter
         let enabledTools =
             match frontmatter |> Map.tryFind "tools" with
@@ -208,42 +201,16 @@ module MarkdownWriter =
         let toolMap =
             Map.fold (fun acc k v -> Map.add k v acc) enabledMap disabledMap
 
-        // Determine target format
-        let targetFormat =
-            match opts.ToolFormat with
-            | Auto ->
-                match harness with
-                | Copilot -> ToolsList
-                | Opencode -> ToolsList
-                | ClaudeCode -> ToolsList
-            | explicit -> explicit
-
-        // Format based on target
-        match targetFormat with
-        | ToolsList ->
-            // Only include enabled tools
-            toolMap
-            |> Map.filter (fun _ v ->
-                match v with
-                | :? bool as b -> b
-                | _ -> true)
-            |> Map.keys
-            |> Seq.map string
-            |> String.concat "\n  - "
-            |> sprintf "\n  - %s"
-
-        | ToolsMap ->
-            // Include all tools with status
-            toolMap
-            |> Map.toSeq
-            |> Seq.map (fun (k, v) ->
-                let valueStr =
-                    match v with
-                    | :? bool as b -> b.ToString().ToLower()
-                    | _ -> v.ToString().ToLower()
-                sprintf "  %s: %s" k valueStr)
-            |> String.concat "\n"
-            |> sprintf "\n%s"
+        // Output as list format - only include enabled tools
+        toolMap
+        |> Map.filter (fun _ v ->
+            match v with
+            | :? bool as b -> b
+            | _ -> true)
+        |> Map.keys
+        |> Seq.map string
+        |> String.concat "\n  - "
+        |> sprintf "\n  - %s"
 
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
@@ -258,7 +225,7 @@ module MarkdownWriter =
                     // Handle tools section first (if tools or disallowedTools exist)
                     let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
                     if hasTools then
-                        let toolsStr = formatToolsFrontmatter agent.Frontmatter Opencode opts
+                        let toolsStr = formatToolsFrontmatter agent.Frontmatter Opencode
                         sb.AppendLine($"tools: {toolsStr}") |> ignore
 
                     // Handle other frontmatter keys
@@ -288,7 +255,7 @@ module MarkdownWriter =
                 // Handle tools section first (if tools or disallowedTools exist)
                 let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
                 if hasTools then
-                    let toolsStr = formatToolsFrontmatter agent.Frontmatter Copilot opts
+                    let toolsStr = formatToolsFrontmatter agent.Frontmatter Copilot
                     sb.AppendLine($"tools: {toolsStr}") |> ignore
 
                 // Handle other frontmatter keys
@@ -319,7 +286,7 @@ module MarkdownWriter =
                     // Handle tools section first (if tools or disallowedTools exist)
                     let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
                     if hasTools then
-                        let toolsStr = formatToolsFrontmatter agent.Frontmatter ClaudeCode opts
+                        let toolsStr = formatToolsFrontmatter agent.Frontmatter ClaudeCode
                         sb.AppendLine($"tools: {toolsStr}") |> ignore
 
                     // Handle other frontmatter keys

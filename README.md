@@ -138,7 +138,6 @@ agent {
 
 - `OutputFormat`: `Opencode` (default) or `Copilot`
 - `OutputType`: `Md` (default), `Json`, or `Yaml`
-- `ToolFormat`: `Auto` (default), `ToolsList`, or `ToolsMap` - Controls tool configuration output format
 - `TemplateVariables`: Map of variable name → value for template rendering
 - `DisableCodeBlockWrapping`: Force raw output even for `import` (default false)
 - `RenameMap`: Map for renaming section headings
@@ -149,12 +148,11 @@ agent {
 
 See `knowledge/import-data.md` for an example of generated output with imported data rules from `knowledge/import-data.rules.json`.
 
-## Tool Configuration Formats
+## Tool Configuration
 
-FsAgent supports type-safe tool configuration with automatic harness-specific name mapping:
+FsAgent supports type-safe tool configuration with automatic harness-specific name mapping. Tools are always output as a list, with disabled tools omitted from the output.
 
-### List Format (Allowlist)
-Used by Copilot, Claude, and OpenCode:
+### Basic Tool Configuration
 
 ```fsharp
 open FsAgent.Tools
@@ -172,30 +170,9 @@ let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
 //   - read
 ```
 
-### Map Format (Enable/Disable)
-Used by OpenCode for fine-grained control:
+### Disabling Tools
 
-```fsharp
-open FsAgent.Tools
-
-let agent = agent {
-    name "my-agent"
-    tools [Edit; WebFetch]
-    disallowedTools [Bash; Write]
-}
-
-let markdown = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.ToolFormat <- MarkdownWriter.ToolsMap)
-// Output:
-// tools:
-//   bash: false
-//   write: false
-//   edit: true
-//   webfetch: true
-```
-
-### Allow/Disallow Pattern
-Combine allowed and disallowed tools for convenience:
+Use `disallowedTools` to exclude specific tools from the output:
 
 ```fsharp
 open FsAgent.Tools
@@ -203,51 +180,17 @@ open FsAgent.Tools
 let agent = agent {
     name "my-agent"
     tools [Glob; Bash; Read; Edit]
-    disallowedTools [Bash; Write]  // Disable specific tools
+    disallowedTools [Bash; Write]  // These tools won't appear in output
 }
 
-let markdown = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.ToolFormat <- MarkdownWriter.ToolsMap)
+let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
 // Output:
 // tools:
-//   grep: true
-//   bash: false   (overridden by disallowedTools)
-//   read: true
-//   edit: true
-//   write: false  (from disallowedTools)
+//   - grep
+//   - read
+//   - edit
+// (bash and write are omitted because they're disabled)
 ```
-
-### Format Conversion
-
-The writer can convert between formats:
-
-```fsharp
-open FsAgent.Tools
-
-// List → Map (all tools enabled)
-let agent = agent {
-    tools [Glob; Bash]
-}
-let mapOutput = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.ToolFormat <- MarkdownWriter.ToolsMap)
-// Output: tools:\n  grep: true\n  bash: true
-
-// Map → List (only enabled tools)
-let agent2 = agent {
-    tools [Edit; Read]
-    disallowedTools [Bash]
-}
-let listOutput = MarkdownWriter.writeAgent agent2 (fun opts ->
-    opts.ToolFormat <- MarkdownWriter.ToolsList)
-// Output: tools:\n  - edit\n  - read
-// (bash excluded because it's disabled)
-```
-
-### Auto Format Selection
-
-By default, `ToolFormat = Auto` selects the format based on `OutputFormat`:
-- **Copilot**: Uses `ToolsList` (list format)
-- **Opencode**: Uses `ToolsList` (list format, can override with explicit `ToolsMap`)
 
 ## Importing Data
 

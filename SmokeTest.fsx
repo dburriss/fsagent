@@ -9,6 +9,7 @@ open FsAgent
 open FsAgent.Agents
 open FsAgent.Writers
 open FsAgent.AST
+open FsAgent.Tools
 open System
 
 printfn "=== FsAgent v2.0 Smoke Test ==="
@@ -59,20 +60,18 @@ printfn ""
 // Task 10.4: Generate Opencode output
 printfn "Task 10.4: Generating Opencode output and verifying tool names are lowercase and Edit is disabled"
 let opencodeOutput = MarkdownWriter.writeAgent smokeTestAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Opencode
-    opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    opts.OutputFormat <- MarkdownWriter.Opencode)
 
 printfn "Opencode output:"
 printfn "---"
 printfn "%s" opencodeOutput
 printfn "---"
 
-// Verify Opencode tool names
+// Verify Opencode tool names (list format, lowercase, disabled tools omitted)
 let opencodeChecks = [
-    ("write: true", "Write tool is enabled and lowercase")
-    ("bash: true", "Bash tool is enabled and lowercase")
-    ("mcp_special: true", "Custom tool passes through")
-    ("edit: false", "Edit tool is disabled")
+    ("- write", "Write tool is enabled and lowercase")
+    ("- bash", "Bash tool is enabled and lowercase")
+    ("- mcp_special", "Custom tool passes through")
 ]
 
 let mutable opencodeSuccess = true
@@ -82,6 +81,13 @@ for (expected, description) in opencodeChecks do
     else
         printfn "✗ ERROR: %s (expected to find: %s)" description expected
         opencodeSuccess <- false
+
+// Edit should NOT appear (it's disabled)
+if not (opencodeOutput.Contains("- edit")) then
+    printfn "✓ Disabled Edit tool not in output"
+else
+    printfn "✗ ERROR: Disabled Edit tool appears in output"
+    opencodeSuccess <- false
 
 if not (opencodeOutput.Contains("Write") || opencodeOutput.Contains("Bash") || opencodeOutput.Contains("Edit")) then
     printfn "✓ No capitalized tool names in Opencode output"
@@ -94,8 +100,7 @@ printfn ""
 // Task 10.5: Generate Copilot output
 printfn "Task 10.5: Generating Copilot output and verifying tool names match Copilot specification"
 let copilotOutput = MarkdownWriter.writeAgent smokeTestAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Copilot
-    opts.ToolFormat <- MarkdownWriter.ToolsList)
+    opts.OutputFormat <- MarkdownWriter.Copilot)
 
 printfn "Copilot output:"
 printfn "---"
@@ -117,11 +122,11 @@ for (expected, description) in copilotChecks do
         printfn "✗ ERROR: %s (expected to find: %s)" description expected
         copilotSuccess <- false
 
-// Edit should NOT appear in ToolsList output (it's disabled)
+// Edit should NOT appear in output (it's disabled)
 if not (copilotOutput.Contains("- edit")) then
-    printfn "✓ Disabled Edit tool not in ToolsList output"
+    printfn "✓ Disabled Edit tool not in output"
 else
-    printfn "✗ ERROR: Disabled Edit tool appears in ToolsList output"
+    printfn "✗ ERROR: Disabled Edit tool appears in output"
     copilotSuccess <- false
 
 printfn ""
@@ -129,20 +134,18 @@ printfn ""
 // Task 10.6: Generate ClaudeCode output
 printfn "Task 10.6: Generating ClaudeCode output and verifying tool names match Claude Code specification"
 let claudeOutput = MarkdownWriter.writeAgent smokeTestAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode
-    opts.ToolFormat <- MarkdownWriter.ToolsMap)
+    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
 
 printfn "ClaudeCode output:"
 printfn "---"
 printfn "%s" claudeOutput
 printfn "---"
 
-// Verify ClaudeCode tool names (capitalized)
+// Verify ClaudeCode tool names (capitalized, list format, disabled tools omitted)
 let claudeChecks = [
-    ("Write: true", "Write tool is enabled and capitalized")
-    ("Bash: true", "Bash tool is enabled and capitalized")
-    ("mcp_special: true", "Custom tool passes through")
-    ("Edit: false", "Edit tool is disabled and capitalized")
+    ("- Write", "Write tool is enabled and capitalized")
+    ("- Bash", "Bash tool is enabled and capitalized")
+    ("- mcp_special", "Custom tool passes through")
 ]
 
 let mutable claudeSuccess = true
@@ -152,6 +155,13 @@ for (expected, description) in claudeChecks do
     else
         printfn "✗ ERROR: %s (expected to find: %s)" description expected
         claudeSuccess <- false
+
+// Edit should NOT appear (it's disabled)
+if not (claudeOutput.Contains("- Edit")) then
+    printfn "✓ Disabled Edit tool not in output"
+else
+    printfn "✗ ERROR: Disabled Edit tool appears in output"
+    claudeSuccess <- false
 
 if not (claudeOutput.Contains("write") || claudeOutput.Contains("bash") || claudeOutput.Contains("edit")) then
     printfn "✓ No lowercase standard tool names in ClaudeCode output"

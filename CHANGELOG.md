@@ -8,7 +8,6 @@
 - **Harness-specific tool name mapping**: Tools automatically map to correct names based on target platform (e.g., `Write` → "write" for Opencode, "Write" for ClaudeCode)
 - **Typed tools operation**: Agent builder `tools` operation now accepts `Tool list` for compile-time safety and IDE autocomplete
 - **Typed disallowedTools operation**: Agent builder `disallowedTools` operation now accepts `Tool list` instead of `string list`
-- **ToolFormat option**: Writer option to control tools output format (`ToolsList`, `ToolsMap`, or `Auto`)
 - **FsAgent.Tools namespace**: New dedicated namespace for Tool type and related tool functionality
 
 ### Changed
@@ -18,9 +17,11 @@
 - **BREAKING**: `disallowedTools` operation signature changed from `string list` to `Tool list`
 - **BREAKING**: Frontmatter storage changed - tools stored as `Tool list` objects, not string maps
 - Tool name resolution moved from agent definition time to write time, enabling harness-agnostic agent definitions
+- Tools are now always output as a list format, with disabled tools omitted from the output
 
 ### Removed
 - **BREAKING**: `toolMap` operation removed from agent builder - use `tools` + `disallowedTools` instead
+- **BREAKING**: `ToolFormat` option removed from `MarkdownWriter.Options` - tools are now always output as a list (equivalent to the old `ToolsList` format). The `ToolFormat` option (`ToolsList`, `ToolsMap`, `Auto`) has been removed to simplify the API. Since `Auto` defaulted to `ToolsList` for all harnesses, the format option was redundant. Disabled tools are simply omitted from the output list.
 
 ### Migration
 See [MIGRATION.md](MIGRATION.md) for complete migration guide from v1.x to v2.0.

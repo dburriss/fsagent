@@ -69,7 +69,7 @@ DSL (agent { ... }) → Agent record → MarkdownWriter.writeMarkdown → String
 
 - **AgentHarness**: Execution platform - `Opencode` (default), `Copilot` (requires `name` and `description` in frontmatter), `ClaudeCode`
 - **OutputType**: `Md` (markdown), `Json`, `Yaml`
-- **ToolFormat**: `ToolsList` (array), `ToolsMap` (boolean map), `Auto` (default, based on harness)
+- **Tools Output**: Tools are always output as a list, with disabled tools omitted
 
 ### Tool Configuration
 
@@ -175,14 +175,13 @@ MarkdownWriter.writeAgent agent (fun opts ->
 
 // Generate output for different harnesses
 let opencodeOutput = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- Opencode
-    opts.ToolFormat <- ToolsList)
+    opts.OutputFormat <- Opencode)
 
 let claudeOutput = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- ClaudeCode
-    opts.ToolFormat <- ToolsList)
+    opts.OutputFormat <- ClaudeCode)
 
 // The same agent definition produces harness-specific tool names
+// Tools are always output as a list, with disabled tools omitted
 ```
 
 ## Test Organization
