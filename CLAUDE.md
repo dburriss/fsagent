@@ -35,9 +35,12 @@ dotnet pack src/FsAgent/FsAgent.fsproj -c Release
 
 The library is organized across multiple files:
 
+**src/FsAgent/Tools.fs**
+- **`Tool`** - Discriminated union for type-safe tool references: `Write`, `Edit`, `Bash`, `Shell`, `Read`, `Glob`, `List`, `LSP`, `Skill`, `TodoWrite`, `TodoRead`, `WebFetch`, `WebSearch`, `Question`, `Todo`, `Custom of string`
+
 **src/FsAgent/AST.fs**
 - **`Node`** - Discriminated union representing AST nodes: `Text`, `Section`, `List`, `Imported`, `Template`, `TemplateFile`
-- **`Tool`** - Discriminated union for type-safe tool references: `Write`, `Edit`, `Bash`, `Shell`, `Read`, `Glob`, `List`, `LSP`, `Skill`, `TodoWrite`, `TodoRead`, `WebFetch`, `WebSearch`, `Question`, `Todo`, `Custom of string`
+- **`DataFormat`** - Format discriminated union: `Yaml`, `Json`, `Toon`, `Unknown`
 - **`AST` module** - Constructor functions (`role`, `objective`, `instructions`, etc.) and frontmatter helpers (`fmStr`, `fmNum`, `fmBool`, `fmList`, `fmMap`)
 
 **src/FsAgent/Prompts.fs**

@@ -25,7 +25,7 @@ Question | `question` | `AskUserQuestion` | `_` | Ask the user a question
 - For those that are missing from FsAgent, you can create custom tools using the `Custom` constructor of the `Tool` type. See the example below:
 
 ```fsharp
-open FsAgent.AST  // For Tool type
+open FsAgent.Tools
 let myAgent =
     agent {
         ...

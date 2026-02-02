@@ -3,7 +3,7 @@
 
 open FsAgent.Agents
 open FsAgent.Writers
-open FsAgent.AST  // For Tool type
+open FsAgent.Tools
 
 printfn "=== Typed Tools and Harness-Specific Mapping Examples ==="
 printfn ""

@@ -4,14 +4,36 @@ This guide helps you migrate from FsAgent v1.x to v2.0, which introduces type-sa
 
 ## Breaking Changes Summary
 
-1. **AgentFormat → AgentHarness**: Type renamed to better represent execution platform
-2. **ClaudeCode harness added**: New harness type for Claude Code platform
-3. **tools operation**: Now accepts `Tool list` instead of `obj list`
-4. **disallowedTools operation**: Now accepts `Tool list` instead of `string list`
-5. **toolMap operation removed**: Use `tools` + `disallowedTools` instead
-6. **Frontmatter storage**: Tools stored as `Tool list`, not string maps
+1. **Tool namespace**: `Tool` type moved from `FsAgent.AST` to `FsAgent.Tools` namespace
+2. **AgentFormat → AgentHarness**: Type renamed to better represent execution platform
+3. **ClaudeCode harness added**: New harness type for Claude Code platform
+4. **tools operation**: Now accepts `Tool list` instead of `obj list`
+5. **disallowedTools operation**: Now accepts `Tool list` instead of `string list`
+6. **toolMap operation removed**: Use `tools` + `disallowedTools` instead
+7. **Frontmatter storage**: Tools stored as `Tool list`, not string maps
 
-## 1. AgentFormat → AgentHarness
+## 1. Tool Namespace Change (FsAgent.AST → FsAgent.Tools)
+
+The `Tool` type has been moved to its own dedicated namespace for better organization and discoverability.
+
+**Before (v1.x):**
+```fsharp
+open FsAgent.AST  // Tool was here
+```
+
+**After (v2.0):**
+```fsharp
+open FsAgent.Tools  // Tool is now here
+```
+
+**Impact:** You must update all imports where you use the `Tool` type. If you also use AST types like `Node` or `DataFormat`, you'll need both namespaces:
+
+```fsharp
+open FsAgent.AST    // For Node, DataFormat, AST module
+open FsAgent.Tools  // For Tool type
+```
+
+## 2. AgentFormat → AgentHarness
 
 **Before (v1.x):**
 ```fsharp
@@ -29,7 +51,7 @@ MarkdownWriter.writeAgent agent (fun opts ->
 
 The type is renamed from `AgentFormat` to `AgentHarness` throughout the codebase.
 
-## 2. ClaudeCode Harness
+## 3. ClaudeCode Harness
 
 A new harness type is available for Claude Code:
 
@@ -40,7 +62,7 @@ MarkdownWriter.writeAgent agent (fun opts ->
 
 ClaudeCode uses capitalized tool names (e.g., `Write`, `Edit`, `Bash`).
 
-## 3. Typed Tools (tools operation)
+## 4. Typed Tools (tools operation)
 
 **Before (v1.x):**
 ```fsharp
@@ -51,7 +73,7 @@ let agent = agent {
 
 **After (v2.0):**
 ```fsharp
-open FsAgent.AST  // for Tool type
+open FsAgent.Tools  // for Tool type
 
 let agent = agent {
     tools [Write; Bash; Custom "read"]
@@ -63,7 +85,7 @@ let agent = agent {
 - Compile-time checking (no typos)
 - Harness-agnostic (same code generates correct names for each platform)
 
-## 4. Typed disallowedTools
+## 5. Typed disallowedTools
 
 **Before (v1.x):**
 ```fsharp
@@ -74,12 +96,14 @@ let agent = agent {
 
 **After (v2.0):**
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     disallowedTools [Bash; Write]
 }
 ```
 
-## 5. toolMap Removal
+## 6. toolMap Removal
 
 The `toolMap` operation has been removed. Migrate to `tools` + `disallowedTools`:
 
@@ -92,6 +116,8 @@ let agent = agent {
 
 **After (v2.0) - Option 1: Separate lists (recommended)**
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     tools [Write; Edit]
     disallowedTools [Bash]
@@ -100,12 +126,14 @@ let agent = agent {
 
 **After (v2.0) - Option 2: Only enabled tools**
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     tools [Write; Edit]
 }
 ```
 
-## 6. Custom Tools (MCP, platform-specific)
+## 7. Custom Tools (MCP, platform-specific)
 
 **Before (v1.x):**
 ```fsharp
@@ -116,12 +144,14 @@ let agent = agent {
 
 **After (v2.0):**
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     tools [Custom "mcp_database"; Custom "github_api"]
 }
 ```
 
-## 7. Mixed Built-in and Custom Tools
+## 8. Mixed Built-in and Custom Tools
 
 **Before (v1.x):**
 ```fsharp
@@ -132,16 +162,20 @@ let agent = agent {
 
 **After (v2.0):**
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     tools [Write; Bash; Custom "mcp_special"]
 }
 ```
 
-## 8. Harness-Specific Tool Names
+## 9. Harness-Specific Tool Names
 
 Tool names are now automatically mapped based on the target harness:
 
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     name "my-agent"
     description "Example agent"
@@ -165,7 +199,7 @@ let claudeOut = MarkdownWriter.writeAgent agent (fun opts ->
 
 You write the agent definition once and generate platform-specific output.
 
-## 9. Tool Type Reference
+## 10. Tool Type Reference
 
 ```fsharp
 type Tool =
@@ -201,7 +235,7 @@ let output = MarkdownWriter.writeAgent agent (fun opts ->
 open FsAgent
 open FsAgent.Agents
 open FsAgent.Writers
-open FsAgent.AST  // for Tool type
+open FsAgent.Tools  // for Tool type
 
 let agent = agent {
     name "code-reviewer"
@@ -215,6 +249,18 @@ let output = MarkdownWriter.writeAgent agent (fun opts ->
 ```
 
 ## Troubleshooting
+
+### Compilation Error: "The type or namespace 'Tool' is not defined"
+
+Add the `FsAgent.Tools` namespace:
+
+```fsharp
+// Before
+open FsAgent.AST
+
+// After
+open FsAgent.Tools
+```
 
 ### Compilation Error: "The type 'AgentFormat' is not defined"
 

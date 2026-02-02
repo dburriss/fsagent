@@ -5,6 +5,7 @@ open System.Text
 open System.Text.Json
 open YamlDotNet.Serialization
 open FsAgent.AST
+open FsAgent.Tools
 open FsAgent.Prompts
 open FsAgent.Agents
 
@@ -99,7 +100,7 @@ module MarkdownWriter =
         | Section (name, content) ->
             let contentObjs = content |> List.map (fun n -> nodeToObj n templateVars)
             dict [name, contentObjs :> obj] :> obj
-        | List items ->
+        | Node.List items ->
             (items |> List.map (fun n -> nodeToObj n templateVars)) :> obj
         | Imported (path, format, wrapInCodeBlock) ->
             dict [("path", path :> obj); ("format", format.ToString().ToLower() :> obj); ("wrapInCodeBlock", wrapInCodeBlock :> obj)] :> obj
@@ -360,7 +361,7 @@ module MarkdownWriter =
                 sb.AppendLine(heading) |> ignore
                 sb.AppendLine() |> ignore
                 for c in content do writeNode c (level + 1)
-            | List items ->
+            | Node.List items ->
                 for item in items do
                     sb.Append("- ") |> ignore
                     writeNode item level

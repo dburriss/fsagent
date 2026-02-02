@@ -6,6 +6,7 @@ open FsAgent.Agents
 open FsAgent.Prompts
 open FsAgent.Writers
 open FsAgent.AST
+open FsAgent.Tools
 open System.IO
 
 // A - Acceptance Tests: End-to-end DSL → AST → Writer pipeline

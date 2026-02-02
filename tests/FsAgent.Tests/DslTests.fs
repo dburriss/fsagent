@@ -5,6 +5,7 @@ open FsAgent
 open FsAgent.Agents
 open FsAgent.Prompts
 open FsAgent.AST
+open FsAgent.Tools
 
 [<Fact>]
 let ``DSL meta builder supports kvObj and kvListObj`` () =

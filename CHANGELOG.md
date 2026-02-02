@@ -9,8 +9,10 @@
 - **Typed tools operation**: Agent builder `tools` operation now accepts `Tool list` for compile-time safety and IDE autocomplete
 - **Typed disallowedTools operation**: Agent builder `disallowedTools` operation now accepts `Tool list` instead of `string list`
 - **ToolFormat option**: Writer option to control tools output format (`ToolsList`, `ToolsMap`, or `Auto`)
+- **FsAgent.Tools namespace**: New dedicated namespace for Tool type and related tool functionality
 
 ### Changed
+- **BREAKING**: `Tool` type moved from `FsAgent.AST` to `FsAgent.Tools` namespace - users must update imports from `open FsAgent.AST` to `open FsAgent.Tools`
 - **BREAKING**: `AgentFormat` type renamed to `AgentHarness` throughout codebase to better represent execution platform
 - **BREAKING**: `tools` operation signature changed from `obj list` to `Tool list`
 - **BREAKING**: `disallowedTools` operation signature changed from `string list` to `Tool list`
@@ -26,11 +28,13 @@ See [MIGRATION.md](MIGRATION.md) for complete migration guide from v1.x to v2.0.
 **Quick migration examples:**
 ```fsharp
 // Before (v1.x)
+open FsAgent.AST
 tools ["write" :> obj; "bash" :> obj]
 disallowedTools ["bash"]
 opts.OutputFormat <- MarkdownWriter.AgentFormat.Opencode
 
 // After (v2.0)
+open FsAgent.Tools  // Tool type now in Tools namespace
 tools [Write; Bash]
 disallowedTools [Bash]
 opts.OutputFormat <- Opencode

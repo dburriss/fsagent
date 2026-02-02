@@ -1,6 +1,7 @@
 namespace FsAgent.Agents
 
 open FsAgent.AST
+open FsAgent.Tools
 open FsAgent.Prompts
 
 type Agent = {

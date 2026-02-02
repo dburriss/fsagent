@@ -32,13 +32,14 @@ let assistantPrompt = prompt {
 ```fsharp
 open FsAgent.Agents
 open FsAgent.Writers
+open FsAgent.Tools
 
 let codingAgent = agent {
     name "FSharp-Assistant"
     description "An AI assistant for F# development"
     model "gpt-4"
     temperature 0.7
-    tools [ "read"; "search"; "edit" ]
+    tools [Read; Custom "search"; Edit]
 
     prompt assistantPrompt  // Reference the prompt
 }
@@ -113,10 +114,9 @@ agent {
     temperature 0.7
     maxTokens 2000.0
 
-    // Tool configuration (choose one approach)
-    tools ["tool1"; "tool2"]                    // List format (allowlist)
-    toolMap [("bash", false); ("edit", true)]   // Map format (enable/disable)
-    disallowedTools ["write"; "bash"]           // Disable specific tools (creates map)
+    // Tool configuration
+    tools [Write; Edit; Read]                   // Type-safe tool list
+    disallowedTools [Bash; Write]               // Disable specific tools
 
     // Reference prompts
     prompt myPrompt1
@@ -151,19 +151,21 @@ See `knowledge/import-data.md` for an example of generated output with imported 
 
 ## Tool Configuration Formats
 
-FsAgent supports both tool configuration formats used in agent systems:
+FsAgent supports type-safe tool configuration with automatic harness-specific name mapping:
 
 ### List Format (Allowlist)
 Used by Copilot, Claude, and OpenCode:
 
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     name "my-agent"
-    tools ["grep" :> obj; "bash" :> obj; "read" :> obj]
+    tools [Glob; Bash; Read]
 }
 
 let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
-// Output:
+// Output (Opencode):
 // tools:
 //   - grep
 //   - bash
@@ -174,14 +176,12 @@ let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
 Used by OpenCode for fine-grained control:
 
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     name "my-agent"
-    toolMap [
-        ("bash", false)
-        ("write", false)
-        ("edit", true)
-        ("webfetch", true)
-    ]
+    tools [Edit; WebFetch]
+    disallowedTools [Bash; Write]
 }
 
 let markdown = MarkdownWriter.writeAgent agent (fun opts ->
@@ -198,10 +198,12 @@ let markdown = MarkdownWriter.writeAgent agent (fun opts ->
 Combine allowed and disallowed tools for convenience:
 
 ```fsharp
+open FsAgent.Tools
+
 let agent = agent {
     name "my-agent"
-    tools ["grep" :> obj; "bash" :> obj; "read" :> obj; "edit" :> obj]
-    disallowedTools ["bash"; "write"]  // Disable specific tools
+    tools [Glob; Bash; Read; Edit]
+    disallowedTools [Bash; Write]  // Disable specific tools
 }
 
 let markdown = MarkdownWriter.writeAgent agent (fun opts ->
@@ -220,9 +222,11 @@ let markdown = MarkdownWriter.writeAgent agent (fun opts ->
 The writer can convert between formats:
 
 ```fsharp
+open FsAgent.Tools
+
 // List → Map (all tools enabled)
 let agent = agent {
-    tools ["grep" :> obj; "bash" :> obj]
+    tools [Glob; Bash]
 }
 let mapOutput = MarkdownWriter.writeAgent agent (fun opts ->
     opts.ToolFormat <- MarkdownWriter.ToolsMap)
@@ -230,12 +234,13 @@ let mapOutput = MarkdownWriter.writeAgent agent (fun opts ->
 
 // Map → List (only enabled tools)
 let agent2 = agent {
-    toolMap [("bash", false); ("edit", true); ("read", true)]
+    tools [Edit; Read]
+    disallowedTools [Bash]
 }
 let listOutput = MarkdownWriter.writeAgent agent2 (fun opts ->
     opts.ToolFormat <- MarkdownWriter.ToolsList)
 // Output: tools:\n  - edit\n  - read
-// (bash excluded because it's false)
+// (bash excluded because it's disabled)
 ```
 
 ### Auto Format Selection
@@ -287,7 +292,7 @@ let toonPrompt = prompt {
 let toonAgent = agent {
     name "toon-importer"
     model "gpt-4.1"
-    tools ["read" :> obj; "search" :> obj]
+    tools [Read; Custom "search"]
     prompt toonPrompt
 }
 

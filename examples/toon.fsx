@@ -6,7 +6,7 @@ open System.IO
 open FsAgent.Agents
 open FsAgent.Prompts
 open FsAgent.Writers
-open FsAgent.AST  // For Tool type
+open FsAgent.Tools
 
 let scriptDir = __SOURCE_DIRECTORY__
 let repoRoot = Path.GetFullPath(Path.Combine(scriptDir, ".."))
