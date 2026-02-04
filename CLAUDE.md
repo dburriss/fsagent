@@ -69,7 +69,24 @@ DSL (agent { ... }) → Agent record → MarkdownWriter.writeMarkdown → String
 
 - **AgentHarness**: Execution platform - `Opencode` (default), `Copilot` (requires `name` and `description` in frontmatter), `ClaudeCode`
 - **OutputType**: `Md` (markdown), `Json`, `Yaml`
-- **Tools Output**: Tools are always output as a list, with disabled tools omitted
+
+**Tools output format by harness:**
+
+**Opencode**: Uses struct/map format with boolean values, including both enabled and disabled tools
+```yaml
+tools:
+  bash: true
+  write: true
+  read: false  # Disabled tools shown explicitly
+```
+
+**Copilot and ClaudeCode**: Use list format with enabled tools only
+```yaml
+tools:
+  - bash
+  - write
+  # Disabled tools are omitted
+```
 
 ### Tool Configuration
 

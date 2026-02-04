@@ -252,51 +252,51 @@ let ``C: TemplateFile with missing file returns error message`` () =
 // Tool Format Conversion Tests
 
 [<Fact>]
-let ``A: Tools map format outputs as list by default`` () =
+let ``A: Opencode outputs tools as struct format by default`` () =
     let agent: Agent = {
         Frontmatter = Map.ofList ["tools", ([Custom "grep"; Bash; Custom "read"] :> obj)]
         Sections = []
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
     Assert.Contains("tools:", result)
-    Assert.Contains("  - grep", result)
-    Assert.Contains("  - bash", result)
-    Assert.Contains("  - read", result)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  bash: true", result)
+    Assert.Contains("  read: true", result)
 
 
 [<Fact>]
-let ``A: tools DSL operation creates list format`` () =
+let ``A: Opencode tools DSL operation creates struct format`` () =
     let agent = agent {
         tools [Custom "grep"; Bash; Custom "read"]
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
-    Assert.Contains("  - grep", result)
-    Assert.Contains("  - bash", result)
-    Assert.Contains("  - read", result)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  bash: true", result)
+    Assert.Contains("  read: true", result)
 
 
 [<Fact>]
-let ``A: disallowedTools alone omits disabled tools from list`` () =
+let ``A: Opencode disallowedTools shows disabled tools as false`` () =
     let agent = agent {
         disallowedTools [Bash; Write]
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
-    // Disabled tools should not appear in the list output
-    Assert.DoesNotContain("  - bash", result)
-    Assert.DoesNotContain("  - write", result)
+    // Disabled tools should appear with false in struct format
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  write: false", result)
 
 [<Fact>]
-let ``A: disallowedTools combined with tools shows only enabled tools`` () =
+let ``A: Opencode disallowedTools combined with tools shows both enabled and disabled`` () =
     let agent = agent {
         tools [Custom "grep"; Custom "read"]
         disallowedTools [Bash; Write]
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
-    Assert.Contains("  - grep", result)
-    Assert.Contains("  - read", result)
-    // Disabled tools should not appear
-    Assert.DoesNotContain("  - bash", result)
-    Assert.DoesNotContain("  - write", result)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  read: true", result)
+    // Disabled tools should appear with false
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  write: false", result)
 
 [<Fact>]
 let ``A: disallowedTools combined with tools using universal Tool types`` () =
@@ -305,11 +305,11 @@ let ``A: disallowedTools combined with tools using universal Tool types`` () =
         disallowedTools [Bash; Write]
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
-    Assert.Contains("  - edit", result)
-    Assert.Contains("  - read", result)
-    // Disabled tools should not appear
-    Assert.DoesNotContain("  - bash", result)
-    Assert.DoesNotContain("  - write", result)
+    Assert.Contains("  edit: true", result)
+    Assert.Contains("  read: true", result)
+    // Disabled tools should appear with false
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  write: false", result)
 
 [<Fact>]
 let ``A: disallowedTools can override previously allowed tools`` () =
@@ -318,21 +318,21 @@ let ``A: disallowedTools can override previously allowed tools`` () =
         disallowedTools [Bash]  // Disable bash
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
-    Assert.Contains("  - grep", result)
-    Assert.Contains("  - read", result)
-    // Bash should not appear since it was disabled
-    Assert.DoesNotContain("  - bash", result)
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  read: true", result)
+    // Bash should appear as disabled
+    Assert.Contains("  bash: false", result)
 
 [<Fact>]
-let ``A: disallowedTools output shows only enabled tools`` () =
+let ``A: Opencode disallowedTools output shows all tools with status`` () =
     let agent = agent {
         tools [Custom "grep"; Bash; Custom "read"]
         disallowedTools [Bash]
     }
     let result = MarkdownWriter.writeAgent agent (fun _ -> ())
-    Assert.Contains("  - grep", result)
-    Assert.Contains("  - read", result)
-    Assert.DoesNotContain("  - bash", result)  // bash is disabled, shouldn't appear in list
+    Assert.Contains("  grep: true", result)
+    Assert.Contains("  read: true", result)
+    Assert.Contains("  bash: false", result)  // bash is disabled, shown with false
 // B - Building Tests: Harness-specific tool name mapping
 
 [<Fact>]
@@ -342,9 +342,9 @@ let ``B: Opencode harness uses lowercase tool names`` () =
     }
     let result = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.Opencode)
-    Assert.Contains("  - write", result)
-    Assert.Contains("  - edit", result)
-    Assert.Contains("  - bash", result)
+    Assert.Contains("  write: true", result)
+    Assert.Contains("  edit: true", result)
+    Assert.Contains("  bash: true", result)
 
 [<Fact>]
 let ``B: Copilot harness uses correct tool names`` () =
@@ -377,19 +377,19 @@ let ``B: Custom tools passthrough unchanged for all harnesses`` () =
         description "Test agent for custom tools"
         tools [Custom "mcp_special"; Custom "my_tool"]
     }
-    // Test Opencode
+    // Test Opencode - struct format
     let opencodeResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.Opencode)
-    Assert.Contains("  - mcp_special", opencodeResult)
-    Assert.Contains("  - my_tool", opencodeResult)
+    Assert.Contains("  mcp_special: true", opencodeResult)
+    Assert.Contains("  my_tool: true", opencodeResult)
 
-    // Test Copilot
+    // Test Copilot - list format
     let copilotResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.Copilot)
     Assert.Contains("  - mcp_special", copilotResult)
     Assert.Contains("  - my_tool", copilotResult)
 
-    // Test ClaudeCode
+    // Test ClaudeCode - list format
     let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.ClaudeCode)
     Assert.Contains("  - mcp_special", claudeResult)
@@ -407,11 +407,11 @@ let ``B: Same Tool list produces different strings for different harnesses`` () 
     let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.ClaudeCode)
 
-    // Opencode uses lowercase
-    Assert.Contains("  - write", opencodeResult)
-    Assert.Contains("  - bash", opencodeResult)
+    // Opencode uses lowercase struct format
+    Assert.Contains("  write: true", opencodeResult)
+    Assert.Contains("  bash: true", opencodeResult)
 
-    // ClaudeCode uses capitalized
+    // ClaudeCode uses capitalized list format
     Assert.Contains("  - Write", claudeResult)
     Assert.Contains("  - Bash", claudeResult)
 
@@ -494,8 +494,8 @@ let ``B: Opencode omits WebSearch when not supported`` () =
     }
     let result = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.Opencode)
-    Assert.Contains("  - write", result)
-    Assert.Contains("  - edit", result)
+    Assert.Contains("  write: true", result)
+    Assert.Contains("  edit: true", result)
     Assert.DoesNotContain("WebSearch", result)
     Assert.DoesNotContain("websearch", result)
 
@@ -536,23 +536,66 @@ let ``B: Custom tools with special names pass through unchanged for all harnesse
         tools [Custom "mcp_database"; Custom "github_api"; Custom "slack_api"]
     }
 
-    // Test Opencode
+    // Test Opencode - struct format
     let opencodeResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.Opencode)
-    Assert.Contains("  - mcp_database", opencodeResult)
-    Assert.Contains("  - github_api", opencodeResult)
-    Assert.Contains("  - slack_api", opencodeResult)
+    Assert.Contains("  mcp_database: true", opencodeResult)
+    Assert.Contains("  github_api: true", opencodeResult)
+    Assert.Contains("  slack_api: true", opencodeResult)
 
-    // Test Copilot
+    // Test Copilot - list format
     let copilotResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.Copilot)
     Assert.Contains("  - mcp_database", copilotResult)
     Assert.Contains("  - github_api", copilotResult)
     Assert.Contains("  - slack_api", copilotResult)
 
-    // Test ClaudeCode
+    // Test ClaudeCode - list format
     let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
         opts.OutputFormat <- MarkdownWriter.ClaudeCode)
     Assert.Contains("  - mcp_database", claudeResult)
     Assert.Contains("  - github_api", claudeResult)
     Assert.Contains("  - slack_api", claudeResult)
+
+[<Fact>]
+let ``B: Copilot uses list format not struct format`` () =
+    let agent = agent {
+        name "test-agent"
+        description "Test agent"
+        tools [Write; Edit]
+        disallowedTools [Bash]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Copilot)
+    Assert.Contains("  - write", result)
+    Assert.Contains("  - edit", result)
+    Assert.DoesNotContain("bash", result)  // Disabled tools omitted
+    Assert.DoesNotContain(": true", result)  // No struct format
+
+[<Fact>]
+let ``B: ClaudeCode uses list format not struct format`` () =
+    let agent = agent {
+        tools [Write; Edit]
+        disallowedTools [Bash]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+    Assert.Contains("  - Write", result)
+    Assert.Contains("  - Edit", result)
+    Assert.DoesNotContain("Bash", result)
+    Assert.DoesNotContain(": true", result)
+
+[<Fact>]
+let ``A: Opencode struct format includes both enabled and disabled tools`` () =
+    let agent = agent {
+        tools [Write; Edit; Read]
+        disallowedTools [Bash; WebFetch]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun _ -> ())
+    // Enabled tools
+    Assert.Contains("  write: true", result)
+    Assert.Contains("  edit: true", result)
+    Assert.Contains("  read: true", result)
+    // Disabled tools
+    Assert.Contains("  bash: false", result)
+    Assert.Contains("  webfetch: false", result)

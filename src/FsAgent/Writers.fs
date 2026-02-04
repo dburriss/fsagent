@@ -201,16 +201,33 @@ module MarkdownWriter =
         let toolMap =
             Map.fold (fun acc k v -> Map.add k v acc) enabledMap disabledMap
 
-        // Output as list format - only include enabled tools
-        toolMap
-        |> Map.filter (fun _ v ->
-            match v with
-            | :? bool as b -> b
-            | _ -> true)
-        |> Map.keys
-        |> Seq.map string
-        |> String.concat "\n  - "
-        |> sprintf "\n  - %s"
+        // Output format depends on harness
+        match harness with
+        | Opencode ->
+            // Struct format: include all tools with true/false values
+            toolMap
+            |> Map.toSeq
+            |> Seq.sortBy fst  // Sort alphabetically for deterministic output
+            |> Seq.map (fun (k, v) ->
+                let valueStr =
+                    match v with
+                    | :? bool as b -> b.ToString().ToLower()
+                    | _ -> "true"
+                sprintf "  %s: %s" k valueStr)
+            |> String.concat "\n"
+            |> sprintf "\n%s"
+
+        | Copilot | ClaudeCode ->
+            // List format: only include enabled tools
+            toolMap
+            |> Map.filter (fun _ v ->
+                match v with
+                | :? bool as b -> b
+                | _ -> true)
+            |> Map.keys
+            |> Seq.map string
+            |> String.concat "\n  - "
+            |> sprintf "\n  - %s"
 
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
