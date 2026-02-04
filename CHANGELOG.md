@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-02-04
+
 ### Changed
 - **Opencode tool output format**: Tools now output in struct/map format with boolean values (e.g., `bash: true`, `write: false`) instead of list format
 - **Opencode shows disabled tools**: Disabled tools now appear with `false` value in Opencode output, providing explicit visibility of all tool states
