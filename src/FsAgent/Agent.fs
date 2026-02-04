@@ -45,63 +45,63 @@ module AgentBuilder =
         member _.Run(agent) = agent
 
         [<CustomOperation("meta")>]
-        member _.Meta(agent, frontmatter: Map<string, obj>) =
+        member _.Meta(agent: Agent, frontmatter: Map<string, obj>) =
             { agent with Frontmatter = frontmatter }
 
         [<CustomOperation("name")>]
-        member _.Name(agent, value: string) =
+        member _.Name(agent: Agent, value: string) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "name" (AST.fmStr value) }
 
         [<CustomOperation("description")>]
-        member _.Description(agent, value: string) =
+        member _.Description(agent: Agent, value: string) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "description" (AST.fmStr value) }
 
         [<CustomOperation("author")>]
-        member _.Author(agent, value: string) =
+        member _.Author(agent: Agent, value: string) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "author" (AST.fmStr value) }
 
         [<CustomOperation("version")>]
-        member _.Version(agent, value: string) =
+        member _.Version(agent: Agent, value: string) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "version" (AST.fmStr value) }
 
         [<CustomOperation("license")>]
-        member _.License(agent, value: string) =
+        member _.License(agent: Agent, value: string) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "license" (AST.fmStr value) }
 
         [<CustomOperation("model")>]
-        member _.Model(agent, value: string) =
+        member _.Model(agent: Agent, value: string) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "model" (AST.fmStr value) }
 
         [<CustomOperation("temperature")>]
-        member _.Temperature(agent, value: float) =
+        member _.Temperature(agent: Agent, value: float) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "temperature" (AST.fmNum value) }
 
         [<CustomOperation("maxTokens")>]
-        member _.MaxTokens(agent, value: float) =
+        member _.MaxTokens(agent: Agent, value: float) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "maxTokens" (AST.fmNum value) }
 
         [<CustomOperation("tools")>]
-        member _.Tools(agent, value: Tool list) =
+        member _.Tools(agent: Agent, value: Tool list) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "tools" (value :> obj) }
 
         [<CustomOperation("disallowedTools")>]
-        member _.DisallowedTools(agent, value: Tool list) =
+        member _.DisallowedTools(agent: Agent, value: Tool list) =
             { agent with Frontmatter = agent.Frontmatter |> Map.add "disallowedTools" (value :> obj) }
 
         [<CustomOperation("prompt")>]
-        member _.Prompt(agent, prompt: Prompt) =
+        member _.Prompt(agent: Agent, prompt: Prompt) =
             { agent with Sections = agent.Sections @ prompt.Sections }
 
         [<CustomOperation("section")>]
-        member _.Section(agent, name: string, content: string) =
+        member _.Section(agent: Agent, name: string, content: string) =
             { agent with Sections = agent.Sections @ [Section(name, [Text content])] }
 
         [<CustomOperation("import")>]
-        member _.Import(agent, path: string) =
+        member _.Import(agent: Agent, path: string) =
             { agent with Sections = agent.Sections @ [AST.importRef path] }
 
         [<CustomOperation("importRaw")>]
-        member _.ImportRaw(agent, path: string) =
+        member _.ImportRaw(agent: Agent, path: string) =
             { agent with Sections = agent.Sections @ [AST.importRawRef path] }
 
     let agent = AgentBuilder()
