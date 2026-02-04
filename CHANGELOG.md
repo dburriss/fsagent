@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed
+- **Opencode tool output format**: Tools now output in struct/map format with boolean values (e.g., `bash: true`, `write: false`) instead of list format
+- **Opencode shows disabled tools**: Disabled tools now appear with `false` value in Opencode output, providing explicit visibility of all tool states
+- **Alphabetical tool ordering**: Opencode tools are now sorted alphabetically for deterministic output
+
+### Fixed
+- Fixed malformed YAML output when Copilot/ClaudeCode agents have only `disallowedTools` with no enabled tools - now correctly omits the tools section instead of outputting `tools: \n  - `
+
+### Added
+- 4 new unit tests covering harness-specific tool output format scenarios (alphabetical sorting, empty tools, only disallowedTools for Copilot/ClaudeCode)
+- OpenSpec requirement documentation for harness-specific tools output format in `openspec/specs/markdown-writer/spec.md`
+
 ## [0.3.0] - 2026-02-02
 
 ### Added
