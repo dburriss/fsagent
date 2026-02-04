@@ -81,3 +81,38 @@ The system SHALL provide Template module in FsAgent.Writers namespace with rende
 #### Scenario: Access Template module
 - **WHEN** user opens FsAgent.Writers
 - **THEN** Template.renderInline and Template.renderFile SHALL be available
+
+### Requirement: Harness-specific tools output format
+The system SHALL output tools in different formats based on the target harness: struct/map format for Opencode, list format for Copilot and ClaudeCode.
+
+#### Scenario: Opencode uses struct format with enabled tools
+- **WHEN** Agent has tools [Write, Edit, Read] AND OutputFormat is Opencode
+- **THEN** output SHALL contain YAML struct with "write: true", "edit: true", "read: true"
+
+#### Scenario: Opencode includes disabled tools in struct format
+- **WHEN** Agent has tools [Write, Edit] and disallowedTools [Bash, WebFetch] AND OutputFormat is Opencode
+- **THEN** output SHALL contain "write: true", "edit: true", "bash: false", "webfetch: false"
+
+#### Scenario: Opencode struct format is alphabetically sorted
+- **WHEN** Agent has tools in any order AND OutputFormat is Opencode
+- **THEN** output SHALL sort tool names alphabetically for deterministic output
+
+#### Scenario: Copilot uses list format with enabled tools only
+- **WHEN** Agent has tools [Write, Edit] and disallowedTools [Bash] AND OutputFormat is Copilot
+- **THEN** output SHALL contain list items "- write" and "- edit" but NOT "- bash"
+
+#### Scenario: ClaudeCode uses list format with enabled tools only
+- **WHEN** Agent has tools [Write, Edit] and disallowedTools [Bash] AND OutputFormat is ClaudeCode
+- **THEN** output SHALL contain list items "- Write" and "- Edit" but NOT "- Bash"
+
+#### Scenario: Empty tools for all harnesses
+- **WHEN** Agent has no tools AND no disallowedTools
+- **THEN** output SHALL NOT contain a tools section in frontmatter
+
+#### Scenario: Only disallowedTools for Opencode shows disabled tools
+- **WHEN** Agent has only disallowedTools [Bash, Write] AND OutputFormat is Opencode
+- **THEN** output SHALL contain "bash: false" and "write: false" in struct format
+
+#### Scenario: Only disallowedTools for Copilot/ClaudeCode shows no tools
+- **WHEN** Agent has only disallowedTools [Bash, Write] AND OutputFormat is Copilot or ClaudeCode
+- **THEN** output SHALL NOT contain a tools section (no enabled tools to list)
