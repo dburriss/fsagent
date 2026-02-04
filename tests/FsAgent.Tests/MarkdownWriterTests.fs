@@ -599,3 +599,49 @@ let ``A: Opencode struct format includes both enabled and disabled tools`` () =
     // Disabled tools
     Assert.Contains("  bash: false", result)
     Assert.Contains("  webfetch: false", result)
+
+[<Fact>]
+let ``A: Opencode struct format is alphabetically sorted`` () =
+    let agent = agent {
+        tools [Write; Bash; Edit; Read]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun _ -> ())
+    let lines = result.Split('\n') |> Array.filter (fun l -> l.Contains(": true") || l.Contains(": false"))
+    let toolOrder = lines |> Array.map (fun l -> l.Trim().Split(':').[0])
+    Assert.Equal(4, toolOrder.Length)
+    Assert.Equal("bash", toolOrder.[0])
+    Assert.Equal("edit", toolOrder.[1])
+    Assert.Equal("read", toolOrder.[2])
+    Assert.Equal("write", toolOrder.[3])
+
+[<Fact>]
+let ``A: Empty tools for all harnesses`` () =
+    let agentOpencode = agent { name "test"; description "test" }
+    let agentCopilot = agent { name "test"; description "test" }
+    let agentClaude = agent { name "test"; description "test" }
+
+    let opencodeResult = MarkdownWriter.writeAgent agentOpencode (fun _ -> ())
+    let copilotResult = MarkdownWriter.writeAgent agentCopilot (fun opts -> opts.OutputFormat <- MarkdownWriter.Copilot)
+    let claudeResult = MarkdownWriter.writeAgent agentClaude (fun opts -> opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+
+    Assert.DoesNotContain("tools:", opencodeResult)
+    Assert.DoesNotContain("tools:", copilotResult)
+    Assert.DoesNotContain("tools:", claudeResult)
+
+[<Fact>]
+let ``A: Only disallowedTools for Copilot shows no tools section`` () =
+    let agent = agent {
+        name "test"
+        description "test"
+        disallowedTools [Bash; Write; Edit]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.OutputFormat <- MarkdownWriter.Copilot)
+    Assert.DoesNotContain("tools:", result)
+
+[<Fact>]
+let ``A: Only disallowedTools for ClaudeCode shows no tools section`` () =
+    let agent = agent {
+        disallowedTools [Bash; Write; Edit]
+    }
+    let result = MarkdownWriter.writeAgent agent (fun opts -> opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+    Assert.DoesNotContain("tools:", result)

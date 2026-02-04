@@ -219,15 +219,22 @@ module MarkdownWriter =
 
         | Copilot | ClaudeCode ->
             // List format: only include enabled tools
-            toolMap
-            |> Map.filter (fun _ v ->
-                match v with
-                | :? bool as b -> b
-                | _ -> true)
-            |> Map.keys
-            |> Seq.map string
-            |> String.concat "\n  - "
-            |> sprintf "\n  - %s"
+            let enabledTools =
+                toolMap
+                |> Map.filter (fun _ v ->
+                    match v with
+                    | :? bool as b -> b
+                    | _ -> true)
+                |> Map.keys
+                |> Seq.map string
+                |> Seq.toList
+
+            if enabledTools.IsEmpty then
+                ""  // No tools to output
+            else
+                enabledTools
+                |> String.concat "\n  - "
+                |> sprintf "\n  - %s"
 
     let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
@@ -273,7 +280,8 @@ module MarkdownWriter =
                 let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
                 if hasTools then
                     let toolsStr = formatToolsFrontmatter agent.Frontmatter Copilot
-                    sb.AppendLine($"tools: {toolsStr}") |> ignore
+                    if toolsStr <> "" then
+                        sb.AppendLine($"tools: {toolsStr}") |> ignore
 
                 // Handle other frontmatter keys
                 for kv in agent.Frontmatter do
@@ -304,7 +312,8 @@ module MarkdownWriter =
                     let hasTools = agent.Frontmatter.ContainsKey("tools") || agent.Frontmatter.ContainsKey("disallowedTools")
                     if hasTools then
                         let toolsStr = formatToolsFrontmatter agent.Frontmatter ClaudeCode
-                        sb.AppendLine($"tools: {toolsStr}") |> ignore
+                        if toolsStr <> "" then
+                            sb.AppendLine($"tools: {toolsStr}") |> ignore
 
                     // Handle other frontmatter keys
                     for kv in agent.Frontmatter do
