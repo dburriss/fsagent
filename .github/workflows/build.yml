@@ -20,13 +20,18 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
-          # Enable cache when packages.lock.json exists
-          cache: true
-          cache-dependency-path: '**/packages.lock.json'
+          # Disable NuGet package cache to prevent NU1403 hash validation failures
+          # Cache corruption can cause "Package content hash validation failed" errors
+          cache: false
 
       # Optional: fail fast if lock file missing
       # - run: |
       #     test -f ./packages.lock.json || (echo "Missing packages.lock.json" && exit 1)
+
+      # Clear NuGet caches before restore to prevent NU1403 errors
+      # This ensures we start with a clean state and avoid corrupted package caches
+      - name: Clear NuGet caches
+        run: dotnet nuget locals all --clear
 
       - name: Restore (locked-mode)
         run: dotnet restore --locked-mode
