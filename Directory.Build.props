@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- GitHub Actions sets CI=true; disable locked mode for local development -->
+    <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
+    <RestoreLockedMode Condition="'$(CI)' != 'true'">false</RestoreLockedMode>
+  </PropertyGroup>
+</Project>

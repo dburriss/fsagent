@@ -33,7 +33,6 @@
 
     <!-- Enable NuGet lock files for reproducible restores -->
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-    <RestoreLockedMode>true</RestoreLockedMode>
   </PropertyGroup>
 
   <ItemGroup>
