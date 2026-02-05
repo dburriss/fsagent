@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Disable implicit FSharp.Core from SDK to use explicit NuGet package -->
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Explicitly reference FSharp.Core to force NuGet.org download instead of SDK bundle -->
+    <PackageReference Include="FSharp.Core" Version="8.0.400" />
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />

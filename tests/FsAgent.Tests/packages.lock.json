@@ -10,9 +10,9 @@
       },
       "FSharp.Core": {
         "type": "Direct",
-        "requested": "[10.0.102, )",
-        "resolved": "10.0.102",
-        "contentHash": "dk/Rm4/s7e+MAn4VSIHTBSKuPh4wySnSdKKNOmzdasa/Y6QiaF72NOcCKeHDdmVXMWB8sdC594lGTBjYrL4zqg=="
+        "requested": "[8.0.400, )",
+        "resolved": "8.0.400",
+        "contentHash": "kHMdDDmlZl98tujgHCmL8/HNH9VKbxsRMC9s7wbwr4noR40SSa5D4d00yF8cMK52s8jabVuiLLcrUw9r+PkKDQ=="
       },
       "Microsoft.NET.Test.Sdk": {
         "type": "Direct",
@@ -136,7 +136,7 @@
       "fsagent": {
         "type": "Project",
         "dependencies": {
-          "FSharp.Core": "[10.0.102, )",
+          "FSharp.Core": "[8.0.400, )",
           "Fue": "[2.2.0, )",
           "YamlDotNet": "[16.3.0, )"
         }
