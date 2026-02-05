@@ -150,7 +150,9 @@ See `knowledge/import-data.md` for an example of generated output with imported 
 
 ## Tool Configuration
 
-FsAgent supports type-safe tool configuration with automatic harness-specific name mapping. Tools are always output as a list, with disabled tools omitted from the output.
+FsAgent supports type-safe tool configuration with automatic harness-specific name mapping. Output format varies by harness:
+- **Opencode**: Struct/map format with boolean values (e.g., `bash: true`), includes all tools including disabled ones marked as `false`
+- **Copilot/ClaudeCode**: List format (e.g., `- bash`), only includes enabled tools
 
 ### Basic Tool Configuration
 
@@ -165,9 +167,9 @@ let agent = agent {
 let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
 // Output (Opencode):
 // tools:
-//   - grep
-//   - bash
-//   - read
+//   bash: true
+//   grep: true
+//   read: true
 ```
 
 ### Disabling Tools
@@ -184,12 +186,14 @@ let agent = agent {
 }
 
 let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
-// Output:
+// Output (Opencode):
 // tools:
-//   - grep
-//   - read
-//   - edit
-// (bash and write are omitted because they're disabled)
+//   bash: false
+//   edit: true
+//   grep: true
+//   read: true
+//   write: false
+// (Opencode shows all tools with true/false values, disabled tools are marked false)
 ```
 
 ## Importing Data
