@@ -5,7 +5,7 @@ FsAgent can generate agents, prompts, and commands but has no first-class suppor
 ## What Changes
 
 - Add a `Skill` record type with `Name`, `Description`, `License`, `Compatibility`, `Metadata`, and `Sections` fields.
-- Add a `skill { ... }` computation expression (CE) in a new `FsAgent.Skills` namespace.
+- Add a `skill { ... }` computation expression (CE) in a new `FsAgent.Skills` namespace. Can take a `prompt` like the other builders.
 - Add `AgentWriter.renderSkill` to produce Markdown-only output with SKILL.md-compatible frontmatter.
 - Expose `Skill` type alias and `skill` CE value in `Library.fs` for backward-compatible top-level access.
 - No changes to `Agent`, `Prompt`, `Command`, or `Node`. No breaking changes.
