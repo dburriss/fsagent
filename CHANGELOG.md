@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+- **Tool name injection in templates**: `{{{tool <Name>}}}` syntax in template strings resolves to the harness-correct tool name at write time (e.g., `{{{tool Bash}}}` → `"bash"` for Opencode, `"Bash"` for ClaudeCode)
+- `Template.renderWithHarness` and `Template.renderFileWithHarness` functions for harness-aware template rendering
+- `AgentHarness` type moved above `Template` module in `Writers.fs` to allow use in template function signatures
+
+### Changed
+- `writeMd` `Template` and `TemplateFile` branches now use harness-aware render functions; existing variable substitution behaviour is unchanged
+
 ## [0.3.1] - 2026-02-04
 
 ### Changed

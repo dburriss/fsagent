@@ -645,3 +645,17 @@ let ``A: Only disallowedTools for ClaudeCode shows no tools section`` () =
     }
     let result = MarkdownWriter.writeAgent agent (fun opts -> opts.OutputFormat <- MarkdownWriter.ClaudeCode)
     Assert.DoesNotContain("tools:", result)
+
+// 4.8 – toolNameMap maps known DU case name to correct Tool value (verified end-to-end via writeAgent)
+[<Fact>]
+let ``A: toolNameMap resolves Bash case name via writeAgent Template node`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Template "Use {{{tool Bash}}}"]
+    }
+    let opencodeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.Opencode)
+    let claudeResult = MarkdownWriter.writeAgent agent (fun opts ->
+        opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+    Assert.Contains("Use bash", opencodeResult)
+    Assert.Contains("Use Bash", claudeResult)

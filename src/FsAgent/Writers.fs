@@ -9,6 +9,11 @@ open FsAgent.Tools
 open FsAgent.Prompts
 open FsAgent.Agents
 
+type AgentHarness =
+    | Opencode
+    | Copilot
+    | ClaudeCode
+
 module Template =
     open Fue.Data
     open Fue.Compiler
@@ -36,12 +41,63 @@ module Template =
         with
         | ex -> $"[Template error: {ex.Message}]"
 
+    /// Resolve all {{{tool <Name>}}} occurrences in text before Fue processing.
+    let private resolveToolNames
+        (toolNameMap: Map<string, FsAgent.Tools.Tool>)
+        (toolToString: AgentHarness -> FsAgent.Tools.Tool -> string list)
+        (harness: AgentHarness)
+        (text: string) : string =
+        System.Text.RegularExpressions.Regex.Replace(
+            text,
+            @"\{\{\{tool\s+(\w+)\}\}\}",
+            fun m ->
+                let name = m.Groups.[1].Value
+                let tool =
+                    toolNameMap
+                    |> Map.tryFind name
+                    |> Option.defaultValue (FsAgent.Tools.Tool.Custom name)
+                toolToString harness tool |> List.tryHead |> Option.defaultValue name)
+
+    let renderWithHarness
+        (text: string)
+        (toolNameMap: Map<string, FsAgent.Tools.Tool>)
+        (toolToString: AgentHarness -> FsAgent.Tools.Tool -> string list)
+        (harness: AgentHarness)
+        (variables: TemplateVariables) : string =
+        try
+            let resolved = resolveToolNames toolNameMap toolToString harness text
+            let data =
+                variables
+                |> Map.fold (fun acc key value -> acc |> add key value) init
+            data |> fromText resolved
+        with
+        | ex -> $"[Template error: {ex.Message}]"
+
+    let renderFileWithHarness
+        (path: string)
+        (toolNameMap: Map<string, FsAgent.Tools.Tool>)
+        (toolToString: AgentHarness -> FsAgent.Tools.Tool -> string list)
+        (harness: AgentHarness)
+        (variables: TemplateVariables) : string =
+        try
+            if not (System.IO.File.Exists(path)) then
+                $"[Template file not found: {path}]"
+            else
+                let text = System.IO.File.ReadAllText(path)
+                let resolved = resolveToolNames toolNameMap toolToString harness text
+                let data =
+                    variables
+                    |> Map.fold (fun acc key value -> acc |> add key value) init
+                data |> fromText resolved
+        with
+        | ex -> $"[Template error: {ex.Message}]"
+
 module MarkdownWriter =
 
-    type AgentHarness =
-        | Opencode
-        | Copilot
-        | ClaudeCode
+    // Re-export AgentHarness cases for backward compatibility
+    let Opencode = AgentHarness.Opencode
+    let Copilot = AgentHarness.Copilot
+    let ClaudeCode = AgentHarness.ClaudeCode
 
     type OutputType =
         | Md
@@ -159,6 +215,25 @@ module MarkdownWriter =
 
         // Custom tools pass through unchanged for all harnesses
         | _, Tool.Custom s -> [s]
+
+    let private toolNameMap : Map<string, Tool> =
+        Map.ofList [
+            "Write", Tool.Write
+            "Edit", Tool.Edit
+            "Bash", Tool.Bash
+            "Shell", Tool.Shell
+            "Read", Tool.Read
+            "Glob", Tool.Glob
+            "List", Tool.List
+            "LSP", Tool.LSP
+            "Skill", Tool.Skill
+            "TodoWrite", Tool.TodoWrite
+            "TodoRead", Tool.TodoRead
+            "WebFetch", Tool.WebFetch
+            "WebSearch", Tool.WebSearch
+            "Question", Tool.Question
+            "Todo", Tool.Todo
+        ]
 
     let private formatToolsFrontmatter (frontmatter: Map<string, obj>) (harness: AgentHarness) : string =
         // Extract Tool lists from frontmatter
@@ -380,10 +455,10 @@ module MarkdownWriter =
                 with
                 | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
             | Template text ->
-                let rendered = Template.renderInline text opts.TemplateVariables
+                let rendered = Template.renderWithHarness text toolNameMap toolToString ctx.Format opts.TemplateVariables
                 sb.AppendLine(rendered) |> ignore
             | TemplateFile path ->
-                let rendered = Template.renderFile path opts.TemplateVariables
+                let rendered = Template.renderFileWithHarness path toolNameMap toolToString ctx.Format opts.TemplateVariables
                 sb.AppendLine(rendered) |> ignore
 
         for section in agent.Sections do
