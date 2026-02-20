@@ -9,11 +9,11 @@
 - [x] 2.2 Add `renderFileWithHarness` to the `Template` module: same signature but reads template from a file path; return `"[Template file not found: {path}]"` when the file is absent
 - [x] 2.3 Ensure existing `renderInline` and `renderFile` signatures and behaviour are unchanged
 
-## 3. MarkdownWriter – toolNameMap and Dispatch
+## 3. AgentWriter – toolNameMap and Dispatch
 
-- [x] 3.1 Build `toolNameMap: Map<string, Tool>` in `MarkdownWriter` mapping each `Tool` DU case name string (e.g., `"Bash"`) to its `Tool` value; include all current `Tool` cases
-- [x] 3.2 Update `writeMd`'s `Template` branch to call `renderWithHarness` with `ctx.Format`, `toolNameMap`, and `toolToString` instead of `renderInline`
-- [x] 3.3 Update `writeMd`'s `TemplateFile` branch to call `renderFileWithHarness` with the same arguments instead of `renderFile`
+- [x] 3.1 Build `toolNameMap: Map<string, Tool>` in `AgentWriter` mapping each `Tool` DU case name string (e.g., `"Bash"`) to its `Tool` value; include all current `Tool` cases
+- [x] 3.2 Update `renderMd`'s `Template` branch to call `renderWithHarness` with `ctx.Format`, `toolNameMap`, and `toolToString` instead of `renderInline`
+- [x] 3.3 Update `renderMd`'s `TemplateFile` branch to call `renderFileWithHarness` with the same arguments instead of `renderFile`
 
 ## 4. Acceptance Tests
 

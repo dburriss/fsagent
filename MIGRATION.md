@@ -1,4 +1,64 @@
-# Migration Guide: v1.x to v2.0
+# Migration Guide
+
+This guide covers all breaking changes in FsAgent.
+
+---
+
+## MarkdownWriter → AgentWriter (pre-1.0 rename)
+
+`module MarkdownWriter` has been renamed to `module AgentWriter`. All public write functions have been renamed to `render*`. The `writeMarkdown` alias has been removed.
+
+### Rename map
+
+| Old | New |
+|-----|-----|
+| `MarkdownWriter` | `AgentWriter` |
+| `MarkdownWriter.writeAgent` | `AgentWriter.renderAgent` |
+| `MarkdownWriter.writePrompt` | `AgentWriter.renderPrompt` |
+| `MarkdownWriter.writeCommand` | `AgentWriter.renderCommand` |
+| `MarkdownWriter.writeMarkdown` | removed — use `AgentWriter.renderAgent` |
+
+### Quick migration
+
+**Before:**
+```fsharp
+open FsAgent.Writers
+
+let output = MarkdownWriter.writeAgent agent (fun opts ->
+    opts.OutputFormat <- Opencode)
+
+let prompt = MarkdownWriter.writePrompt myPrompt (fun _ -> ())
+let cmd    = MarkdownWriter.writeCommand myCommand (fun _ -> ())
+```
+
+**After:**
+```fsharp
+open FsAgent.Writers
+
+let output = AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- Opencode)
+
+let prompt = AgentWriter.renderPrompt myPrompt (fun _ -> ())
+let cmd    = AgentWriter.renderCommand myCommand (fun _ -> ())
+```
+
+### Compilation errors
+
+**"The value, constructor, namespace or type 'MarkdownWriter' is not defined"**
+
+Replace `MarkdownWriter` with `AgentWriter` throughout your code.
+
+**"The value or constructor 'writeAgent' is not defined"** (or `writePrompt`, `writeCommand`)
+
+Replace `write*` calls with the corresponding `render*` call (see rename map above).
+
+**"The value or constructor 'writeMarkdown' is not defined"**
+
+`writeMarkdown` was an alias for `writeAgent` and has been removed. Use `AgentWriter.renderAgent` directly.
+
+---
+
+## v1.x to v2.0
 
 This guide helps you migrate from FsAgent v1.x to v2.0, which introduces type-safe tool configuration and renames `AgentFormat` to `AgentHarness`.
 
@@ -43,10 +103,10 @@ MarkdownWriter.writeAgent agent (fun opts ->
 
 **After (v2.0):**
 ```fsharp
-MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Opencode)
+AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Opencode)
 // or explicitly:
-    opts.OutputFormat <- MarkdownWriter.AgentHarness.Opencode)
+    opts.OutputFormat <- AgentWriter.AgentHarness.Opencode)
 ```
 
 The type is renamed from `AgentFormat` to `AgentHarness` throughout the codebase.
@@ -56,8 +116,8 @@ The type is renamed from `AgentFormat` to `AgentHarness` throughout the codebase
 A new harness type is available for Claude Code:
 
 ```fsharp
-MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- AgentWriter.ClaudeCode)
 ```
 
 ClaudeCode uses capitalized tool names (e.g., `Write`, `Edit`, `Bash`).
@@ -183,14 +243,14 @@ let agent = agent {
 }
 
 // Generate Opencode output (lowercase)
-let opencodeOut = MarkdownWriter.writeAgent agent (fun opts ->
+let opencodeOut = AgentWriter.renderAgent agent (fun opts ->
     opts.OutputFormat <- Opencode)
 // Output: tools:
 //           - write
 //           - bash
 
 // Generate ClaudeCode output (capitalized)
-let claudeOut = MarkdownWriter.writeAgent agent (fun opts ->
+let claudeOut = AgentWriter.renderAgent agent (fun opts ->
     opts.OutputFormat <- ClaudeCode)
 // Output: tools:
 //           - Write
@@ -226,8 +286,8 @@ let agent = agent {
     disallowedTools ["bash"]
 }
 
-let output = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.AgentFormat.Opencode)
+let output = AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- AgentWriter.AgentFormat.Opencode)
 ```
 
 **After (v2.0):**
@@ -244,7 +304,7 @@ let agent = agent {
     disallowedTools [Bash]
 }
 
-let output = MarkdownWriter.writeAgent agent (fun opts ->
+let output = AgentWriter.renderAgent agent (fun opts ->
     opts.OutputFormat <- Opencode)
 ```
 
@@ -268,10 +328,10 @@ Replace `AgentFormat` with `AgentHarness`:
 
 ```fsharp
 // Before
-opts.OutputFormat <- MarkdownWriter.AgentFormat.Opencode
+opts.OutputFormat <- AgentWriter.AgentFormat.Opencode
 
 // After
-opts.OutputFormat <- MarkdownWriter.Opencode
+opts.OutputFormat <- AgentWriter.Opencode
 ```
 
 ### Compilation Error: "This expression was expected to have type 'Tool list'"
@@ -302,5 +362,5 @@ disallowedTools [Bash]
 ## Need Help?
 
 - Check the updated [CLAUDE.md](CLAUDE.md) for architecture details
-- Review the test suite in `tests/FsAgent.Tests/MarkdownWriterTests.fs` for examples
+- Review the test suite in `tests/FsAgent.Tests/AgentWriterTests.fs` for examples
 - Open an issue on GitHub if you encounter migration problems

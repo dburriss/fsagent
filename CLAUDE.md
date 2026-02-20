@@ -53,7 +53,7 @@ The library is organized across multiple files:
 
 **src/FsAgent/Writers.fs**
 - **`AgentHarness`** - Target execution platform: `Opencode`, `Copilot`, `ClaudeCode`
-- **`MarkdownWriter` module** - Converts `Agent` to string output with configurable `Options`
+- **`AgentWriter` module** - Converts `Agent` to string output with configurable `Options`
 - Harness-specific tool name mapping (e.g., `Write` → "write" for Opencode, "Write" for ClaudeCode)
 
 **src/FsAgent/Library.fs**
@@ -62,7 +62,7 @@ The library is organized across multiple files:
 ### Data Flow
 
 ```
-DSL (agent { ... }) → Agent record → MarkdownWriter.writeMarkdown → String output
+DSL (agent { ... }) → Agent record → AgentWriter.renderAgent → String output
 ```
 
 ### Output Formats
@@ -185,16 +185,16 @@ Options are configured via a mutable record passed to a configuration function:
 
 ```fsharp
 // Basic configuration
-MarkdownWriter.writeAgent agent (fun opts ->
+AgentWriter.renderAgent agent (fun opts ->
     opts.OutputFormat <- Opencode  // AgentHarness: Opencode, Copilot, or ClaudeCode
     opts.RenameMap <- Map.ofList ["role", "Agent Role"]
     opts.HeadingFormatter <- Some (fun s -> s.ToUpper()))
 
 // Generate output for different harnesses
-let opencodeOutput = MarkdownWriter.writeAgent agent (fun opts ->
+let opencodeOutput = AgentWriter.renderAgent agent (fun opts ->
     opts.OutputFormat <- Opencode)
 
-let claudeOutput = MarkdownWriter.writeAgent agent (fun opts ->
+let claudeOutput = AgentWriter.renderAgent agent (fun opts ->
     opts.OutputFormat <- ClaudeCode)
 
 // The same agent definition produces harness-specific tool names

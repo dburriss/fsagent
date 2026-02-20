@@ -44,7 +44,7 @@ let codingAgent = agent {
     prompt assistantPrompt  // Reference the prompt
 }
 
-let markdown = MarkdownWriter.writeAgent codingAgent (fun _ -> ())
+let markdown = AgentWriter.renderAgent codingAgent (fun _ -> ())
 ```
 
 ### Using Templates
@@ -58,7 +58,7 @@ let greetingPrompt = prompt {
     template "Hello {{{userName}}}, welcome to {{{appName}}}!"
 }
 
-let output = MarkdownWriter.writePrompt greetingPrompt (fun opts ->
+let output = AgentWriter.renderPrompt greetingPrompt (fun opts ->
     opts.TemplateVariables <- Map.ofList [
         ("userName", "Alice" :> obj)
         ("appName", "FsAgent" :> obj)
@@ -164,7 +164,7 @@ let agent = agent {
     tools [Glob; Bash; Read]
 }
 
-let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
+let markdown = AgentWriter.renderAgent agent (fun _ -> ())
 // Output (Opencode):
 // tools:
 //   bash: true
@@ -185,7 +185,7 @@ let agent = agent {
     disallowedTools [Bash; Write]  // These tools won't appear in output
 }
 
-let markdown = MarkdownWriter.writeAgent agent (fun _ -> ())
+let markdown = AgentWriter.renderAgent agent (fun _ -> ())
 // Output (Opencode):
 // tools:
 //   bash: false
@@ -211,10 +211,10 @@ let agent = agent {
 }
 
 // Default: imports are resolved with code blocks respected
-let markdown = MarkdownWriter.writeMarkdown agent (fun _ -> ())
+let markdown = AgentWriter.renderAgent agent (fun _ -> ())
 
 // Force all imports to raw (no code blocks)
-let rawMarkdown = MarkdownWriter.writeMarkdown agent (fun opts ->
+let rawMarkdown = AgentWriter.renderAgent agent (fun opts ->
     opts.DisableCodeBlockWrapping <- true)
 ```
 
@@ -224,7 +224,7 @@ The script `examples/toon.fsx` demonstrates the prompt-first approach:
 
 1. **Create a prompt** with role, objective, instructions, and imported TOON data
 2. **Build an agent** that references the prompt with configuration metadata
-3. **Generate output** with `MarkdownWriter.writeAgent`
+3. **Generate output** with `AgentWriter.renderAgent`
 
 ```fsharp
 // 1. Define reusable prompt
@@ -244,7 +244,7 @@ let toonAgent = agent {
 }
 
 // 3. Write to file
-let markdown = MarkdownWriter.writeAgent toonAgent (fun _ -> ())
+let markdown = AgentWriter.renderAgent toonAgent (fun _ -> ())
 ```
 
 This shows how prompts can be defined once and reused across multiple agents while keeping configuration separate from content.

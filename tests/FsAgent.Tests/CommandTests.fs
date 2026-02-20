@@ -16,7 +16,7 @@ let ``A: command with description renders frontmatter`` () =
             name "my-cmd"
             description "Does a thing"
         }
-    let result = MarkdownWriter.writeCommand cmd (fun _ -> ())
+    let result = AgentWriter.renderCommand cmd (fun _ -> ())
     Assert.Contains("description: Does a thing", result)
     Assert.Contains("---", result)
 
@@ -27,7 +27,7 @@ let ``A: command name is not in frontmatter`` () =
             name "my-cmd"
             description "Does a thing"
         }
-    let result = MarkdownWriter.writeCommand cmd (fun _ -> ())
+    let result = AgentWriter.renderCommand cmd (fun _ -> ())
     // Find only the YAML front block (between first and second ---)
     let lines = result.Split('\n')
     let frontmatterLines =
@@ -47,7 +47,7 @@ let ``A: command sections render correctly`` () =
             instructions "Follow the steps"
             section "notes" "Extra notes here"
         }
-    let result = MarkdownWriter.writeCommand cmd (fun _ -> ())
+    let result = AgentWriter.renderCommand cmd (fun _ -> ())
     Assert.Contains("# role", result)
     Assert.Contains("# instructions", result)
     Assert.Contains("# notes", result)
@@ -60,7 +60,7 @@ let ``A: command template renders with Opencode harness`` () =
             description "Runs bash"
             template "Use {{{tool Bash}}}"
         }
-    let result = MarkdownWriter.writeCommand cmd (fun opts -> opts.OutputFormat <- MarkdownWriter.Opencode)
+    let result = AgentWriter.renderCommand cmd (fun opts -> opts.OutputFormat <- AgentWriter.Opencode)
     Assert.Contains("bash", result)
     Assert.DoesNotContain("{{{tool Bash}}}", result)
 
@@ -74,7 +74,7 @@ let ``A: command import embeds file content`` () =
             description "Context command"
             importRaw tempFile
         }
-    let result = MarkdownWriter.writeCommand cmd (fun _ -> ())
+    let result = AgentWriter.renderCommand cmd (fun _ -> ())
     Assert.Contains("Shared context", result)
     Assert.Contains("Some important info", result)
     File.Delete(tempFile)
@@ -87,9 +87,9 @@ let ``A: command renders identically for Copilot and ClaudeCode`` () =
             description "Cross-harness test"
             instructions "Do the thing"
         }
-    let copilotResult = MarkdownWriter.writeCommand cmd (fun opts -> opts.OutputFormat <- MarkdownWriter.Copilot)
-    let claudeResult = MarkdownWriter.writeCommand cmd (fun opts -> opts.OutputFormat <- MarkdownWriter.ClaudeCode)
-    let opencodeResult = MarkdownWriter.writeCommand cmd (fun opts -> opts.OutputFormat <- MarkdownWriter.Opencode)
+    let copilotResult = AgentWriter.renderCommand cmd (fun opts -> opts.OutputFormat <- AgentWriter.Copilot)
+    let claudeResult = AgentWriter.renderCommand cmd (fun opts -> opts.OutputFormat <- AgentWriter.ClaudeCode)
+    let opencodeResult = AgentWriter.renderCommand cmd (fun opts -> opts.OutputFormat <- AgentWriter.Opencode)
     Assert.Equal(opencodeResult, copilotResult)
     Assert.Equal(opencodeResult, claudeResult)
 
@@ -99,7 +99,7 @@ let ``A: empty command renders only description frontmatter`` () =
         command {
             description ""
         }
-    let result = MarkdownWriter.writeCommand cmd (fun _ -> ())
+    let result = AgentWriter.renderCommand cmd (fun _ -> ())
     Assert.Contains("---", result)
     Assert.Contains("description:", result)
     Assert.DoesNotContain("# ", result)

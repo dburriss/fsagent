@@ -14,7 +14,7 @@
     <Compile Include="TemplateTests.fs" />
     <Compile Include="DslTests.fs" />
     <Compile Include="AgentPromptIntegrationTests.fs" />
-    <Compile Include="MarkdownWriterTests.fs" />
+    <Compile Include="AgentWriterTests.fs" />
     <Compile Include="CommandTests.fs" />
   </ItemGroup>
 

@@ -6,7 +6,7 @@ Users of FsAgent need to generate slash command files (`.opencode/commands/*.md`
 
 - Add `SlashCommand` record type (`Name`, `Description`, `Sections`) in a new `Command.fs` module.
 - Add `command { }` computation expression builder with operations mirroring the prompt builder (`name`, `description`, `role`, `objective`, `instructions`, `context`, `output`, `section`, `import`, `importRaw`, `template`, `templateFile`, `examples`, `prompt`).
-- Add `MarkdownWriter.writeCommand` function that renders a `SlashCommand` to Markdown with `description`-only frontmatter.
+- Add `AgentWriter.renderCommand` function that renders a `SlashCommand` to Markdown with `description`-only frontmatter.
 - Re-export `SlashCommand` type alias and `command` CE from `Library.fs` for top-level access.
 - Add acceptance tests covering frontmatter rendering, section rendering, template resolution, and harness parity.
 

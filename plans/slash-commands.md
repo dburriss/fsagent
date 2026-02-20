@@ -14,9 +14,9 @@ No changes to the existing `Agent`, `Prompt`, or `AST` layers. No breaking chang
 - **Name is file-naming metadata only** — not included in frontmatter (matches existing `.opencode/command/*.md` pattern).
 - **`description` in frontmatter** — a frontmatter key; matches observed harness format.
 - **Sections reuse `Node`** — no new AST nodes. All existing DSL operations (`template`, `import`, `section`, etc.) apply.
-- **Writer produces Markdown** by default; `OutputType` option (Md/Json/Yaml) follows the same pattern as `writeAgent` for completeness.
+- **Writer produces Markdown** by default; `OutputType` option (Md/Json/Yaml) follows the same pattern as `renderAgent` for completeness.
 - **Harness differences**: None currently — all three emit the same format. The writer accepts `AgentHarness` in options for future-proofing; no conditional output yet.
-- **Template rendering** at write time; uses `Template.renderWithHarness` just like `writeMd`.
+- **Template rendering** at write time; uses `Template.renderWithHarness` just like `renderMd`.
 
 ## DSL Example (Target API)
 
@@ -34,7 +34,7 @@ let myCmd =
     }
 
 // Render to string
-let output = MarkdownWriter.writeCommand myCmd (fun opts ->
+let output = AgentWriter.renderCommand myCmd (fun opts ->
     opts.OutputFormat <- Opencode)
 // → ---\ndescription: Does a thing\n---\n\n# instructions\n...
 ```
@@ -124,10 +124,10 @@ module CommandBuilder =
 
 ## Writer Extension
 
-Add `writeCommand` to `MarkdownWriter` module in **`Writers.fs`**:
+Add `renderCommand` to `AgentWriter` module in **`Writers.fs`**:
 
 ```fsharp
-let writeCommand (cmd: SlashCommand) (configure: Options -> unit) : string =
+let renderCommand (cmd: SlashCommand) (configure: Options -> unit) : string =
     let opts = defaultOptions()
     configure opts
     // Build a synthetic Agent with only `description` in frontmatter
@@ -143,12 +143,12 @@ let writeCommand (cmd: SlashCommand) (configure: Options -> unit) : string =
         AgentDescription = Some cmd.Description
     }
     match opts.OutputType with
-    | Md -> writeMd agentLike opts ctx
-    | Json -> writeJson agentLike opts ctx
-    | Yaml -> writeYaml agentLike opts ctx
+    | Md -> renderMd agentLike opts ctx
+    | Json -> renderJson agentLike opts ctx
+    | Yaml -> renderYaml agentLike opts ctx
 ```
 
-No new private rendering logic needed — `writeMd` already handles sections, templates, imports, and `description`-only frontmatter correctly.
+No new private rendering logic needed — `renderMd` already handles sections, templates, imports, and `description`-only frontmatter correctly.
 
 ## Library.fs Backward Compatibility Layer
 
@@ -196,7 +196,7 @@ Update `FsAgent.fsproj` — insert `Command.fs` after `Agent.fs`:
 |------|--------|-------|
 | `src/FsAgent/Command.fs` | Create | `SlashCommand` type + `CommandBuilder` CE |
 | `src/FsAgent/FsAgent.fsproj` | Modify | Add `Command.fs` compile entry |
-| `src/FsAgent/Writers.fs` | Modify | Add `writeCommand` to `MarkdownWriter` |
+| `src/FsAgent/Writers.fs` | Modify | Add `renderCommand` to `AgentWriter` |
 | `src/FsAgent/Library.fs` | Modify | Add `SlashCommand` alias + `Commands` re-export |
 | `tests/FsAgent.Tests/CommandTests.fs` | Create | Acceptance tests |
 | `tests/FsAgent.Tests/FsAgent.Tests.fsproj` | Modify | Add `CommandTests.fs` compile entry |

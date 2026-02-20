@@ -55,7 +55,7 @@ Keep it concise — the agent reads the whole file at session start."""
 
 let outputPath = Path.Combine(scriptDir, "AGENTS.md.example")
 
-let markdown = MarkdownWriter.writeCommand agentsMdCommand (fun _ -> ())
+let markdown = AgentWriter.renderCommand agentsMdCommand (fun _ -> ())
 
 File.WriteAllText(outputPath, markdown)
 printfn "Wrote %s" outputPath

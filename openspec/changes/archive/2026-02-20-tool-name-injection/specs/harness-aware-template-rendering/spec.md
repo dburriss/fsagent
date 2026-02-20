@@ -42,7 +42,7 @@ The system SHALL provide a `Template.renderFileWithHarness` function that accept
 - **THEN** the system SHALL return `"[Template file not found: {path}]"`
 
 ### Requirement: toolNameMap lookup by DU case name
-The system SHALL build a `toolNameMap: Map<string, Tool>` inside `MarkdownWriter` that maps each `Tool` DU case name string (e.g., `"Bash"`) to its corresponding `Tool` value.
+The system SHALL build a `toolNameMap: Map<string, Tool>` inside `AgentWriter` that maps each `Tool` DU case name string (e.g., `"Bash"`) to its corresponding `Tool` value.
 
 #### Scenario: Known tool case name resolves to Tool value
 - **WHEN** `toolNameMap` is queried with `"Bash"`
@@ -53,12 +53,12 @@ The system SHALL build a `toolNameMap: Map<string, Tool>` inside `MarkdownWriter
 - **THEN** the system SHALL resolve it as `Tool.Custom name`, returning the name string unchanged for all harnesses
 
 ### Requirement: Write-time harness-aware template dispatch
-The system SHALL update `writeMd`'s `Template` and `TemplateFile` branches to call `renderWithHarness` and `renderFileWithHarness` respectively, passing the current harness, `toolNameMap`, and `toolToString`.
+The system SHALL update `renderMd`'s `Template` and `TemplateFile` branches to call `renderWithHarness` and `renderFileWithHarness` respectively, passing the current harness, `toolNameMap`, and `toolToString`.
 
 #### Scenario: Template node rendered with harness context
-- **WHEN** `writeMd` processes a `Template` node and a harness is set in the format context
+- **WHEN** `renderMd` processes a `Template` node and a harness is set in the format context
 - **THEN** the system SHALL call `renderWithHarness` with the current harness
 
 #### Scenario: TemplateFile node rendered with harness context
-- **WHEN** `writeMd` processes a `TemplateFile` node and a harness is set in the format context
+- **WHEN** `renderMd` processes a `TemplateFile` node and a harness is set in the format context
 - **THEN** the system SHALL call `renderFileWithHarness` with the current harness

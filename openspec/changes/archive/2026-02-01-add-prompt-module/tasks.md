@@ -52,18 +52,18 @@
 - [x] 5.4 Implement Template.renderFile function (path -> variables -> string) using Fue
 - [x] 5.5 Add error handling to renderInline (return "[Template error: ...]" on exception)
 - [x] 5.6 Add error handling to renderFile (return "[Template file not found: ...]" or "[Template error: ...]")
-- [x] 5.7 Move MarkdownWriter module from Library.fs to Writers.fs
+- [x] 5.7 Move AgentWriter module from Library.fs to Writers.fs
 - [x] 5.8 Keep existing types (AgentFormat, OutputType, WriterContext, Options)
 - [x] 5.9 Add TemplateVariables field to Options type (mutable, default: Map.empty)
 - [x] 5.10 Update defaultOptions function to include TemplateVariables = Map.empty
 - [x] 5.11 Move existing private helper functions to Writers.fs (formatFrontmatter, loadImportContent, nodeToObj, etc.)
-- [x] 5.12 Extend writeMd function to handle Template nodes (call Template.renderInline with opts.TemplateVariables)
-- [x] 5.13 Extend writeMd function to handle TemplateFile nodes (call Template.renderFile with opts.TemplateVariables)
+- [x] 5.12 Extend renderMd function to handle Template nodes (call Template.renderInline with opts.TemplateVariables)
+- [x] 5.13 Extend renderMd function to handle TemplateFile nodes (call Template.renderFile with opts.TemplateVariables)
 - [x] 5.14 Extend nodeToObj function for JSON/YAML serialization to handle Template and TemplateFile nodes
-- [x] 5.15 Create writePrompt function (Prompt -> (Options -> unit) -> string)
-- [x] 5.16 In writePrompt, convert Prompt to Agent-like structure with Frontmatter = Map.empty
-- [x] 5.17 In writePrompt, delegate to writeMd/writeJson/writeYaml based on OutputType
-- [x] 5.18 Keep writeMarkdown function as alias to writeAgent for backward compatibility
+- [x] 5.15 Create renderPrompt function (Prompt -> (Options -> unit) -> string)
+- [x] 5.16 In renderPrompt, convert Prompt to Agent-like structure with Frontmatter = Map.empty
+- [x] 5.17 In renderPrompt, delegate to renderMd/renderJson/renderYaml based on OutputType
+- [x] 5.18 Keep renderAgent function as alias to renderAgent for backward compatibility
 
 ## 6. Update Library.fs (Backward Compatibility Layer)
 
@@ -71,12 +71,12 @@
 - [x] 6.2 Add type aliases in FsAgent namespace (DataFormat, Node, Agent, Prompt)
 - [x] 6.3 Create DSL module with re-exports (meta, agent, prompt builders)
 - [x] 6.4 Create AST module re-export (pointing to AST.AST)
-- [x] 6.5 Create MarkdownWriter module re-export (pointing to Writers.MarkdownWriter)
+- [x] 6.5 Create AgentWriter module re-export (pointing to Writers.AgentWriter)
 
 ## 7. Create Test Files
 
 - [x] 7.1 Create tests/FsAgent.Tests/PromptTests.fs
-- [x] 7.2 Write acceptance tests for prompt DSL → Prompt → writePrompt pipeline
+- [x] 7.2 Write acceptance tests for prompt DSL → Prompt → renderPrompt pipeline
 - [x] 7.3 Write building tests for PromptBuilder operations
 - [x] 7.4 Write communication tests for prompt format validation
 - [x] 7.5 Create tests/FsAgent.Tests/TemplateTests.fs
@@ -97,10 +97,10 @@
 - [x] 8.5 Remove tests for agent builder role/objective/instructions operations from DslTests.fs
 - [x] 8.6 Add tests for agent builder prompt operation in DslTests.fs
 - [x] 8.7 Add tests for agent builder model/temperature/maxTokens/tools operations in DslTests.fs
-- [x] 8.8 Update tests/FsAgent.Tests/MarkdownWriterTests.fs imports to open FsAgent.Writers
-- [x] 8.9 Add backward compatibility tests for writeMarkdown in MarkdownWriterTests.fs
-- [x] 8.10 Add tests for Template/TemplateFile node rendering in MarkdownWriterTests.fs
-- [x] 8.11 Add tests for TemplateVariables in Options in MarkdownWriterTests.fs
+- [x] 8.8 Update tests/FsAgent.Tests/AgentWriterTests.fs imports to open FsAgent.Writers
+- [x] 8.9 Add backward compatibility tests for renderAgent in AgentWriterTests.fs
+- [x] 8.10 Add tests for Template/TemplateFile node rendering in AgentWriterTests.fs
+- [x] 8.11 Add tests for TemplateVariables in Options in AgentWriterTests.fs
 
 ## 9. Update Test Project Configuration
 

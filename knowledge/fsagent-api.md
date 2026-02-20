@@ -110,12 +110,14 @@ let agentExample =
 
 Writers are used to serialize the components to string format for saving to files or displaying.
 
+The current API uses the `AgentWriter` module:
+
 ```fsharp
-let writerExample = MarkdownWriter()
-let promptMarkdown = writerExample.WritePrompt(promptExample)
-let agentMarkdown = writerExample.WriteAgent(agentExample)
-let skillMarkdown = writerExample.WriteSkill(skillExample)
-let slashCommandMarkdown = writerExample.WriteSlashCommand(slashCommandExample)
+open FsAgent.Writers
+
+let promptMarkdown  = AgentWriter.renderPrompt promptExample (fun _ -> ())
+let agentMarkdown   = AgentWriter.renderAgent agentExample (fun _ -> ())
+let commandMarkdown = AgentWriter.renderCommand slashCommandExample (fun _ -> ())
 ```
 
 ## Readers
@@ -125,11 +127,12 @@ Readers allow you to read in an existing artifact from a string or file and pars
 This could be useful for loading existing prompts, agents, skills, or slash commands. You could then convert them to use with another agent harness.
 
 ```fsharp
-let readerExample = MarkdownReader()
+// Future API (not yet implemented)
+let readerExample = AgentReader()
 let openCodePrompt = readerExample.ReadPrompt("path/to/prompt.md", AgentFormats.OpenCode)
 
-let writer = MarkdownWriter()
-let copilotPromptMarkdown = writer.WritePrompt(openCodePrompt, AgentFormats.Copilot)
+let copilotPromptMarkdown = AgentWriter.renderPrompt openCodePrompt (fun opts ->
+    opts.OutputFormat <- Copilot)
 File.WriteAllText(ConfigPaths.CopilotPrompts.Repository(), copilotPromptMarkdown)
 ```
 

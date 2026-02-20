@@ -344,9 +344,9 @@ module AgentBuilder =
 
 Key changes:
 1. Add Template module with Fue integration
-2. Extend `writeMd` to handle Template/TemplateFile nodes (like Imported)
-3. Add `writePrompt` function (similar to writeMarkdown but no frontmatter output)
-4. Keep `writeMarkdown` as alias to `writeAgent`
+2. Extend `renderMd` to handle Template/TemplateFile nodes (like Imported)
+3. Add `renderPrompt` function (similar to renderAgent but no frontmatter output)
+4. Keep `renderAgent` as alias to `renderAgent`
 
 ```fsharp
 namespace FsAgent.Writers
@@ -385,7 +385,7 @@ module Template =
         with
         | ex -> $"[Template error: {ex.Message}]"
 
-module MarkdownWriter =
+module AgentWriter =
 
     type AgentFormat =
         | Opencode
@@ -433,12 +433,12 @@ module MarkdownWriter =
     // - formatFrontmatter
     // - loadImportContent
     // - nodeToObj (extend for Template/TemplateFile)
-    // - writeMd (extend for Template/TemplateFile nodes)
-    // - writeJson
-    // - writeYaml
+    // - renderMd (extend for Template/TemplateFile nodes)
+    // - renderJson
+    // - renderYaml
 
     // NEW: Write prompt (no frontmatter output)
-    let writePrompt (prompt: Prompt) (configure: Options -> unit) : string =
+    let renderPrompt (prompt: Prompt) (configure: Options -> unit) : string =
         let opts = defaultOptions()
         configure opts
 
@@ -456,23 +456,23 @@ module MarkdownWriter =
         let agentLike = { Frontmatter = Map.empty; Sections = prompt.Sections }
 
         match opts.OutputType with
-        | Md -> writeMd agentLike opts ctx
-        | Json -> writeJson agentLike opts ctx
-        | Yaml -> writeYaml agentLike opts ctx
+        | Md -> renderMd agentLike opts ctx
+        | Json -> renderJson agentLike opts ctx
+        | Yaml -> renderYaml agentLike opts ctx
 
-    // Keep existing writeMarkdown for agents (extend writeMd to handle Template nodes)
-    let writeAgent (agent: Agent) (configure: Options -> unit) : string =
+    // Keep existing renderAgent for agents (extend renderMd to handle Template nodes)
+    let renderAgent (agent: Agent) (configure: Options -> unit) : string =
         // [Keep existing implementation from Library.fs lines 320-348]
-        // Extend to handle Template/TemplateFile nodes in writeMd
+        // Extend to handle Template/TemplateFile nodes in renderMd
         ""
 
-    let writeMarkdown = writeAgent  // Backward compatibility alias
+    let renderAgent = renderAgent  // Backward compatibility alias
 ```
 
-**Note**: The `writeMd` function needs to be extended to handle Template/TemplateFile nodes:
+**Note**: The `renderMd` function needs to be extended to handle Template/TemplateFile nodes:
 
 ```fsharp
-// In writeMd recursive function
+// In renderMd recursive function
 match node with
 | Template text ->
     sb.Append(Template.renderInline text opts.TemplateVariables) |> ignore
@@ -507,7 +507,7 @@ module DSL =
 
 // Re-export modules
 module AST = AST.AST
-module MarkdownWriter = Writers.MarkdownWriter
+module AgentWriter = Writers.AgentWriter
 ```
 
 **Usage Examples:**
@@ -550,7 +550,7 @@ let a = agent { ... }
 ### 8. Create New Test Files
 
 **tests/FsAgent.Tests/PromptTests.fs**:
-- A: prompt DSL → Prompt → writePrompt pipeline tests
+- A: prompt DSL → Prompt → renderPrompt pipeline tests
 - B: PromptBuilder operations
 - C: Format validation
 
@@ -576,9 +576,9 @@ let a = agent { ... }
 - Remove tests for agent builder role/objective/instructions operations
 - Keep meta builder tests
 
-**tests/FsAgent.Tests/MarkdownWriterTests.fs**:
+**tests/FsAgent.Tests/AgentWriterTests.fs**:
 - Update imports: `open FsAgent.Writers`
-- Add tests for backward compatibility (writeMarkdown still works)
+- Add tests for backward compatibility (renderAgent still works)
 - Extend tests to verify Template/TemplateFile node handling
 
 ### 10. Update FsAgent.Tests.fsproj
@@ -589,7 +589,7 @@ let a = agent { ... }
     <Compile Include="PromptTests.fs" />
     <Compile Include="TemplateTests.fs" />
     <Compile Include="DslTests.fs" />
-    <Compile Include="MarkdownWriterTests.fs" />
+    <Compile Include="AgentWriterTests.fs" />
     <Compile Include="AgentPromptIntegrationTests.fs" />
     <Compile Include="Program.fs" />
 </ItemGroup>
@@ -639,7 +639,7 @@ let reviewPrompt = prompt {
     role "You are a code reviewer"
 }
 
-let output = MarkdownWriter.writePrompt reviewPrompt (fun opts ->
+let output = AgentWriter.renderPrompt reviewPrompt (fun opts ->
     opts.TemplateVariables <- Map.ofList [
         "username", "Alice" :> obj
         "filename", "Library.fs" :> obj
@@ -677,4 +677,4 @@ After implementation:
 - `/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/` - Create PromptTests.fs, TemplateTests.fs, AgentPromptIntegrationTests.fs
 - `/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/AstTests.fs` - Remove prompt-related tests
 - `/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/DslTests.fs` - Update for new structure
-- `/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/MarkdownWriterTests.fs` - Extend for templates
+- `/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/AgentWriterTests.fs` - Extend for templates

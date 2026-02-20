@@ -72,18 +72,18 @@ The system SHALL catch file not found errors and return error message in output.
 - **THEN** system SHALL return "[Template error: Parse error]"
 
 ### Requirement: Rendering at write time
-The system SHALL render templates when writePrompt or writeAgent is called, not when template nodes are created.
+The system SHALL render templates when renderPrompt or renderAgent is called, not when template nodes are created.
 
 #### Scenario: Template not rendered in builder
 - **WHEN** user creates prompt with template operation
 - **THEN** system SHALL store Template node without rendering
 
 #### Scenario: Template rendered in writer
-- **WHEN** writePrompt is called with TemplateVariables in options
+- **WHEN** renderPrompt is called with TemplateVariables in options
 - **THEN** system SHALL render all Template and TemplateFile nodes using provided variables
 
 ### Requirement: TemplateVariables in Options
-The system SHALL add TemplateVariables field (Map<string, obj>) to MarkdownWriter Options type with default value of empty map.
+The system SHALL add TemplateVariables field (Map<string, obj>) to AgentWriter Options type with default value of empty map.
 
 #### Scenario: Default template variables
 - **WHEN** user creates default options

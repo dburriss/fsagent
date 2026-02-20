@@ -93,7 +93,7 @@ module Template =
         with
         | ex -> $"[Template error: {ex.Message}]"
 
-module MarkdownWriter =
+module AgentWriter =
 
     // Re-export AgentHarness cases for backward compatibility
     let Opencode = AgentHarness.Opencode
@@ -312,7 +312,7 @@ module MarkdownWriter =
                 |> String.concat "\n  - "
                 |> sprintf "\n  - %s"
 
-    let private writeMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
+    let private renderMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
 
         // Frontmatter
@@ -472,14 +472,14 @@ module MarkdownWriter =
 
         sb.ToString()
 
-    let private writeJson (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
+    let private renderJson (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let data = dict [
             "frontmatter", agent.Frontmatter :> obj
             "sections", (agent.Sections |> List.map (fun n -> nodeToObj n opts.TemplateVariables)) :> obj
         ]
         JsonSerializer.Serialize(data, JsonSerializerOptions(WriteIndented = true))
 
-    let private writeYaml (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
+    let private renderYaml (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let serializer = Serializer()
         let data = dict [
             "frontmatter", agent.Frontmatter :> obj
@@ -487,7 +487,7 @@ module MarkdownWriter =
         ]
         serializer.Serialize(data)
 
-    let writeAgent (agent: Agent) (configure: Options -> unit) : string =
+    let renderAgent (agent: Agent) (configure: Options -> unit) : string =
         let opts = defaultOptions()
         configure opts
 
@@ -513,11 +513,11 @@ module MarkdownWriter =
                 AgentDescription = agentDescription
             }
             match opts.OutputType with
-            | Md -> writeMd agent opts ctx
-            | Json -> writeJson agent opts ctx
-            | Yaml -> writeYaml agent opts ctx
+            | Md -> renderMd agent opts ctx
+            | Json -> renderJson agent opts ctx
+            | Yaml -> renderYaml agent opts ctx
 
-    let writePrompt (prompt: Prompt) (configure: Options -> unit) : string =
+    let renderPrompt (prompt: Prompt) (configure: Options -> unit) : string =
         let opts = defaultOptions()
         configure opts
 
@@ -533,14 +533,11 @@ module MarkdownWriter =
         }
 
         match opts.OutputType with
-        | Md -> writeMd agentLike opts ctx
-        | Json -> writeJson agentLike opts ctx
-        | Yaml -> writeYaml agentLike opts ctx
+        | Md -> renderMd agentLike opts ctx
+        | Json -> renderJson agentLike opts ctx
+        | Yaml -> renderYaml agentLike opts ctx
 
-    // Backward compatibility alias
-    let writeMarkdown = writeAgent
-
-    let writeCommand (cmd: SlashCommand) (configure: Options -> unit) : string =
+    let renderCommand (cmd: SlashCommand) (configure: Options -> unit) : string =
         let opts = defaultOptions()
         configure opts
 
@@ -558,6 +555,6 @@ module MarkdownWriter =
         }
 
         match opts.OutputType with
-        | Md -> writeMd agentLike opts ctx
-        | Json -> writeJson agentLike opts ctx
-        | Yaml -> writeYaml agentLike opts ctx
+        | Md -> renderMd agentLike opts ctx
+        | Json -> renderJson agentLike opts ctx
+        | Yaml -> renderYaml agentLike opts ctx

@@ -59,7 +59,7 @@ type Options = {
 ### Usage
 
 ```fsharp
-writeMarkdown agent (fun opts ->
+renderAgent agent (fun opts ->
     opts.OutputFormat <- Opencode
     opts.AgentEnricher <- Some myEnricher
 )
@@ -198,7 +198,7 @@ let myEnricher =
         nameBasedEnricher
     ]
 
-writeMarkdown agent (fun opts ->
+renderAgent agent (fun opts ->
     opts.OutputFormat <- Opencode
     opts.AgentEnricher <- Some myEnricher
 )
@@ -285,7 +285,7 @@ AgentEnricher handles all cases. Don't create ToolEnricher, SectionEnricher, etc
 ```
 src/FsAgent/
   ├── Agent.fs         - Agent type, AgentBuilder
-  ├── Writers.fs       - MarkdownWriter with AgentEnricher support
+  ├── Writers.fs       - AgentWriter with AgentEnricher support
   └── Enrichers.fs     - AgentEnricher module with helpers (NEW)
 ```
 
@@ -331,7 +331,7 @@ let ``compose applies enrichers in order`` () =
 
 ```fsharp
 [<Fact>]
-let ``writeMarkdown applies enricher before serialization`` () =
+let ``renderAgent applies enricher before serialization`` () =
     let agent = agent {
         name "test-agent"
         tools [Write]
@@ -340,7 +340,7 @@ let ``writeMarkdown applies enricher before serialization`` () =
     let enricher = AgentEnricher.modifyTools (Map.add "custom" (box true))
 
     let output =
-        MarkdownWriter.writeMarkdown agent (fun opts ->
+        AgentWriter.renderAgent agent (fun opts ->
             opts.AgentEnricher <- Some enricher
         )
 
@@ -351,7 +351,7 @@ let ``writeMarkdown applies enricher before serialization`` () =
 
 1. Add `AgentEnricher` type and helpers
 2. Update `Options` to include `AgentEnricher`
-3. Update `writeMarkdown` to apply enricher before serialization
+3. Update `renderAgent` to apply enricher before serialization
 4. Add tests for helpers and integration
 5. Document usage patterns in README/examples
 6. Optional: Deprecate any existing specialized enrichers (if they exist)
@@ -364,7 +364,7 @@ None - design decisions confirmed.
 
 1. Implement `AgentEnricher` type in `Writers.fs`
 2. Implement helper functions in `Enrichers.fs` or `Agent.fs`
-3. Update `writeMarkdown` to apply enricher
+3. Update `renderAgent` to apply enricher
 4. Add unit tests for helpers
 5. Add integration tests
 6. Update documentation with examples

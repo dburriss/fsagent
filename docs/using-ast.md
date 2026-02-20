@@ -2,7 +2,7 @@
 
 Provides an immutable AST for representing agent files, with constructors for common sections like role, objective, instructions, etc.
 
-## Markdown Writer
+## Agent Writer
 
 The library includes a Markdown writer to convert the Agent AST to Markdown strings with configurable options.
 
@@ -19,5 +19,5 @@ let agent = {
     ]
 }
 
-let markdown = MarkdownWriter.writeMarkdown agent id
+let markdown = AgentWriter.renderAgent agent id
 ```

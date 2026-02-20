@@ -212,7 +212,7 @@ All breaking changes function as designed:
 - src/FsAgent/Writers.fs (AgentHarness rename, toolToString, formatToolsFrontmatter)
 
 **Tests**:
-- tests/FsAgent.Tests/MarkdownWriterTests.fs (14 tests updated, 5 tests added)
+- tests/FsAgent.Tests/AgentWriterTests.fs (14 tests updated, 5 tests added)
 - tests/FsAgent.Tests/DslTests.fs (1 test updated)
 
 **Documentation**:

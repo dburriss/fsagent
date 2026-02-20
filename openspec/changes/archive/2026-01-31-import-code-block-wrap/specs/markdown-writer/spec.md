@@ -4,7 +4,7 @@
 The system SHALL provide a Markdown writer that converts the immutable Agent AST to a Markdown string with configurable options for heading renaming/formatting. Output MUST support multiple agent formats.
 
 #### Scenario: Default write succeeds with imports resolved
-- **WHEN** `writeMarkdown(agent, configure)` is called with no option changes
+- **WHEN** `renderAgent(agent, configure)` is called with no option changes
 - **THEN** the writer returns a Markdown string
 - **AND** headings use ATX style (`#`, `##`, ...)
 - **AND** frontmatter is emitted at the top of the document by default according to the selected `outputFormat`
@@ -48,7 +48,7 @@ The system SHALL provide a Markdown writer that converts the immutable Agent AST
 The system SHALL expose a configuration API that uses a function receiving a mutable options object to set writer behavior.
 
 #### Scenario: Sensible defaults
-- **WHEN** `writeMarkdown(agent, configure)` is called without mutations
+- **WHEN** `renderAgent(agent, configure)` is called without mutations
 - **THEN** defaults apply: `outputFormat=Opencode`, ATX headings, `DisableCodeBlockWrapping=false`, frontmatter included, no renames, default heading formatter (identity), no footer, deterministic order
 
 ## ADDED Requirements

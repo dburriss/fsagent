@@ -80,7 +80,7 @@ let ``Agent with prompt writes complete markdown`` () =
         description "An expert advisory agent"
         prompt p
     }
-    let result = MarkdownWriter.writeAgent a (fun _ -> ())
+    let result = AgentWriter.renderAgent a (fun _ -> ())
     Assert.Contains("name: AdvisorAgent", result)
     Assert.Contains("# role", result)
     Assert.Contains("# objective", result)
@@ -94,7 +94,7 @@ let ``Prompt with templates integrated into agent`` () =
     let a = agent {
         prompt p
     }
-    let result = MarkdownWriter.writeAgent a (fun opts ->
+    let result = AgentWriter.renderAgent a (fun opts ->
         opts.TemplateVariables <- Map.ofList [
             ("instructions", "check for bugs" :> obj)
         ])
@@ -120,7 +120,7 @@ let ``Agent can combine multiple prompts with different concerns`` () =
         prompt outputPrompt
     }
     Assert.Equal(4, a.Sections.Length)
-    let result = MarkdownWriter.writeAgent a (fun _ -> ())
+    let result = AgentWriter.renderAgent a (fun _ -> ())
     Assert.Contains("# role", result)
     Assert.Contains("# objective", result)
     Assert.Contains("# instructions", result)

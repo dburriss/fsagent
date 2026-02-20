@@ -17,4 +17,4 @@ module DSL =
 
 // Re-export modules
 module AST = FsAgent.AST.AST
-module MarkdownWriter = FsAgent.Writers.MarkdownWriter
+module AgentWriter = FsAgent.Writers.AgentWriter

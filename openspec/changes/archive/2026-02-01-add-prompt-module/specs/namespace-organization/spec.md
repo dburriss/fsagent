@@ -22,11 +22,11 @@ The system SHALL organize Agent type and Agent module in FsAgent.Agents namespac
 - **THEN** system SHALL make Agent type and Agent module available
 
 ### Requirement: FsAgent.Writers namespace
-The system SHALL organize MarkdownWriter and Template modules in FsAgent.Writers namespace.
+The system SHALL organize AgentWriter and Template modules in FsAgent.Writers namespace.
 
 #### Scenario: Access Writer modules
 - **WHEN** user opens FsAgent.Writers
-- **THEN** system SHALL make MarkdownWriter and Template modules available
+- **THEN** system SHALL make AgentWriter and Template modules available
 
 ### Requirement: AutoOpen for PromptBuilder
 The system SHALL mark PromptBuilder module with AutoOpen attribute in FsAgent.Prompts namespace.
@@ -64,11 +64,11 @@ The system SHALL create Agent.fs file containing Agent type, Agent module, MetaB
 - **THEN** Agent.fs SHALL define Agent type, Agent module, MetaBuilder, and AgentBuilder CE
 
 ### Requirement: Writers.fs file
-The system SHALL create Writers.fs file containing Template module and MarkdownWriter module.
+The system SHALL create Writers.fs file containing Template module and AgentWriter module.
 
 #### Scenario: Writers.fs contains serialization logic
 - **WHEN** project is compiled
-- **THEN** Writers.fs SHALL define Template module for rendering and MarkdownWriter module for serialization
+- **THEN** Writers.fs SHALL define Template module for rendering and AgentWriter module for serialization
 
 ### Requirement: Library.fs backward compatibility
 The system SHALL maintain Library.fs as re-export layer for backward compatibility.

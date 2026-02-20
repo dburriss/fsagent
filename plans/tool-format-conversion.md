@@ -207,10 +207,10 @@ let defaultOptions () = {
 
 ### Phase 2: Update Frontmatter Serialization
 
-Modify the frontmatter serialization in `writeMd` to handle tools specially:
+Modify the frontmatter serialization in `renderMd` to handle tools specially:
 
 ```fsharp
-// In writeMd, replace existing tools serialization with:
+// In renderMd, replace existing tools serialization with:
 let formatToolsFrontmatter (key: string) (value: obj) (opts: Options) =
     if key = "tools" then
         // Determine target format
@@ -266,7 +266,7 @@ let formatToolsFrontmatter (key: string) (value: obj) (opts: Options) =
    - Add `ToolFormat` type (ToolsList, ToolsMap, Auto)
    - Add `ToolFormat` field to `Options` type
    - Update `defaultOptions` to include `ToolFormat = Auto`
-   - Add special handling for `tools` frontmatter key in `writeMd`
+   - Add special handling for `tools` frontmatter key in `renderMd`
    - Implement conversion logic between list and map formats
 
 ### Optional: DSL Enhancement
@@ -277,7 +277,7 @@ let formatToolsFrontmatter (key: string) (value: obj) (opts: Options) =
 
 ### Testing
 
-3. **`/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/MarkdownWriterTests.fs`**
+3. **`/Users/devon.burriss/Documents/GitHub/fsagent/main/tests/FsAgent.Tests/AgentWriterTests.fs`**
    - Test list → list conversion (existing, verify)
    - Test list → map conversion
    - Test map → list conversion (filter enabled only)
@@ -303,7 +303,7 @@ let formatToolsFrontmatter (key: string) (value: obj) (opts: Options) =
 1. Extract current tools serialization code
 2. Add format detection logic
 3. Implement 4 conversion paths (list→list, list→map, map→list, map→map)
-4. Integrate into `writeMd` frontmatter serialization
+4. Integrate into `renderMd` frontmatter serialization
 
 ### Step 3: Test Thoroughly
 1. Test with list input, list output (Copilot/Claude)
@@ -326,13 +326,13 @@ After implementation, verify all conversion paths:
 let agent1 = agent {
     tools ["grep"; "bash"]
 }
-let output1 = MarkdownWriter.writeAgent agent1 (fun opts ->
+let output1 = AgentWriter.renderAgent agent1 (fun opts ->
     opts.OutputFormat <- Copilot
     opts.ToolFormat <- Auto)
 // Should contain: tools:\n  - grep\n  - bash
 
 // Test 2: List input → Map output (OpenCode map mode)
-let output2 = MarkdownWriter.writeAgent agent1 (fun opts ->
+let output2 = AgentWriter.renderAgent agent1 (fun opts ->
     opts.OutputFormat <- Opencode
     opts.ToolFormat <- ToolsMap)
 // Should contain: tools:\n  grep: true\n  bash: true
@@ -347,23 +347,23 @@ let agent3 = agent {
         ])
     })
 }
-let output3 = MarkdownWriter.writeAgent agent3 (fun opts ->
+let output3 = AgentWriter.renderAgent agent3 (fun opts ->
     opts.ToolFormat <- ToolsList)
 // Should contain: tools:\n  - edit\n  - read
 // (bash excluded because it's false)
 
 // Test 4: Map input → Map output (pass through)
-let output4 = MarkdownWriter.writeAgent agent3 (fun opts ->
+let output4 = AgentWriter.renderAgent agent3 (fun opts ->
     opts.ToolFormat <- ToolsMap)
 // Should contain: tools:\n  bash: false\n  edit: true\n  read: true
 
 // Test 5: Auto format selection
-let output5 = MarkdownWriter.writeAgent agent1 (fun opts ->
+let output5 = AgentWriter.renderAgent agent1 (fun opts ->
     opts.OutputFormat <- Copilot
     opts.ToolFormat <- Auto)  // Should choose ToolsList for Copilot
 Assert.Contains("  - grep", output5)
 
-let output6 = MarkdownWriter.writeAgent agent1 (fun opts ->
+let output6 = AgentWriter.renderAgent agent1 (fun opts ->
     opts.OutputFormat <- Opencode
     opts.ToolFormat <- Auto)  // Should choose ToolsList for Opencode (default)
 Assert.Contains("  - grep", output6)

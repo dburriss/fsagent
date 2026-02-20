@@ -121,7 +121,7 @@ Tool values SHALL remain as Tool types until serialization time. String conversi
 - **THEN** frontmatter SHALL contain Tool list objects, not string maps
 
 #### Scenario: String conversion timing
-- **WHEN** writeMarkdown is called
+- **WHEN** renderAgent is called
 - **THEN** Tool-to-string conversion SHALL occur during serialization, not before
 
 #### Scenario: Harness context available

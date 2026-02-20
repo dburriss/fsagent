@@ -58,14 +58,14 @@ argument.
 
 ## Architecture
 
-Templates are rendered at write time in `writeMd` (`Writers.fs` lines 382–387),
+Templates are rendered at write time in `renderMd` (`Writers.fs` lines 382–387),
 where `opts.OutputFormat` (the `AgentHarness`) is already in scope. This is the
 only place that needs to change.
 
 ```
 DSL: template "Use {{{tool Bash}}}"
         ↓  (stored as Template node in AST — no change)
-writeMd: Template text branch
+renderMd: Template text branch
         ↓  (currently: Template.renderInline text opts.TemplateVariables)
         ↓  (NEW:       Template.renderWithHarness text opts.TemplateVariables harness toolToString)
 Template.renderWithHarness: injects `tool` Fue function into data context
@@ -77,8 +77,8 @@ Rendered string: "Use bash"
 
 | File | Change |
 |------|--------|
-| `src/FsAgent/Writers.fs` | 1. Add `toolNameMap` (DU case name string → `Tool` value); 2. Add `renderWithHarness` and `renderFileWithHarness` to `Template` module; 3. Update `writeMd` `Template`/`TemplateFile` branches to call harness-aware render |
-| `tests/FsAgent.Tests/MarkdownWriterTests.fs` | Acceptance tests (see below) |
+| `src/FsAgent/Writers.fs` | 1. Add `toolNameMap` (DU case name string → `Tool` value); 2. Add `renderWithHarness` and `renderFileWithHarness` to `Template` module; 3. Update `renderMd` `Template`/`TemplateFile` branches to call harness-aware render |
+| `tests/FsAgent.Tests/AgentWriterTests.fs` | Acceptance tests (see below) |
 | `CHANGELOG.md` | Entry under Unreleased |
 
 `toolToString` is already defined in the same module — no visibility change needed.
@@ -87,7 +87,7 @@ Rendered string: "Use bash"
 
 ### Step 1: Tool name lookup map
 
-Add inside `MarkdownWriter` module, before `writeMd`, after `toolToString`:
+Add inside `AgentWriter` module, before `renderMd`, after `toolToString`:
 
 ```fsharp
 let private toolNameMap : Map<string, Tool> =
@@ -116,7 +116,7 @@ pass-through branch below.
 ### Step 2: Add `renderWithHarness` and `renderFileWithHarness` to `Template` module
 
 These sit alongside the existing `renderInline` / `renderFile` functions. Because
-`toolToString` is defined later in `MarkdownWriter`, it is passed in as a parameter
+`toolToString` is defined later in `AgentWriter`, it is passed in as a parameter
 to avoid a forward-dependency within the same file.
 
 ```fsharp
@@ -170,7 +170,7 @@ Note: `AgentHarness` and `Tool` are referenced here but defined later in the sam
 file. `AgentHarness` will be moved above the `Template` module (see Forward-Dependency
 Resolution below) to make these types available.
 
-### Step 3: Update `writeMd` Template/TemplateFile branches
+### Step 3: Update `renderMd` Template/TemplateFile branches
 
 ```fsharp
 // Before
@@ -190,11 +190,11 @@ Resolution below) to make these types available.
     sb.AppendLine(rendered) |> ignore
 ```
 
-`ctx.Format` is the `AgentHarness` already in scope in `writeMd`.
+`ctx.Format` is the `AgentHarness` already in scope in `renderMd`.
 
 ## Tests (A — Acceptance)
 
-All tests go in `MarkdownWriterTests.fs` and exercise the full DSL → write pipeline.
+All tests go in `AgentWriterTests.fs` and exercise the full DSL → write pipeline.
 
 ```fsharp
 // 1. Bash resolves correctly per harness
@@ -238,9 +238,9 @@ let ``renderInline without harness is unaffected`` ()
 
 ## Forward-Dependency Resolution
 
-`Template` module is compiled before `MarkdownWriter` in the same file. `AgentHarness`
+`Template` module is compiled before `AgentWriter` in the same file. `AgentHarness`
 and `Tool` types are needed by `renderWithHarness`.
 
 **Decision**: Move the `AgentHarness` type definition above the `Template` module.
-It has no dependencies on `Template` or anything else in `MarkdownWriter`, so this
+It has no dependencies on `Template` or anything else in `AgentWriter`, so this
 is a safe, clean reorder with no cascading changes.

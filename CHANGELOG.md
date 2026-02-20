@@ -2,20 +2,27 @@
 
 ## [Unreleased]
 
+### Changed (Breaking)
+- **`module MarkdownWriter` renamed to `module AgentWriter`** in `FsAgent.Writers` namespace
+- **`writeAgent` renamed to `renderAgent`** (public)
+- **`writePrompt` renamed to `renderPrompt`** (public)
+- **`writeCommand` renamed to `renderCommand`** (public)
+- **`writeMarkdown` removed** — use `renderAgent` directly
+- Private helpers renamed: `writeMd` → `renderMd`, `writeJson` → `renderJson`, `writeYaml` → `renderYaml`
+
 ### Added
 - **SlashCommand DSL**: `SlashCommand` record type (`Name`, `Description`, `Sections`) in `FsAgent.Commands` namespace
 - **`command { }` CE builder**: Computation expression with `name`, `description`, `role`, `objective`, `instructions`, `context`, `output`, `section`, `import`, `importRaw`, `template`, `templateFile`, `examples`, and `prompt` operations
-- **`MarkdownWriter.writeCommand`**: Renders a `SlashCommand` to Markdown with `description`-only frontmatter, reusing existing section/template/import rendering
+- **`AgentWriter.renderCommand`**: Renders a `SlashCommand` to Markdown with `description`-only frontmatter, reusing existing section/template/import rendering
 - `type SlashCommand` alias and `let command` CE re-exported from `FsAgent` namespace for `open FsAgent` access
-- feat: add SlashCommand DSL type, command CE builder, and MarkdownWriter.writeCommand
 
 ### Added
-- **Tool name injection in templates**: `{{{tool <Name>}}}` syntax in template strings resolves to the harness-correct tool name at write time (e.g., `{{{tool Bash}}}` → `"bash"` for Opencode, `"Bash"` for ClaudeCode)
+- **Tool name injection in templates**: `{{{tool <Name>}}}` syntax in template strings resolves to the harness-correct tool name at write time (e.g., `{{{tool Bash}}}` → `"bash"` for Opencode, `"ClaudeCode"` for ClaudeCode)
 - `Template.renderWithHarness` and `Template.renderFileWithHarness` functions for harness-aware template rendering
 - `AgentHarness` type moved above `Template` module in `Writers.fs` to allow use in template function signatures
 
 ### Changed
-- `writeMd` `Template` and `TemplateFile` branches now use harness-aware render functions; existing variable substitution behaviour is unchanged
+- `renderMd` `Template` and `TemplateFile` branches now use harness-aware render functions; existing variable substitution behaviour is unchanged
 
 ## [0.3.1] - 2026-02-04
 
@@ -52,7 +59,7 @@
 
 ### Removed
 - **BREAKING**: `toolMap` operation removed from agent builder - use `tools` + `disallowedTools` instead
-- **BREAKING**: `ToolFormat` option removed from `MarkdownWriter.Options` - tools are now always output as a list (equivalent to the old `ToolsList` format). The `ToolFormat` option (`ToolsList`, `ToolsMap`, `Auto`) has been removed to simplify the API. Since `Auto` defaulted to `ToolsList` for all harnesses, the format option was redundant. Disabled tools are simply omitted from the output list.
+- **BREAKING**: `ToolFormat` option removed from `AgentWriter.Options` - tools are now always output as a list (equivalent to the old `ToolsList` format). The `ToolFormat` option (`ToolsList`, `ToolsMap`, `Auto`) has been removed to simplify the API. Since `Auto` defaulted to `ToolsList` for all harnesses, the format option was redundant. Disabled tools are simply omitted from the output list.
 
 ### Migration
 See [MIGRATION.md](MIGRATION.md) for complete migration guide from v1.x to v2.0.
@@ -63,7 +70,7 @@ See [MIGRATION.md](MIGRATION.md) for complete migration guide from v1.x to v2.0.
 open FsAgent.AST
 tools ["write" :> obj; "bash" :> obj]
 disallowedTools ["bash"]
-opts.OutputFormat <- MarkdownWriter.AgentFormat.Opencode
+opts.OutputFormat <- AgentWriter.AgentFormat.Opencode
 
 // After (v2.0)
 open FsAgent.Tools  // Tool type now in Tools namespace
@@ -80,7 +87,7 @@ opts.OutputFormat <- Opencode
 - **Prompt as first-class type**: New `Prompt` type with `prompt { ... }` computation expression builder for creating reusable prompts
 - **Template support**: Added `Template` and `TemplateFile` node cases with Fue-based variable substitution (`{{{variable}}}` syntax)
 - **Namespace organization**: Domain-focused namespaces (`FsAgent.AST`, `FsAgent.Prompts`, `FsAgent.Agents`, `FsAgent.Writers`)
-- **New writer functions**: `writePrompt` for rendering prompts without frontmatter blocks, `writeAgent` as primary agent writer
+- **New writer functions**: `renderPrompt` for rendering prompts without frontmatter blocks, `renderAgent` as primary agent writer
 - **Template operations**: `template` and `templateFile` operations in prompt builder for dynamic content generation
 - **Prompt metadata**: Prompt builder supports `name`, `description`, `author`, `version`, `license` metadata operations
 - **Agent metadata operations**: Agent builder now supports `model`, `temperature`, `maxTokens`, `tools` operations
@@ -94,7 +101,7 @@ opts.OutputFormat <- Opencode
 - **BREAKING**: `import` now automatically wraps content in fenced code blocks (` ```json `, ` ```yaml `, ` ```toon `). Use `importRaw` for raw embedding
 - **BREAKING**: `ImportInclusion` type removed entirely. Imports are always resolved—code block behavior is controlled by the DSL operation (`import` vs `importRaw`), not writer options
 - Prompt constructors (`role`, `objective`, `instructions`, `context`, `output`, `example`, `examples`) moved from AST module to Prompt module
-- `writeMarkdown` is now an alias to `writeAgent` for backward compatibility
+- `writeMarkdown` alias removed — was previously an alias to `writeAgent`
 - Library.fs now serves as backward compatibility layer with re-exports
 - Target netstandard2.0 for broader compatibility
 

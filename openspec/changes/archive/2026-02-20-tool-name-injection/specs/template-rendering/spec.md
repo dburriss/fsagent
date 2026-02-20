@@ -8,14 +8,14 @@ The system SHALL provide a Template module in FsAgent.Writers namespace with ren
 - **THEN** system SHALL make Template.renderInline, Template.renderFile, Template.renderWithHarness, and Template.renderFileWithHarness available
 
 ### Requirement: Rendering at write time
-The system SHALL render templates when writePrompt or writeAgent is called, not when template nodes are created. When a harness is available, the system SHALL use harness-aware rendering for Template and TemplateFile nodes.
+The system SHALL render templates when renderPrompt or renderAgent is called, not when template nodes are created. When a harness is available, the system SHALL use harness-aware rendering for Template and TemplateFile nodes.
 
 #### Scenario: Template not rendered in builder
 - **WHEN** user creates prompt with template operation
 - **THEN** system SHALL store Template node without rendering
 
 #### Scenario: Template rendered with harness in writer
-- **WHEN** writePrompt is called with a harness set in the format context and TemplateVariables in options
+- **WHEN** renderPrompt is called with a harness set in the format context and TemplateVariables in options
 - **THEN** system SHALL render all Template and TemplateFile nodes using renderWithHarness/renderFileWithHarness with the current harness
 
 ## ADDED Requirements

@@ -1,7 +1,7 @@
 ## 1. Preparation
 
 - [x] 1.1 Run `dotnet build` and `dotnet test` to confirm baseline passes
-- [x] 1.2 Review `src/FsAgent/Prompt.fs` and `src/FsAgent/Writers.fs` to confirm `Prompt.role/objective/instructions/context/output/examples` signatures and `writeMd` internal shape
+- [x] 1.2 Review `src/FsAgent/Prompt.fs` and `src/FsAgent/Writers.fs` to confirm `Prompt.role/objective/instructions/context/output/examples` signatures and `renderMd` internal shape
 
 ## 2. Core Type and Builder
 
@@ -24,10 +24,10 @@
 
 ## 4. Writer Extension
 
-- [x] 4.1 Add `writeCommand (cmd: SlashCommand) (configure: Options -> unit) : string` to `MarkdownWriter` module in `src/FsAgent/Writers.fs`
+- [x] 4.1 Add `renderCommand (cmd: SlashCommand) (configure: Options -> unit) : string` to `AgentWriter` module in `src/FsAgent/Writers.fs`
 - [x] 4.2 Construct synthetic `Agent` with `Frontmatter = Map.ofList ["description", AST.fmStr cmd.Description]` and `Sections = cmd.Sections`
 - [x] 4.3 Construct `WriterContext` with `AgentName = Some cmd.Name`, `AgentDescription = Some cmd.Description`
-- [x] 4.4 Dispatch to `writeMd` / `writeJson` / `writeYaml` based on `opts.OutputType`
+- [x] 4.4 Dispatch to `renderMd` / `writeJson` / `writeYaml` based on `opts.OutputType`
 
 ## 5. Library Re-exports
 
@@ -48,6 +48,6 @@
 
 ## 7. Changelog and Verification
 
-- [x] 7.1 Add entry under `[Unreleased]` in `CHANGELOG.md`: `feat: add SlashCommand DSL type, command CE builder, and MarkdownWriter.writeCommand`
+- [x] 7.1 Add entry under `[Unreleased]` in `CHANGELOG.md`: `feat: add SlashCommand DSL type, command CE builder, and AgentWriter.renderCommand`
 - [x] 7.2 Run `dotnet build` — confirm zero errors
 - [x] 7.3 Run `dotnet test` — confirm all tests pass including new CommandTests

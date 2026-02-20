@@ -3,7 +3,7 @@
 FsAgent is currently a single-file F# library (Library.fs, ~350 lines) that provides an immutable AST and DSL for building agent configuration files. The `Agent` type contains `Frontmatter: Map<string, obj>` and `Sections: Node list`, where sections like role, objective, and instructions are created through the `AgentBuilder` computation expression. This design conflates prompt content with agent configuration, preventing prompt reuse across multiple agents.
 
 The current architecture has:
-- All code in a single namespace (`FsAgent`) with modules: AST, DSL, MarkdownWriter
+- All code in a single namespace (`FsAgent`) with modules: AST, DSL, AgentWriter
 - Agent builder includes operations: `role`, `objective`, `instructions`, `context`, `output`, `examples`
 - Node types: Text, Section, List, Imported (for data file imports)
 - Writers support Opencode/Copilot formats with configurable options
@@ -72,7 +72,7 @@ This refactoring introduces a first-class Prompt type to enable composition and 
 
 ### Decision 5: Template Rendering at Write Time
 
-**Choice**: Templates render in the Writer when `writePrompt` or `writeAgent` is called, using `TemplateVariables` from Options.
+**Choice**: Templates render in the Writer when `renderPrompt` or `renderAgent` is called, using `TemplateVariables` from Options.
 
 **Alternatives Considered**:
 - Render in builder when template is added → Rejected: Variables not known at build time, makes AST impure
@@ -93,7 +93,7 @@ This refactoring introduces a first-class Prompt type to enable composition and 
 
 ### Decision 7: Prompt Writer Behavior
 
-**Choice**: `writePrompt` doesn't output frontmatter YAML blocks; frontmatter is stored internally but not serialized.
+**Choice**: `renderPrompt` doesn't output frontmatter YAML blocks; frontmatter is stored internally but not serialized.
 
 **Alternatives Considered**:
 - Output frontmatter like agents → Rejected: Prompts are content, not configuration files

@@ -33,7 +33,7 @@ Current tool configuration is stringly-typed with no compile-time safety or IDE 
 - `src/FsAgent/Library.fs` - Re-export Tool type
 - `src/FsAgent/Agent.fs` - Update tools/disallowedTools operations, remove toolMap
 - `src/FsAgent/Writers.fs` - Rename AgentFormat → AgentHarness, add ClaudeCode, add toolToString mapping, update formatToolsFrontmatter
-- `tests/FsAgent.Tests/MarkdownWriterTests.fs` - Update ~14 tests, remove 1 test
+- `tests/FsAgent.Tests/AgentWriterTests.fs` - Update ~14 tests, remove 1 test
 
 **Breaking Changes**:
 - All external code using `AgentFormat` must update to `AgentHarness`

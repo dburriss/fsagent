@@ -49,7 +49,7 @@ agent {
 │    - Access to full agent context                       │
 │                                                         │
 │  ┌──────────────────────────────────────────┐          │
-│  │ writeMarkdown agent (fun opts ->         │          │
+│  │ renderAgent agent (fun opts ->         │          │
 │  │     opts.ToolEnricher <- enricherFn      │          │
 │  │ )                                        │          │
 │  └──────────────────────────────────────────┘          │
@@ -157,7 +157,7 @@ let databaseEnricher: ToolEnricher =
             |> Map.add "mcp_db_execute" (box true)
         | _ -> toolMap
 
-writeMarkdown myAgent (fun opts ->
+renderAgent myAgent (fun opts ->
     opts.ToolEnricher <- Some databaseEnricher
 )
 ```
@@ -210,7 +210,7 @@ let myEnricher =
         metadataEnricher
     ]
 
-writeMarkdown agent (fun opts ->
+renderAgent agent (fun opts ->
     opts.ToolEnricher <- Some myEnricher
 )
 ```
@@ -236,7 +236,7 @@ writeMarkdown agent (fun opts ->
 │                         │                            │
 │  2. Writer Configuration (Library User)              │
 │     ┌──────────────────────────────────────┐        │
-│     │ writeMarkdown agent (fun opts ->     │        │
+│     │ renderAgent agent (fun opts ->     │        │
 │     │     opts.OutputFormat <- Opencode    │        │
 │     │     opts.ToolEnricher <- Some (      │        │
 │     │         fun harness agent toolMap -> │        │

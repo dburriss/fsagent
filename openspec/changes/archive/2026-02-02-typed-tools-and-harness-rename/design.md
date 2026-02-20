@@ -59,7 +59,7 @@ agent {
 // Stores: frontmatter["tools"] = [Write; Bash] :> obj
 
 // Writer (platform-specific)
-writeMarkdown agent (fun opts -> opts.OutputFormat <- ClaudeCode)
+renderAgent agent (fun opts -> opts.OutputFormat <- ClaudeCode)
 // Converts: Write → "Write", Bash → "Bash" for ClaudeCode
 ```
 
@@ -322,6 +322,6 @@ If critical issues discovered post-release:
 - `src/FsAgent/Library.fs` - Re-export Tool
 - `src/FsAgent/Agent.fs` - Update tools/disallowedTools, remove toolMap
 - `src/FsAgent/Writers.fs` - Rename AgentFormat → AgentHarness, add ClaudeCode, toolToString, update formatToolsFrontmatter
-- `tests/FsAgent.Tests/MarkdownWriterTests.fs` - Update ~14 tests, remove 1
+- `tests/FsAgent.Tests/AgentWriterTests.fs` - Update ~14 tests, remove 1
 
 **No New Files Required:** All changes are modifications to existing files.

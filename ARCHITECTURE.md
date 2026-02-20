@@ -38,10 +38,11 @@ The system builds agent definitions through a high-level F# DSL or directly thro
 +---------------------------------------------------------------+
 | 3. Writers (Output Layer — High-Level)                         |
 |    - Convert domain types into final output                    |
-|    - MarkdownWriter (baseline)                                 |
-|    - Supports Md, Json, Yaml output types                      |
-|    - writeAgent: Renders agents with frontmatter               |
-|    - writePrompt: Renders prompts without frontmatter          |
+|    - AgentWriter module (in FsAgent.Writers namespace)         |
+|    - Supports Md, Json, Yaml output types via Options          |
+|    - renderAgent: Renders agents with frontmatter              |
+|    - renderPrompt: Renders prompts without frontmatter         |
+|    - renderCommand: Renders slash commands                     |
 |    - Template rendering at write time with variables           |
 |    - Responsible for:                                          |
 |         * frontmatter shaping                                  |
@@ -67,62 +68,26 @@ The system builds agent definitions through a high-level F# DSL or directly thro
 
 # Key Architectural Decisions
 
-## 1. **Writers Are First-Class Output Components**
+## 1. **AgentWriter Module and Options-Based Dispatch**
 
-Writers sit *just below* the AST. They are the main API for producing deliverables.
-Users will typically do:
+`AgentWriter` is the single writer module. It dispatches to internal `renderMd`, `renderJson`, or `renderYaml` based on `opts.OutputType`. Harness-specific frontmatter shaping (Opencode struct format vs Copilot/ClaudeCode list format) is controlled by `opts.OutputFormat`.
+
+Users call:
 
 ```fsharp
 let agent = agent { ... }
-let output = OpenCodeWriter(MarkdownWriter()).Write(agent)
+let output = AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Copilot)
 ```
 
-Design reasons:
-
-* Writers represent concrete output formats, not “utilities”.
-* Multiple formats (Markdown, JSON) require parallel writer hierarchies.
-* Avoids leaking formatting rules into the DSL or AST.
+The three public functions are:
+- `renderAgent` — renders `Agent` with frontmatter
+- `renderPrompt` — renders `Prompt` without frontmatter
+- `renderCommand` — renders `SlashCommand` with description frontmatter
 
 ---
 
-## 2. **Writer Composition via “Base Writer”**
-
-A flavour writer (OpenCode, Copilot, Claude) wraps a base writer to modify frontmatter and layout.
-
-Example:
-
-```fsharp
-OpenCodeWriter(MarkdownWriter())
-```
-
-For JSON output:
-
-```fsharp
-OpenCodeWriter(JsonWriter())
-```
-
-This creates a *matrix* of possibilities without branching DSL code.
-
----
-
-## 3. **Support for Multiple Output Formats (Markdown and JSON)**
-
-Two “baselines” exist:
-
-* `MarkdownWriter`
-* `JsonWriter`
-
-Both implement:
-
-```fsharp
-Write(agent, ?importFormat:ImportFormat) -> string
-```
-
-Flavour writers only modify frontmatter and structural rules but do not assume Markdown.
-
----
-
-## 4. **Imported Data Resolution at Write Time**
+## 2. **Imported Data Resolution at Write Time**
 
 Imported nodes store:
 
@@ -140,7 +105,7 @@ This keeps the AST pure while allowing flexible output formatting.
 
 ---
 
-## 5. **Stratified Design**
+## 3. **Stratified Design**
 
 The DSL is the highest abstraction.
 The AST is a pure intermediate representation.
@@ -151,7 +116,7 @@ This prevents semantic leakage and keeps each layer’s responsibility narrow.
 
 ---
 
-## 6. **AST Is Immutable and Transformation-Friendly**
+## 4. **AST Is Immutable and Transformation-Friendly**
 
 The AST must remain:
 
@@ -206,9 +171,10 @@ Writers can post-process by constructing a temporary augmented AST, but the orig
 ## Writers
 
 * Decide layout, output rendering, flavour metadata
-* Two main functions:
-  * `writeAgent` - renders agents with frontmatter
-  * `writePrompt` - renders prompts without frontmatter
+* Three main public functions:
+  * `renderAgent` - renders agents with frontmatter
+  * `renderPrompt` - renders prompts without frontmatter
+  * `renderCommand` - renders slash commands with description frontmatter
 * Template rendering at write time:
   * Resolve Template nodes with configured TemplateVariables
   * Load TemplateFile nodes from disk and render
@@ -259,13 +225,13 @@ FsAgent/
 │
 ├── Writers.fs      → FsAgent.Writers
 │   ├── Template module (renderInline, renderFile)
-│   └── MarkdownWriter module (writeAgent, writePrompt, Options)
+│   └── AgentWriter module (renderAgent, renderPrompt, renderCommand, Options)
 │
 └── Library.fs      → FsAgent (backward compatibility)
     ├── Type aliases (DataFormat, Node, Agent, Prompt)
     ├── DSL module (re-exports: meta, agent, prompt)
     ├── AST module re-export
-    └── MarkdownWriter module re-export
+    └── AgentWriter module re-export
 ```
 
 **Import Strategy:**
@@ -323,15 +289,27 @@ Then update writers to handle the new case.
 
 ### Adding a new output format
 
-Extend MarkdownWriter module or create a new writer with similar signature:
+Extend `AgentWriter` module or create a new writer with similar signature:
 
 ```fsharp
-let writeHtml (agent: Agent) (configure: Options -> unit) : string =
+let renderHtml (agent: Agent) (configure: Options -> unit) : string =
     // Custom HTML generation logic
     ...
 ```
 
 ---
 
-If you want, I can produce the equivalent **C4 diagrams**, a **full module layout**, or a **concrete F# skeleton implementation**.
+# Future: Composable Writer Hierarchy
 
+A possible future direction is a composable `IWriter` interface pattern where harness-specific writers wrap a base writer:
+
+```fsharp
+// Not yet implemented
+type IWriter =
+    abstract Write: Agent -> Options -> string
+
+OpenCodeWriter(MarkdownWriter())  // harness wraps base format
+OpenCodeWriter(JsonWriter())       // same harness, different format
+```
+
+This would create a matrix of (harness × format) without branching. Deferred to post-1.0 — the current `Options`-based dispatch is sufficient for the current harness and format count.

@@ -6,7 +6,7 @@ open FsAgent.Prompts
 open FsAgent.Writers
 open FsAgent.AST
 
-// A - Acceptance Tests: prompt DSL → Prompt → writePrompt pipeline
+// A - Acceptance Tests: prompt DSL → Prompt → renderPrompt pipeline
 
 [<Fact>]
 let ``A: prompt builder creates Prompt with role and objective`` () =
@@ -26,7 +26,7 @@ let ``A: writePrompt produces markdown without frontmatter block`` () =
         description "A test prompt"
         role "You are a test"
     }
-    let result = MarkdownWriter.writePrompt p (fun _ -> ())
+    let result = AgentWriter.renderPrompt p (fun _ -> ())
     Assert.DoesNotContain("---", result)
     Assert.DoesNotContain("name:", result)
     Assert.Contains("# role", result)
@@ -119,7 +119,7 @@ let ``C: writePrompt with JSON output type`` () =
     let p = prompt {
         role "Test"
     }
-    let result = MarkdownWriter.writePrompt p (fun opts -> opts.OutputType <- MarkdownWriter.Json)
+    let result = AgentWriter.renderPrompt p (fun opts -> opts.OutputType <- AgentWriter.Json)
     Assert.Contains("\"sections\"", result)
 
 [<Fact>]
@@ -127,5 +127,5 @@ let ``C: writePrompt with YAML output type`` () =
     let p = prompt {
         role "Test"
     }
-    let result = MarkdownWriter.writePrompt p (fun opts -> opts.OutputType <- MarkdownWriter.Yaml)
+    let result = AgentWriter.renderPrompt p (fun opts -> opts.OutputType <- AgentWriter.Yaml)
     Assert.Contains("sections:", result)

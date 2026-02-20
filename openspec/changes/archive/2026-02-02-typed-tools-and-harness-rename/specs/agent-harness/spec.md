@@ -26,7 +26,7 @@ The library SHALL NOT expose an `AgentFormat` type. All references to `AgentForm
 
 ### Requirement: Writer Options use AgentHarness
 
-The MarkdownWriter Options record SHALL use `AgentHarness` for the `OutputFormat` field.
+The AgentWriter Options record SHALL use `AgentHarness` for the `OutputFormat` field.
 
 #### Scenario: OutputFormat field type
 - **WHEN** configuring writer options
@@ -57,7 +57,7 @@ The library SHALL treat ClaudeCode as a first-class harness equal to Opencode an
 - **THEN** ClaudeCode SHALL be a valid case alongside Opencode and Copilot
 
 #### Scenario: ClaudeCode agent generation
-- **WHEN** writeMarkdown is called with OutputFormat set to ClaudeCode
+- **WHEN** renderAgent is called with OutputFormat set to ClaudeCode
 - **THEN** the library SHALL generate agent configuration suitable for Claude Code platform
 
 ### Requirement: Semantic clarity in naming

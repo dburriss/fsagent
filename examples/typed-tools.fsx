@@ -16,7 +16,7 @@ let basicAgent = agent {
     description "Agent using typed tools"
     tools [Write; Edit; Read; Bash]
 }
-let basicOutput = MarkdownWriter.writeAgent basicAgent (fun _ -> ())
+let basicOutput = AgentWriter.renderAgent basicAgent (fun _ -> ())
 printfn "%s" basicOutput
 printfn ""
 
@@ -29,7 +29,7 @@ let filteredAgent = agent {
     tools [Write; Edit; Bash; Read; WebFetch]
     disallowedTools [Bash; Write]
 }
-let filteredOutput = MarkdownWriter.writeAgent filteredAgent (fun _ -> ())
+let filteredOutput = AgentWriter.renderAgent filteredAgent (fun _ -> ())
 printfn "%s" filteredOutput
 printfn ""
 
@@ -41,8 +41,8 @@ let opencodeAgent = agent {
     description "Agent for Opencode platform"
     tools [Write; Edit; Bash; Custom "mcp_database"]
 }
-let opencodeOutput = MarkdownWriter.writeAgent opencodeAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Opencode)
+let opencodeOutput = AgentWriter.renderAgent opencodeAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Opencode)
 printfn "%s" opencodeOutput
 printfn ""
 
@@ -54,8 +54,8 @@ let claudeAgent = agent {
     description "Agent for Claude Code platform"
     tools [Write; Edit; Bash; Custom "mcp_database"]
 }
-let claudeOutput = MarkdownWriter.writeAgent claudeAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+let claudeOutput = AgentWriter.renderAgent claudeAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.ClaudeCode)
 printfn "%s" claudeOutput
 printfn ""
 
@@ -70,13 +70,13 @@ let multiHarnessAgent = agent {
 }
 
 printfn "Opencode output (lowercase):"
-let multiOpencode = MarkdownWriter.writeAgent multiHarnessAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Opencode)
+let multiOpencode = AgentWriter.renderAgent multiHarnessAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Opencode)
 printfn "%s" multiOpencode
 
 printfn "ClaudeCode output (capitalized):"
-let multiClaude = MarkdownWriter.writeAgent multiHarnessAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+let multiClaude = AgentWriter.renderAgent multiHarnessAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.ClaudeCode)
 printfn "%s" multiClaude
 printfn ""
 
@@ -94,8 +94,8 @@ let mcpAgent = agent {
         Custom "github_api"
     ]
 }
-let mcpOutput = MarkdownWriter.writeAgent mcpAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+let mcpOutput = AgentWriter.renderAgent mcpAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.ClaudeCode)
 printfn "%s" mcpOutput
 printfn ""
 

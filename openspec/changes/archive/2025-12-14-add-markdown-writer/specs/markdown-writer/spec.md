@@ -3,7 +3,7 @@
 The system SHALL provide a Markdown writer that converts the immutable Agent AST to a Markdown string with configurable options for imported data inclusion and heading renaming/formatting. Output MUST support multiple agent formats.
 
 #### Scenario: Default write succeeds
-- **WHEN** `writeMarkdown(agent, configure)` is called with no option changes
+- **WHEN** `renderAgent(agent, configure)` is called with no option changes
 - **THEN** the writer returns a Markdown string
 - **AND** headings use ATX style (`#`, `##`, ...)
 - **AND** frontmatter is emitted at the top of the document by default according to the selected `outputFormat`
@@ -63,11 +63,11 @@ The system MUST support selecting the agent output format via options with initi
 The system SHALL expose a configuration API that uses a function receiving a mutable options object to set writer behavior, consistent with common .NET patterns.
 
 #### Scenario: Configure via function mutation
-- **WHEN** `writeMarkdown(agent, fun opts -> opts.importInclusion <- raw; opts.outputFormat <- opencode)` is used
+- **WHEN** `renderAgent(agent, fun opts -> opts.importInclusion <- raw; opts.outputFormat <- opencode)` is used
 - **THEN** the resulting output reflects the configured options
 
 #### Scenario: Sensible defaults
-- **WHEN** `writeMarkdown(agent, configure)` is called without mutations
+- **WHEN** `renderAgent(agent, configure)` is called without mutations
 - **THEN** defaults apply: `outputFormat=opencode`, ATX headings, `importInclusion=none`, frontmatter included, no renames, default heading formatter (identity), no footer, deterministic order
 
 #### Scenario: Validation of options

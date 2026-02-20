@@ -36,11 +36,11 @@ The system SHALL add TemplateVariables field (Map<string, obj>) to Options type 
 - **WHEN** user sets opts.TemplateVariables <- Map ["key" -> value]
 - **THEN** template rendering SHALL use these variables for substitution
 
-### Requirement: writePrompt function for Prompt type
-The system SHALL provide writePrompt function that accepts Prompt and Options configuration function.
+### Requirement: renderPrompt function for Prompt type
+The system SHALL provide renderPrompt function that accepts Prompt and Options configuration function.
 
 #### Scenario: Function signature
-- **WHEN** writePrompt is called
+- **WHEN** renderPrompt is called
 - **THEN** signature SHALL be (Prompt -> (Options -> unit) -> string)
 
 ### Requirement: Prompt sections rendering
@@ -54,7 +54,7 @@ The system SHALL render Prompt.Sections using same markdown generation logic as 
 The system SHALL NOT output YAML frontmatter block when writing prompts, even though Prompt.Frontmatter may contain data.
 
 #### Scenario: Prompt with metadata writes no frontmatter
-- **WHEN** Prompt.Frontmatter contains "name" and "description" keys AND writePrompt is called with OutputType Md
+- **WHEN** Prompt.Frontmatter contains "name" and "description" keys AND renderPrompt is called with OutputType Md
 - **THEN** output SHALL NOT include "---" YAML frontmatter block
 
 ### Requirement: Template rendering respects Options.OutputType
@@ -68,12 +68,12 @@ The system SHALL render templates for all OutputType values: Md, Json, Yaml.
 - **WHEN** OutputType is Yaml AND prompt contains Template node
 - **THEN** rendered template content SHALL appear in YAML structure
 
-### Requirement: Namespace relocation for MarkdownWriter
-The system SHALL provide MarkdownWriter module in FsAgent.Writers namespace instead of FsAgent module.
+### Requirement: Namespace relocation for AgentWriter
+The system SHALL provide AgentWriter module in FsAgent.Writers namespace instead of FsAgent module.
 
 #### Scenario: Access writer from Writers namespace
 - **WHEN** user opens FsAgent.Writers
-- **THEN** MarkdownWriter module SHALL be available
+- **THEN** AgentWriter module SHALL be available
 
 ### Requirement: Template module in Writers namespace
 The system SHALL provide Template module in FsAgent.Writers namespace with renderInline and renderFile functions.

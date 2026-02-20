@@ -6,8 +6,8 @@ Prompt text often hard-codes tool names (e.g., "use the `bash` tool") that diffe
 
 - Add `{{{tool <Name>}}}` Fue function syntax to template rendering, resolved at write time using the current `AgentHarness`
 - Extend `Template` module with `renderWithHarness` and `renderFileWithHarness` functions that inject the `tool` function into the Fue data context
-- Add `toolNameMap` lookup (DU case name string → `Tool` value) inside `MarkdownWriter`
-- Update `writeMd` `Template` and `TemplateFile` branches to call harness-aware render functions
+- Add `toolNameMap` lookup (DU case name string → `Tool` value) inside `AgentWriter`
+- Update `renderMd` `Template` and `TemplateFile` branches to call harness-aware render functions
 - Move `AgentHarness` type definition above the `Template` module to resolve forward-dependency
 
 ## Capabilities
@@ -20,6 +20,6 @@ Prompt text often hard-codes tool names (e.g., "use the `bash` tool") that diffe
 
 ## Impact
 
-- `src/FsAgent/Writers.fs`: `Template` module, `toolNameMap`, `writeMd` branches, `AgentHarness` position
-- `tests/FsAgent.Tests/MarkdownWriterTests.fs`: New acceptance tests
+- `src/FsAgent/Writers.fs`: `Template` module, `toolNameMap`, `renderMd` branches, `AgentHarness` position
+- `tests/FsAgent.Tests/AgentWriterTests.fs`: New acceptance tests
 - No AST changes; no DSL changes; no breaking changes to existing rendering behaviour

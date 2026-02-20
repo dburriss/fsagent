@@ -9,7 +9,7 @@
 - [x] 2.1 Update `import` custom operation to use `AST.importRef` (wrapInCodeBlock=true)
 - [x] 2.2 Add `importRaw` custom operation to use `AST.importRawRef` (wrapInCodeBlock=false)
 
-## 3. MarkdownWriter Changes
+## 3. AgentWriter Changes
 
 - [x] 3.1 Remove `ImportInclusion` type entirely (imports always resolved)
 - [x] 3.2 Add `DisableCodeBlockWrapping: bool` option (default false)

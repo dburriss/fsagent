@@ -68,7 +68,7 @@ dotnet fsi examples/toon.fsx
 
 ### Built-in Tools
 ```fsharp
-open FsAgent.AST
+open FsAgent.Tools
 
 tools [
     Write      // File writing
@@ -118,13 +118,13 @@ let agent = agent {
 }
 
 // Generate for Opencode (lowercase)
-let opencode = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Opencode)
+let opencode = AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Opencode)
 // Output: tools: [write, bash]
 
 // Generate for ClaudeCode (capitalized)
-let claude = MarkdownWriter.writeAgent agent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+let claude = AgentWriter.renderAgent agent (fun opts ->
+    opts.OutputFormat <- AgentWriter.ClaudeCode)
 // Output: tools: [Write, Bash]
 ```
 

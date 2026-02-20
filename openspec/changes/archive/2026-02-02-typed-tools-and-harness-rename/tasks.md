@@ -40,7 +40,7 @@
 
 ## 6. Test Updates - AgentHarness
 
-- [x] 6.1 Update test references from MarkdownWriter.AgentFormat to MarkdownWriter.AgentHarness
+- [x] 6.1 Update test references from AgentWriter.AgentFormat to AgentWriter.AgentHarness
 - [x] 6.2 Update test configurations using Opencode and Copilot harness values
 - [x] 6.3 Add test cases for ClaudeCode harness
 - [x] 6.4 Verify Copilot validation tests still work with AgentHarness

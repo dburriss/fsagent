@@ -21,6 +21,6 @@ None - this modifies existing import behavior.
 
 ## Impact
 
-- `src/FsAgent/Library.fs`: DSL and MarkdownWriter modules
+- `src/FsAgent/Library.fs`: DSL and AgentWriter modules
 - `tests/FsAgent.Tests/`: New and updated tests for import operations
 - Existing code using `import` will need to change to `importRaw` to preserve current behavior (breaking change)

@@ -59,8 +59,8 @@ printfn ""
 
 // Task 10.4: Generate Opencode output
 printfn "Task 10.4: Generating Opencode output and verifying tool names are lowercase and Edit is disabled"
-let opencodeOutput = MarkdownWriter.writeAgent smokeTestAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Opencode)
+let opencodeOutput = AgentWriter.renderAgent smokeTestAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Opencode)
 
 printfn "Opencode output:"
 printfn "---"
@@ -99,8 +99,8 @@ printfn ""
 
 // Task 10.5: Generate Copilot output
 printfn "Task 10.5: Generating Copilot output and verifying tool names match Copilot specification"
-let copilotOutput = MarkdownWriter.writeAgent smokeTestAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.Copilot)
+let copilotOutput = AgentWriter.renderAgent smokeTestAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.Copilot)
 
 printfn "Copilot output:"
 printfn "---"
@@ -133,8 +133,8 @@ printfn ""
 
 // Task 10.6: Generate ClaudeCode output
 printfn "Task 10.6: Generating ClaudeCode output and verifying tool names match Claude Code specification"
-let claudeOutput = MarkdownWriter.writeAgent smokeTestAgent (fun opts ->
-    opts.OutputFormat <- MarkdownWriter.ClaudeCode)
+let claudeOutput = AgentWriter.renderAgent smokeTestAgent (fun opts ->
+    opts.OutputFormat <- AgentWriter.ClaudeCode)
 
 printfn "ClaudeCode output:"
 printfn "---"

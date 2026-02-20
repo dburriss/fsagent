@@ -6,7 +6,7 @@ We need a first writer to convert the immutable Agent AST to Markdown. The write
 - Non-Goals: Implement HTML writer, or file I/O. Avoid complex templating until requested.
 
 ## Decisions
-- Writer API: `writeMarkdown(agent, configure: Options -> unit)` where `configure` mutates an `Options` record/class; returns `string`.
+- Writer API: `renderAgent(agent, configure: Options -> unit)` where `configure` mutates an `Options` record/class; returns `string`.
 - Options: 
   - `outputFormat: AgentFormat` (values: `opencode | copilot`; default `opencode`)
   - `outputType: OutputType` (values: `md | json | yaml`; default `md`)
