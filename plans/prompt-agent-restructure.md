@@ -1,5 +1,7 @@
 # Plan: Add Prompt Module and Refactor FsAgent
 
+status: Done
+
 ## Overview
 
 Refactor FsAgent to separate Prompt and Agent concerns by:

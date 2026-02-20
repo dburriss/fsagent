@@ -1,5 +1,7 @@
 # Agent Enricher Design
 
+Status: Done
+
 ## Overview
 
 General-purpose agent transformation at write time. Instead of specialized enrichers (ToolEnricher, SectionEnricher, etc.), use a single composable `AgentEnricher` that transforms the entire Agent structure.

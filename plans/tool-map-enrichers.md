@@ -1,5 +1,7 @@
 # Tool Map Enrichers Design
 
+Status: Done
+
 ## Problem Statement
 
 Current tool configuration in FsAgent is stringly-typed and redundant:
@@ -13,6 +15,7 @@ agent {
 ```
 
 **Pain Points:**
+
 1. No discoverability - must know exact tool names
 2. No IDE autocomplete or compile-time checking
 3. Three different operations that do overlapping things

@@ -1,5 +1,7 @@
 # Plan: Support Both Tool Configuration Formats
 
+Status: Done
+
 ## Executive Summary
 
 **Problem**: Tool configuration format differs between agent systems:
