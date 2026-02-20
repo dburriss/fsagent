@@ -3,6 +3,7 @@ module FsAgent.Tests.CommandTests
 open Xunit
 open FsAgent
 open FsAgent.Commands
+open FsAgent.Prompts
 open FsAgent.Writers
 open FsAgent.AST
 open System.IO
@@ -39,12 +40,12 @@ let ``A: command name is not in frontmatter`` () =
 
 [<Fact>]
 let ``A: command sections render correctly`` () =
+    let content = prompt { role "You are a helper"; instructions "Follow the steps" }
     let cmd =
         command {
             name "my-cmd"
             description "Test"
-            role "You are a helper"
-            instructions "Follow the steps"
+            prompt content
             section "notes" "Extra notes here"
         }
     let result = AgentWriter.renderCommand cmd (fun _ -> ())
@@ -81,11 +82,12 @@ let ``A: command import embeds file content`` () =
 
 [<Fact>]
 let ``A: command renders identically for Copilot and ClaudeCode`` () =
+    let content = prompt { instructions "Do the thing" }
     let cmd =
         command {
             name "multi-harness"
             description "Cross-harness test"
-            instructions "Do the thing"
+            prompt content
         }
     let copilotResult = AgentWriter.renderCommand cmd (fun opts -> opts.OutputFormat <- AgentWriter.Copilot)
     let claudeResult = AgentWriter.renderCommand cmd (fun opts -> opts.OutputFormat <- AgentWriter.ClaudeCode)

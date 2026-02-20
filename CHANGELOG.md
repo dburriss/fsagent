@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed (Breaking)
+- **`CommandBuilder` semantic ops removed**: `role`, `objective`, `instructions`, `context`, `output`, and `examples` custom operations have been removed from `CommandBuilder`. Callers must migrate to `prompt { ... }` composition — e.g. `command { prompt (let p = prompt { role "..." }; p) }` or bind the prompt outside the CE and pass it via `prompt p`.
 - **`module MarkdownWriter` renamed to `module AgentWriter`** in `FsAgent.Writers` namespace
 - **`writeAgent` renamed to `renderAgent`** (public)
 - **`writePrompt` renamed to `renderPrompt`** (public)
@@ -12,7 +13,7 @@
 
 ### Added
 - **SlashCommand DSL**: `SlashCommand` record type (`Name`, `Description`, `Sections`) in `FsAgent.Commands` namespace
-- **`command { }` CE builder**: Computation expression with `name`, `description`, `role`, `objective`, `instructions`, `context`, `output`, `section`, `import`, `importRaw`, `template`, `templateFile`, `examples`, and `prompt` operations
+- **`command { }` CE builder**: Computation expression with `name`, `description`, `section`, `import`, `importRaw`, `template`, `templateFile`, and `prompt` operations
 - **`AgentWriter.renderCommand`**: Renders a `SlashCommand` to Markdown with `description`-only frontmatter, reusing existing section/template/import rendering
 - `type SlashCommand` alias and `let command` CE re-exported from `FsAgent` namespace for `open FsAgent` access
 

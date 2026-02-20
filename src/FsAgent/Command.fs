@@ -29,26 +29,6 @@ module CommandBuilder =
         member _.Description(cmd: SlashCommand, value: string) =
             { cmd with Description = value }
 
-        [<CustomOperation("role")>]
-        member _.Role(cmd: SlashCommand, text: string) =
-            { cmd with Sections = cmd.Sections @ [Prompt.role text] }
-
-        [<CustomOperation("objective")>]
-        member _.Objective(cmd: SlashCommand, text: string) =
-            { cmd with Sections = cmd.Sections @ [Prompt.objective text] }
-
-        [<CustomOperation("instructions")>]
-        member _.Instructions(cmd: SlashCommand, text: string) =
-            { cmd with Sections = cmd.Sections @ [Prompt.instructions text] }
-
-        [<CustomOperation("context")>]
-        member _.Context(cmd: SlashCommand, text: string) =
-            { cmd with Sections = cmd.Sections @ [Prompt.context text] }
-
-        [<CustomOperation("output")>]
-        member _.Output(cmd: SlashCommand, text: string) =
-            { cmd with Sections = cmd.Sections @ [Prompt.output text] }
-
         [<CustomOperation("section")>]
         member _.Section(cmd: SlashCommand, name: string, content: string) =
             { cmd with Sections = cmd.Sections @ [Section(name, [Text content])] }
@@ -68,10 +48,6 @@ module CommandBuilder =
         [<CustomOperation("templateFile")>]
         member _.TemplateFile(cmd: SlashCommand, path: string) =
             { cmd with Sections = cmd.Sections @ [TemplateFile path] }
-
-        [<CustomOperation("examples")>]
-        member _.Examples(cmd: SlashCommand, examples: Node list) =
-            { cmd with Sections = cmd.Sections @ [Prompt.examples examples] }
 
         [<CustomOperation("prompt")>]
         member _.Prompt(cmd: SlashCommand, prompt: Prompt) =
