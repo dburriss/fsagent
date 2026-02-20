@@ -17,12 +17,12 @@
 
 ## 4. Acceptance Tests
 
-- [ ] 4.1 Test `renderWithHarness` resolves `{{tool Bash}}` correctly for `Opencode` harness
-- [ ] 4.2 Test `renderWithHarness` resolves `{{tool Read}}` correctly for `Copilot` harness
-- [ ] 4.3 Test `renderWithHarness` resolves `{{tool Bash}}` correctly for `ClaudeCode` harness
+- [ ] 4.1 Test `renderWithHarness` resolves `{{{tool Bash}}}` correctly for `Opencode` harness
+- [ ] 4.2 Test `renderWithHarness` resolves `{{{tool Read}}}` correctly for `Copilot` harness
+- [ ] 4.3 Test `renderWithHarness` resolves `{{{tool Bash}}}` correctly for `ClaudeCode` harness
 - [ ] 4.4 Test `renderWithHarness` with an unknown tool name returns the name string unchanged (Custom fallback)
-- [ ] 4.5 Test `renderWithHarness` preserves non-tool template variables alongside `{{tool …}}` substitutions
-- [ ] 4.6 Test `renderFileWithHarness` resolves `{{tool Read}}` from a file for `Copilot` harness
+- [ ] 4.5 Test `renderWithHarness` preserves non-tool template variables alongside `{{{tool …}}}` substitutions
+- [ ] 4.6 Test `renderFileWithHarness` resolves `{{{tool Read}}}` from a file for `Copilot` harness
 - [ ] 4.7 Test `renderFileWithHarness` returns the "file not found" message when the path does not exist
 - [ ] 4.8 Test `toolNameMap` lookup returns the correct `Tool` value for a known case name (e.g., `"Bash"`)
 

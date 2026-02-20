@@ -4,7 +4,7 @@ Prompt text often hard-codes tool names (e.g., "use the `bash` tool") that diffe
 
 ## What Changes
 
-- Add `{{tool <Name>}}` Fue function syntax to template rendering, resolved at write time using the current `AgentHarness`
+- Add `{{{tool <Name>}}}` Fue function syntax to template rendering, resolved at write time using the current `AgentHarness`
 - Extend `Template` module with `renderWithHarness` and `renderFileWithHarness` functions that inject the `tool` function into the Fue data context
 - Add `toolNameMap` lookup (DU case name string → `Tool` value) inside `MarkdownWriter`
 - Update `writeMd` `Template` and `TemplateFile` branches to call harness-aware render functions
@@ -13,7 +13,7 @@ Prompt text often hard-codes tool names (e.g., "use the `bash` tool") that diffe
 ## Capabilities
 
 ### New Capabilities
-- `harness-aware-template-rendering`: Template rendering that resolves `{{tool <Name>}}` to harness-correct tool name strings at write time
+- `harness-aware-template-rendering`: Template rendering that resolves `{{{tool <Name>}}}` to harness-correct tool name strings at write time
 
 ### Modified Capabilities
 - `template-rendering`: Add harness-aware rendering functions alongside existing `renderInline`/`renderFile`; update write-time dispatch to use them

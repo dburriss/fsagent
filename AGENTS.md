@@ -55,6 +55,11 @@ Key directories:
 - `.opencode/` - OpenCode plugin configuration and command definitions
 - `openspec/` - Project specifications and change proposals
 
+# Templating (Fue)
+- Variable interpolation uses **triple** braces: `{{{variable}}}`
+- Function calls also use **triple** braces: `{{{tool Bash}}}` — never double braces `{{...}}`
+- See `knowledge/fue-templating.md` for full reference.
+
 # Coding Guidelines
 - Prefer simplicity.
 - Use pure functions; push I/O to the boundaries.

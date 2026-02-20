@@ -29,8 +29,8 @@ No new AST nodes. No new DSL operations. Purely a rendering-layer concern.
 
 ```fsharp
 prompt {
-    template "Use the {{tool Bash}} tool to run shell commands."
-    template "Mark tasks done using {{tool TodoWrite}}."
+    template "Use the {{{tool Bash}}} tool to run shell commands."
+    template "Mark tasks done using {{{tool TodoWrite}}}."
 }
 ```
 
@@ -39,7 +39,7 @@ Rendered for ClaudeCode: `Use the Bash tool to run shell commands.`
 Rendered for ClaudeCode: `Mark tasks done using TaskCreate, TaskUpdate.`
 Rendered for Copilot:    `Mark tasks done using todo.`
 
-Unknown tool name (e.g. `{{tool Foo}}`) passes through via `Tool.Custom "Foo"`,
+Unknown tool name (e.g. `{{{tool Foo}}}`) passes through via `Tool.Custom "Foo"`,
 returning `"Foo"` unchanged for all harnesses — consistent with existing `Custom`
 behaviour in `toolToString`.
 
@@ -53,7 +53,7 @@ Fue's `add` accepts `string -> 'a`. We bind the key `"tool"` to a function
 3. Calls the existing `toolToString harness tool -> string list`
 4. Joins with `", "` for multi-name results
 
-This keeps the template syntax as `{{tool Bash}}` — a Fue function call with one
+This keeps the template syntax as `{{{tool Bash}}}` — a Fue function call with one
 argument.
 
 ## Architecture
@@ -63,7 +63,7 @@ where `opts.OutputFormat` (the `AgentHarness`) is already in scope. This is the
 only place that needs to change.
 
 ```
-DSL: template "Use {{tool Bash}}"
+DSL: template "Use {{{tool Bash}}}"
         ↓  (stored as Template node in AST — no change)
 writeMd: Template text branch
         ↓  (currently: Template.renderInline text opts.TemplateVariables)
@@ -221,19 +221,19 @@ let ``tool Glob resolves to search for Copilot`` ()
 // 4. Unknown name passes through
 [<Fact>]
 let ``unknown tool name passes through unchanged`` ()
-// template "{{tool my_mcp_tool}}" → "my_mcp_tool" for all harnesses
+// template "{{{tool my_mcp_tool}}}" → "my_mcp_tool" for all harnesses
 
 // 5. Coexistence with TemplateVariables
 [<Fact>]
 let ``tool function coexists with user TemplateVariables`` ()
-// template "Hello {{name}}, use {{tool Read}}"
+// template "Hello {{{name}}}, use {{{tool Read}}}"
 // TemplateVariables = Map ["name", "world" :> obj]
 // Opencode → "Hello world, use read"
 
 // 6. Existing renderInline unchanged
 [<Fact>]
 let ``renderInline without harness is unaffected`` ()
-// No regression — {{tool X}} in plain renderInline produces a Fue error or literal
+// No regression — {{{tool X}}} in plain renderInline produces a Fue error or literal
 ```
 
 ## Forward-Dependency Resolution
