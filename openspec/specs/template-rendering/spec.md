@@ -15,11 +15,11 @@ The system SHALL extend the Node discriminated union with a TemplateFile case co
 - **THEN** system SHALL store the path "templates/greeting.txt" in the node
 
 ### Requirement: Template module in Writers namespace
-The system SHALL provide a Template module in FsAgent.Writers namespace with renderInline and renderFile functions.
+The system SHALL provide a Template module in FsAgent.Writers namespace with renderInline, renderFile, renderWithHarness, and renderFileWithHarness functions.
 
 #### Scenario: Module is accessible
 - **WHEN** user opens FsAgent.Writers
-- **THEN** system SHALL make Template.renderInline and Template.renderFile available
+- **THEN** system SHALL make Template.renderInline, Template.renderFile, Template.renderWithHarness, and Template.renderFileWithHarness available
 
 ### Requirement: Fue integration
 The system SHALL integrate Fue library (version 2.2.0) for template rendering using Mustache-compatible syntax.
@@ -72,15 +72,15 @@ The system SHALL catch file not found errors and return error message in output.
 - **THEN** system SHALL return "[Template error: Parse error]"
 
 ### Requirement: Rendering at write time
-The system SHALL render templates when writePrompt or writeAgent is called, not when template nodes are created.
+The system SHALL render templates when writePrompt or writeAgent is called, not when template nodes are created. When a harness is available, the system SHALL use harness-aware rendering for Template and TemplateFile nodes.
 
 #### Scenario: Template not rendered in builder
 - **WHEN** user creates prompt with template operation
 - **THEN** system SHALL store Template node without rendering
 
-#### Scenario: Template rendered in writer
-- **WHEN** writePrompt is called with TemplateVariables in options
-- **THEN** system SHALL render all Template and TemplateFile nodes using provided variables
+#### Scenario: Template rendered with harness in writer
+- **WHEN** writePrompt is called with a harness set in the format context and TemplateVariables in options
+- **THEN** system SHALL render all Template and TemplateFile nodes using renderWithHarness/renderFileWithHarness with the current harness
 
 ### Requirement: TemplateVariables in Options
 The system SHALL add TemplateVariables field (Map<string, obj>) to MarkdownWriter Options type with default value of empty map.
@@ -92,3 +92,10 @@ The system SHALL add TemplateVariables field (Map<string, obj>) to MarkdownWrite
 #### Scenario: Set template variables
 - **WHEN** user configures options with TemplateVariables <- Map ["key" -> "value"]
 - **THEN** system SHALL use these variables for template rendering
+
+### Requirement: AgentHarness defined before Template module
+The system SHALL define the AgentHarness discriminated union before the Template module in Writers.fs.
+
+#### Scenario: AgentHarness available as Template module parameter type
+- **WHEN** the project is compiled
+- **THEN** system SHALL resolve AgentHarness as a valid type within the Template module's function signatures without forward-reference errors
