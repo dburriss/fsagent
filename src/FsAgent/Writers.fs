@@ -9,6 +9,7 @@ open FsAgent.Tools
 open FsAgent.Prompts
 open FsAgent.Agents
 open FsAgent.Commands
+open FsAgent.Skills
 
 type AgentHarness =
     | Opencode
@@ -522,7 +523,7 @@ module AgentWriter =
         configure opts
 
         // Convert Prompt to Agent-like structure without frontmatter
-        let agentLike = { Frontmatter = Map.empty; Sections = prompt.Sections }
+        let agentLike : Agent = { Frontmatter = Map.empty; Sections = prompt.Sections }
 
         let ctx = {
             Format = opts.OutputFormat
@@ -541,7 +542,7 @@ module AgentWriter =
         let opts = defaultOptions()
         configure opts
 
-        let agentLike = {
+        let agentLike : Agent = {
             Frontmatter = Map.ofList ["description", AST.fmStr cmd.Description]
             Sections = cmd.Sections
         }
@@ -558,3 +559,100 @@ module AgentWriter =
         | Md -> renderMd agentLike opts ctx
         | Json -> renderJson agentLike opts ctx
         | Yaml -> renderYaml agentLike opts ctx
+
+    /// Serialize a single frontmatter scalar value to a YAML string.
+    let private serializeScalar (value: obj) : string =
+        match value with
+        | :? string as s -> s
+        | :? float as f -> f.ToString()
+        | :? bool as b -> b.ToString().ToLower()
+        | :? (obj list) as l ->
+            l |> List.map (fun o ->
+                match o with
+                | :? string as s -> s
+                | _ -> o.ToString()
+            ) |> String.concat "\n  - "
+            |> sprintf "\n  - %s"
+        | :? Map<string, obj> as m ->
+            m |> Map.toSeq |> Seq.map (fun (k, v) -> $"  {k}: {v}") |> String.concat "\n" |> sprintf "\n%s"
+        | _ -> value.ToString()
+
+    let renderSkill (skill: Skill) (harness: AgentHarness) (configure: Options -> unit) : string =
+        let opts = defaultOptions()
+        configure opts
+
+        let sb = StringBuilder()
+
+        // Frontmatter — only emit block if there are keys
+        if skill.Frontmatter.Count > 0 then
+            sb.AppendLine("---") |> ignore
+            for kv in skill.Frontmatter do
+                let valueStr = serializeScalar kv.Value
+                sb.AppendLine($"{kv.Key}: {valueStr}") |> ignore
+            sb.AppendLine("---") |> ignore
+            sb.AppendLine() |> ignore
+
+        // Sections — reuse writeNode with harness-aware template resolution
+        let ctx = {
+            Format = harness
+            OutputType = Md
+            Timestamp = DateTime.Now
+            AgentName = skill.Frontmatter.TryFind "name" |> Option.map string
+            AgentDescription = skill.Frontmatter.TryFind "description" |> Option.map string
+        }
+
+        let rec writeNode (node: Node) (level: int) =
+            match node with
+            | Text t -> sb.AppendLine(t) |> ignore
+            | Section (name, content) ->
+                if level = 1 then
+                    let str = sb.ToString()
+                    if str.Length > 0 && not (str.EndsWith("\n\n")) then
+                        sb.AppendLine() |> ignore
+                let displayName =
+                    opts.RenameMap |> Map.tryFind name |> Option.defaultValue name
+                    |> (opts.HeadingFormatter |> Option.defaultValue id)
+                let heading = String.replicate level "#" + " " + displayName
+                sb.AppendLine(heading) |> ignore
+                sb.AppendLine() |> ignore
+                for c in content do writeNode c (level + 1)
+            | Node.List items ->
+                for item in items do
+                    sb.Append("- ") |> ignore
+                    writeNode item level
+                    sb.AppendLine() |> ignore
+            | Imported (path, format, wrapInCodeBlock) ->
+                let shouldWrap = wrapInCodeBlock && not opts.DisableCodeBlockWrapping
+                if shouldWrap then
+                    let str = sb.ToString()
+                    if str.Length > 0 && not (str.EndsWith("\n\n")) then
+                        sb.AppendLine() |> ignore
+                try
+                    let content = System.IO.File.ReadAllText(path)
+                    if shouldWrap then
+                        let langTag = formatToLanguageTag format
+                        sb.AppendLine($"```{langTag}") |> ignore
+                        sb.Append(content) |> ignore
+                        if not (content.EndsWith("\n")) then
+                            sb.AppendLine() |> ignore
+                        sb.AppendLine("```") |> ignore
+                    else
+                        sb.AppendLine(content) |> ignore
+                with
+                | _ -> sb.AppendLine($"[Error loading {path}]") |> ignore
+            | Template text ->
+                let rendered = Template.renderWithHarness text toolNameMap toolToString ctx.Format opts.TemplateVariables
+                sb.AppendLine(rendered) |> ignore
+            | TemplateFile path ->
+                let rendered = Template.renderFileWithHarness path toolNameMap toolToString ctx.Format opts.TemplateVariables
+                sb.AppendLine(rendered) |> ignore
+
+        for section in skill.Sections do
+            writeNode section 1
+
+        // Footer
+        if opts.GeneratedFooter.IsSome then
+            let footer = opts.GeneratedFooter.Value ctx
+            sb.AppendLine(footer) |> ignore
+
+        sb.ToString()

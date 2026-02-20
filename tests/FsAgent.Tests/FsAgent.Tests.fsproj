@@ -16,6 +16,7 @@
     <Compile Include="AgentPromptIntegrationTests.fs" />
     <Compile Include="AgentWriterTests.fs" />
     <Compile Include="CommandTests.fs" />
+    <Compile Include="SkillTests.fs" />
   </ItemGroup>
 
   <ItemGroup>

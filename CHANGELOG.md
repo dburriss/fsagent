@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+- **`skill-builder`**: `Skill` record type (`Frontmatter: Map<string, obj>`, `Sections: Node list`) in `FsAgent.Skills` namespace, with a `skill { ... }` computation expression exposing `name`, `description`, `license`, `compatibility`, `metadata`, `section`, `prompt`, `import`, `importRaw`, `template`, and `templateFile` custom operations
+- **`skill-writer`**: `AgentWriter.renderSkill` that accepts a `Skill`, an `AgentHarness`, and an `Options -> unit` configurator, producing a SKILL.md-compatible Markdown string with YAML frontmatter; harness-aware `{{{tool X}}}` resolution and all standard `Options` fields are supported
+- `type Skill` alias and `let skill` CE re-exported from `FsAgent` namespace for `open FsAgent` access
+
 ### Changed (Breaking)
 - **`CommandBuilder` semantic ops removed**: `role`, `objective`, `instructions`, `context`, `output`, and `examples` custom operations have been removed from `CommandBuilder`. Callers must migrate to `prompt { ... }` composition — e.g. `command { prompt (let p = prompt { role "..." }; p) }` or bind the prompt outside the CE and pass it via `prompt p`.
 - **`module MarkdownWriter` renamed to `module AgentWriter`** in `FsAgent.Writers` namespace

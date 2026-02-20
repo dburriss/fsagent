@@ -7,6 +7,7 @@ type Node = AST.Node
 type Agent = Agents.Agent
 type Prompt = Prompts.Prompt
 type SlashCommand = Commands.SlashCommand
+type Skill = Skills.Skill
 
 // Re-export DSL builders
 module DSL =
@@ -14,6 +15,7 @@ module DSL =
     let agent = Agents.AgentBuilder.agent
     let prompt = Prompts.PromptBuilder.prompt
     let command = Commands.CommandBuilder.command
+    let skill = Skills.SkillBuilder.skill
 
 // Re-export modules
 module AST = FsAgent.AST.AST
