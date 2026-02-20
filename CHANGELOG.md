@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **SlashCommand DSL**: `SlashCommand` record type (`Name`, `Description`, `Sections`) in `FsAgent.Commands` namespace
+- **`command { }` CE builder**: Computation expression with `name`, `description`, `role`, `objective`, `instructions`, `context`, `output`, `section`, `import`, `importRaw`, `template`, `templateFile`, `examples`, and `prompt` operations
+- **`MarkdownWriter.writeCommand`**: Renders a `SlashCommand` to Markdown with `description`-only frontmatter, reusing existing section/template/import rendering
+- `type SlashCommand` alias and `let command` CE re-exported from `FsAgent` namespace for `open FsAgent` access
+- feat: add SlashCommand DSL type, command CE builder, and MarkdownWriter.writeCommand
+
+### Added
 - **Tool name injection in templates**: `{{{tool <Name>}}}` syntax in template strings resolves to the harness-correct tool name at write time (e.g., `{{{tool Bash}}}` → `"bash"` for Opencode, `"Bash"` for ClaudeCode)
 - `Template.renderWithHarness` and `Template.renderFileWithHarness` functions for harness-aware template rendering
 - `AgentHarness` type moved above `Template` module in `Writers.fs` to allow use in template function signatures

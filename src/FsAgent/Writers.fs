@@ -8,6 +8,7 @@ open FsAgent.AST
 open FsAgent.Tools
 open FsAgent.Prompts
 open FsAgent.Agents
+open FsAgent.Commands
 
 type AgentHarness =
     | Opencode
@@ -538,3 +539,25 @@ module MarkdownWriter =
 
     // Backward compatibility alias
     let writeMarkdown = writeAgent
+
+    let writeCommand (cmd: SlashCommand) (configure: Options -> unit) : string =
+        let opts = defaultOptions()
+        configure opts
+
+        let agentLike = {
+            Frontmatter = Map.ofList ["description", AST.fmStr cmd.Description]
+            Sections = cmd.Sections
+        }
+
+        let ctx = {
+            Format = opts.OutputFormat
+            OutputType = opts.OutputType
+            Timestamp = System.DateTime.Now
+            AgentName = Some cmd.Name
+            AgentDescription = Some cmd.Description
+        }
+
+        match opts.OutputType with
+        | Md -> writeMd agentLike opts ctx
+        | Json -> writeJson agentLike opts ctx
+        | Yaml -> writeYaml agentLike opts ctx

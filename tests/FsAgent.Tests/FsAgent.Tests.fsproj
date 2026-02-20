@@ -15,6 +15,7 @@
     <Compile Include="DslTests.fs" />
     <Compile Include="AgentPromptIntegrationTests.fs" />
     <Compile Include="MarkdownWriterTests.fs" />
+    <Compile Include="CommandTests.fs" />
   </ItemGroup>
 
   <ItemGroup>

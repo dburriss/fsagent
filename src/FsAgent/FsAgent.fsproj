@@ -43,6 +43,7 @@
     <Compile Include="AST.fs" />
     <Compile Include="Prompt.fs" />
     <Compile Include="Agent.fs" />
+    <Compile Include="Command.fs" />
     <Compile Include="Writers.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
