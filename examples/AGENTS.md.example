@@ -1,0 +1,53 @@
+---
+description: Generate a minimal AGENTS.md file for your project
+---
+
+# objective
+
+AGENTS.md is placed at the repository root and read automatically by AI coding agents.
+It orients the agent to the project: what matters, how to build and test, and any conventions to follow.
+Keep it concise — the agent reads the whole file at session start.
+
+# instructions
+
+1. Identify the key files an agent should know about (README, architecture docs, etc.).
+2. Fill in the tech stack (language, frameworks, notable libraries).
+3. Document the build and test commands exactly as run from the repo root.
+4. Add any project-specific coding conventions or constraints.
+5. Write the file to `AGENTS.md` in the repository root.
+
+# template
+
+Key files:
+- `README.md`
+- `<architecture or design doc>`
+
+# General
+- Keep answers succinct and information-dense.
+- Prefer simplicity and incremental changes.
+- State uncertainty explicitly when information is incomplete.
+- Work in small steps and verify each change.
+
+# Tech Stack
+- <language and version>
+- <primary frameworks>
+- <notable libraries>
+
+# Build & Test
+```bash
+<build command>     # e.g. dotnet build / npm run build
+<test command>      # e.g. dotnet test / npm test
+```
+
+# Coding Guidelines
+- <convention 1>
+- <convention 2>
+
+# Git Conventions
+- <branch naming>
+- <commit message format>
+
+# output
+
+A valid AGENTS.md file written to the repository root, using the template above filled in with project-specific values.
+Do not include placeholder text like `<...>` in the final file.
