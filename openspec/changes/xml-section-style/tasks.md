@@ -1,0 +1,34 @@
+## 1. Writers.fs — Type and Options
+
+- [ ] 1.1 Add `SectionStyle` DU (`Markdown` | `Xml`) to `Writers.fs` after the `OutputType` DU
+- [ ] 1.2 Add `mutable SectionStyle: SectionStyle` field to the `Options` record
+- [ ] 1.3 Set `SectionStyle = Markdown` in `defaultOptions`
+
+## 2. Writers.fs — renderMd Section handling
+
+- [ ] 2.1 Update `writeNode` in `renderMd` to extract `displayName` using `RenameMap` and `HeadingFormatter` before the style branch
+- [ ] 2.2 Add `match opts.SectionStyle with` branch: `Markdown` case preserves existing blank-line guard and heading logic
+- [ ] 2.3 Add `Xml` case: emit `<displayName>`, recurse into content, emit `</displayName>` (no level-based blank-line guards)
+
+## 3. Writers.fs — renderSkill Section handling
+
+- [ ] 3.1 Apply identical `writeNode` changes in `renderSkill` (same three steps as 2.1–2.3)
+
+## 4. Build verification
+
+- [ ] 4.1 Run `dotnet build` — must be green before writing tests
+
+## 5. Tests — AgentWriterTests.fs
+
+- [ ] 5.1 Add test: `defaultOptions` has `SectionStyle = Markdown`
+- [ ] 5.2 Add test: existing Markdown rendering unchanged (top-level section → `# name`)
+- [ ] 5.3 Add test: `SectionStyle.Xml` top-level section renders `<name>...</name>`
+- [ ] 5.4 Add test: `SectionStyle.Xml` nested sections render as nested XML tags
+- [ ] 5.5 Add test: `SectionStyle.Xml` output contains no `#` heading lines for sections
+- [ ] 5.6 Add test: `RenameMap` applies to XML tag name
+- [ ] 5.7 Add test: `renderSkill` with `SectionStyle.Xml` renders sections as XML tags
+
+## 6. Test and changelog
+
+- [ ] 6.1 Run `dotnet test` — must be green
+- [ ] 6.2 Add entry to `CHANGELOG.md` under next version for the new `SectionStyle` option
