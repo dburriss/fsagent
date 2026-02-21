@@ -1,4 +1,4 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: renderCommand renders description-only frontmatter
 The system SHALL provide `AgentWriter.renderCommand : SlashCommand -> (Options -> unit) -> string` that renders a YAML front block containing only the `description` key.
@@ -11,9 +11,32 @@ The system SHALL provide `AgentWriter.renderCommand : SlashCommand -> (Options -
 - **WHEN** `renderCommand` is called with a command whose `Name = "my-cmd"`
 - **THEN** the output does NOT contain `name:` in the YAML front block
 
-#### Scenario: empty description renders empty frontmatter value
+#### Scenario: empty description raises validation error
 - **WHEN** `renderCommand` is called with `Description = ""`
-- **THEN** the output contains `description: ` with an empty value (or omits the key — consistent with existing `renderAgent` behaviour for empty strings)
+- **THEN** a `System.Exception` is raised with a message containing `'description'`
+
+#### Scenario: whitespace-only description raises validation error
+- **WHEN** `renderCommand` is called with `Description = "   "`
+- **THEN** a `System.Exception` is raised with a message containing `'description'`
+
+### Requirement: renderCommand validates required fields before serializing
+`renderCommand` SHALL validate that `Name` and `Description` are non-empty and non-whitespace before performing any output serialization. All validation errors SHALL be collected and reported in a single exception.
+
+#### Scenario: empty name raises validation error
+- **WHEN** `renderCommand` is called with `Name = ""`
+- **THEN** a `System.Exception` is raised with a message containing `'name'`
+
+#### Scenario: whitespace-only name raises validation error
+- **WHEN** `renderCommand` is called with `Name = "   "`
+- **THEN** a `System.Exception` is raised with a message containing `'name'`
+
+#### Scenario: both name and description empty reports both errors
+- **WHEN** `renderCommand` is called with `Name = ""` and `Description = ""`
+- **THEN** a single `System.Exception` is raised whose message contains both `'name'` and `'description'`
+
+#### Scenario: valid name and description does not raise
+- **WHEN** `renderCommand` is called with non-empty `Name` and `Description`
+- **THEN** no exception is raised and output is returned
 
 ### Requirement: renderCommand renders sections as Markdown headings
 Sections in a `SlashCommand` SHALL be rendered to Markdown headings and body text using the same rules as `renderAgent`.
