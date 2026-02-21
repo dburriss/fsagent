@@ -7,6 +7,7 @@ open FsAgent.Prompts
 open FsAgent.Writers
 open FsAgent.AST
 open FsAgent.Tools
+open FsAgent.Skills
 open System.IO
 
 // A - Acceptance Tests: End-to-end DSL → AST → Writer pipeline
@@ -652,3 +653,85 @@ let ``A: toolNameMap resolves Bash case name via renderAgent Template node`` () 
         opts.OutputFormat <- AgentWriter.ClaudeCode)
     Assert.Contains("Use bash", opencodeResult)
     Assert.Contains("Use Bash", claudeResult)
+
+// SectionStyle Tests
+
+[<Fact>]
+let ``A: defaultOptions has SectionStyle = Markdown`` () =
+    let opts = AgentWriter.defaultOptions()
+    Assert.Equal(AgentWriter.Markdown, opts.SectionStyle)
+
+[<Fact>]
+let ``A: SectionStyle Markdown top-level section renders as H1`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Section("role", [Text "You are an agent"])]
+    }
+    let result = AgentWriter.renderAgent agent (fun _ -> ())
+    Assert.Contains("# role", result)
+    Assert.DoesNotContain("<role>", result)
+
+[<Fact>]
+let ``A: SectionStyle Xml top-level section renders as XML tag`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Section("role", [Text "You are an agent"])]
+    }
+    let result = AgentWriter.renderAgent agent (fun opts ->
+        opts.SectionStyle <- AgentWriter.Xml)
+    Assert.Contains("<role>", result)
+    Assert.Contains("</role>", result)
+    Assert.Contains("You are an agent", result)
+
+[<Fact>]
+let ``A: SectionStyle Xml nested sections render as nested XML tags`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Section("instructions", [Section("rules", [Text "Rule 1"])])]
+    }
+    let result = AgentWriter.renderAgent agent (fun opts ->
+        opts.SectionStyle <- AgentWriter.Xml)
+    Assert.Contains("<instructions>", result)
+    Assert.Contains("<rules>", result)
+    Assert.Contains("</rules>", result)
+    Assert.Contains("</instructions>", result)
+
+[<Fact>]
+let ``A: SectionStyle Xml output contains no # heading lines for sections`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [
+            Section("role", [Text "Role text"])
+            Section("objective", [Text "Objective text"])
+        ]
+    }
+    let result = AgentWriter.renderAgent agent (fun opts ->
+        opts.SectionStyle <- AgentWriter.Xml)
+    let lines = result.Split('\n')
+    let headingLines = lines |> Array.filter (fun l -> l.TrimStart().StartsWith("#"))
+    Assert.Empty(headingLines)
+
+[<Fact>]
+let ``A: SectionStyle Xml RenameMap applies to XML tag name`` () =
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Section("role", [Text "content"])]
+    }
+    let result = AgentWriter.renderAgent agent (fun opts ->
+        opts.SectionStyle <- AgentWriter.Xml
+        opts.RenameMap <- Map.ofList ["role", "system"])
+    Assert.Contains("<system>", result)
+    Assert.Contains("</system>", result)
+    Assert.DoesNotContain("<role>", result)
+
+[<Fact>]
+let ``A: renderSkill with SectionStyle Xml renders sections as XML tags`` () =
+    let skill: Skill = {
+        Frontmatter = Map.ofList ["name", "test-skill" :> obj; "description", "A test skill" :> obj]
+        Sections = [Section("instructions", [Text "Do something"])]
+    }
+    let result = AgentWriter.renderSkill skill AgentWriter.Opencode (fun opts ->
+        opts.SectionStyle <- AgentWriter.Xml)
+    Assert.Contains("<instructions>", result)
+    Assert.Contains("</instructions>", result)
+    Assert.DoesNotContain("# instructions", result)

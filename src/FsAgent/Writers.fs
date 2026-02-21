@@ -109,6 +109,10 @@ module AgentWriter =
         | Json
         | Yaml
 
+    type SectionStyle =
+        | Markdown
+        | Xml
+
     type WriterContext = {
         Format: AgentHarness
         OutputType: OutputType
@@ -120,6 +124,7 @@ module AgentWriter =
     type Options = {
         mutable OutputFormat: AgentHarness
         mutable OutputType: OutputType
+        mutable SectionStyle: SectionStyle
         mutable DisableCodeBlockWrapping: bool
         mutable RenameMap: Map<string, string>
         mutable HeadingFormatter: (string -> string) option
@@ -139,6 +144,7 @@ module AgentWriter =
     let defaultOptions () = {
         OutputFormat = Opencode
         OutputType = Md
+        SectionStyle = Markdown
         DisableCodeBlockWrapping = false
         RenameMap = Map.empty
         HeadingFormatter = None
@@ -422,18 +428,24 @@ module AgentWriter =
             match node with
             | Text t -> sb.AppendLine(t) |> ignore
             | Section (name, content) ->
-                // Add blank line before level-1 headings if not at document start
-                if level = 1 then
-                    let str = sb.ToString()
-                    if str.Length > 0 && not (str.EndsWith("\n\n")) then
-                        sb.AppendLine() |> ignore
                 let displayName =
                     opts.RenameMap |> Map.tryFind name |> Option.defaultValue name
                     |> (opts.HeadingFormatter |> Option.defaultValue id)
-                let heading = String.replicate level "#" + " " + displayName
-                sb.AppendLine(heading) |> ignore
-                sb.AppendLine() |> ignore
-                for c in content do writeNode c (level + 1)
+                match opts.SectionStyle with
+                | Markdown ->
+                    // Add blank line before level-1 headings if not at document start
+                    if level = 1 then
+                        let str = sb.ToString()
+                        if str.Length > 0 && not (str.EndsWith("\n\n")) then
+                            sb.AppendLine() |> ignore
+                    let heading = String.replicate level "#" + " " + displayName
+                    sb.AppendLine(heading) |> ignore
+                    sb.AppendLine() |> ignore
+                    for c in content do writeNode c (level + 1)
+                | Xml ->
+                    sb.AppendLine($"<{displayName}>") |> ignore
+                    for c in content do writeNode c (level + 1)
+                    sb.AppendLine($"</{displayName}>") |> ignore
             | Node.List items ->
                 for item in items do
                     sb.Append("- ") |> ignore
@@ -630,17 +642,23 @@ module AgentWriter =
             match node with
             | Text t -> sb.AppendLine(t) |> ignore
             | Section (name, content) ->
-                if level = 1 then
-                    let str = sb.ToString()
-                    if str.Length > 0 && not (str.EndsWith("\n\n")) then
-                        sb.AppendLine() |> ignore
                 let displayName =
                     opts.RenameMap |> Map.tryFind name |> Option.defaultValue name
                     |> (opts.HeadingFormatter |> Option.defaultValue id)
-                let heading = String.replicate level "#" + " " + displayName
-                sb.AppendLine(heading) |> ignore
-                sb.AppendLine() |> ignore
-                for c in content do writeNode c (level + 1)
+                match opts.SectionStyle with
+                | Markdown ->
+                    if level = 1 then
+                        let str = sb.ToString()
+                        if str.Length > 0 && not (str.EndsWith("\n\n")) then
+                            sb.AppendLine() |> ignore
+                    let heading = String.replicate level "#" + " " + displayName
+                    sb.AppendLine(heading) |> ignore
+                    sb.AppendLine() |> ignore
+                    for c in content do writeNode c (level + 1)
+                | Xml ->
+                    sb.AppendLine($"<{displayName}>") |> ignore
+                    for c in content do writeNode c (level + 1)
+                    sb.AppendLine($"</{displayName}>") |> ignore
             | Node.List items ->
                 for item in items do
                     sb.Append("- ") |> ignore

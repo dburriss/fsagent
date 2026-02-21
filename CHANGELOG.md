@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **`SectionStyle` option on `AgentWriter.Options`**: New `SectionStyle` discriminated union (`Markdown` | `Xml`) added to `AgentWriter.Options`. When set to `Xml`, `Section` nodes are rendered as `<name>...</name>` XML tags instead of Markdown headings in both `renderAgent` (via `renderMd`) and `renderSkill`. Defaults to `Markdown` to preserve existing behaviour. `RenameMap` and `HeadingFormatter` continue to apply to the tag name in XML mode.
+
+### Added
 - **`AgentWriter.ValidationException`**: Custom F# exception type (`exception ValidationException of string`) defined in `FsAgent.Writers.AgentWriter`. Raised by all three render functions when required fields fail validation, allowing callers to catch validation errors specifically.
 
 ### Changed
