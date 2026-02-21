@@ -3,6 +3,14 @@
 ## [Unreleased]
 
 ### Added
+- **`AgentWriter.ValidationException`**: Custom F# exception type (`exception ValidationException of string`) defined in `FsAgent.Writers.AgentWriter`. Raised by all three render functions when required fields fail validation, allowing callers to catch validation errors specifically.
+
+### Changed
+- **`renderCommand` validation**: `AgentWriter.renderCommand` now validates that `Name` and `Description` are non-empty and non-whitespace before serializing. All violations are collected and reported in a single `raise (ValidationException ...)` with a bulleted message (e.g., `SlashCommand validation failed:\n- requires a non-empty 'name'`).
+- **`renderSkill` validation**: `AgentWriter.renderSkill` now validates that `Frontmatter` contains non-empty, non-whitespace values for both `"name"` and `"description"` keys before serializing. All violations reported in a single `raise (ValidationException ...)` (e.g., `Skill validation failed:\n- requires a non-empty 'name' in frontmatter`).
+- **`renderAgent` validation (Copilot)**: Replaced the single-condition `name.IsNone || desc.IsNone` guard with a collect-then-throw pattern that names each missing field individually, and updated to use `raise (ValidationException ...)` instead of `failwith`.
+
+### Added
 - **`skill-builder`**: `Skill` record type (`Frontmatter: Map<string, obj>`, `Sections: Node list`) in `FsAgent.Skills` namespace, with a `skill { ... }` computation expression exposing `name`, `description`, `license`, `compatibility`, `metadata`, `section`, `prompt`, `import`, `importRaw`, `template`, and `templateFile` custom operations
 - **`skill-writer`**: `AgentWriter.renderSkill` that accepts a `Skill`, an `AgentHarness`, and an `Options -> unit` configurator, producing a SKILL.md-compatible Markdown string with YAML frontmatter; harness-aware `{{{tool X}}}` resolution and all standard `Options` fields are supported
 - `type Skill` alias and `let skill` CE re-exported from `FsAgent` namespace for `open FsAgent` access

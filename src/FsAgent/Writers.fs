@@ -96,6 +96,9 @@ module Template =
 
 module AgentWriter =
 
+    /// Raised when a render function receives a value that fails required-field validation.
+    exception ValidationException of string
+
     // Re-export AgentHarness cases for backward compatibility
     let Opencode = AgentHarness.Opencode
     let Copilot = AgentHarness.Copilot
@@ -497,8 +500,12 @@ module AgentWriter =
         | Copilot ->
             let name = agent.Frontmatter.TryFind "name" |> Option.map string
             let desc = agent.Frontmatter.TryFind "description" |> Option.map string
-            if name.IsNone || desc.IsNone then
-                failwith "Copilot format requires 'name' and 'description' in frontmatter"
+            let errors = [
+                if name.IsNone then "requires 'name' in frontmatter"
+                if desc.IsNone then "requires 'description' in frontmatter"
+            ]
+            if not errors.IsEmpty then
+                raise (ValidationException ("Agent (Copilot) validation failed:\n" + (errors |> List.map (sprintf "- %s") |> String.concat "\n")))
         | _ -> ()
 
         if opts.CustomWriter.IsSome then
@@ -542,6 +549,14 @@ module AgentWriter =
         let opts = defaultOptions()
         configure opts
 
+        // Validation
+        let errors = [
+            if cmd.Name |> System.String.IsNullOrWhiteSpace then "requires a non-empty 'name'"
+            if cmd.Description |> System.String.IsNullOrWhiteSpace then "requires a non-empty 'description'"
+        ]
+        if not errors.IsEmpty then
+            raise (ValidationException ("SlashCommand validation failed:\n" + (errors |> List.map (sprintf "- %s") |> String.concat "\n")))
+
         let agentLike : Agent = {
             Frontmatter = Map.ofList ["description", AST.fmStr cmd.Description]
             Sections = cmd.Sections
@@ -580,6 +595,16 @@ module AgentWriter =
     let renderSkill (skill: Skill) (harness: AgentHarness) (configure: Options -> unit) : string =
         let opts = defaultOptions()
         configure opts
+
+        // Validation — Option.forall p None = true (vacuous truth), so a missing key correctly triggers the error
+        let skillName = skill.Frontmatter.TryFind "name" |> Option.map string
+        let skillDesc = skill.Frontmatter.TryFind "description" |> Option.map string
+        let errors = [
+            if skillName |> Option.forall System.String.IsNullOrWhiteSpace then "requires a non-empty 'name' in frontmatter"
+            if skillDesc |> Option.forall System.String.IsNullOrWhiteSpace then "requires a non-empty 'description' in frontmatter"
+        ]
+        if not errors.IsEmpty then
+            raise (ValidationException ("Skill validation failed:\n" + (errors |> List.map (sprintf "- %s") |> String.concat "\n")))
 
         let sb = StringBuilder()
 

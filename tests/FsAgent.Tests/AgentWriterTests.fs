@@ -183,7 +183,7 @@ let ``A: DisableCodeBlockWrapping forces raw output even for import`` () =
 [<Fact>]
 let ``C: Copilot format fails without name or description`` () =
     let agent: Agent = { Frontmatter = Map.empty; Sections = [] }
-    Assert.Throws<System.Exception>(fun () ->
+    Assert.Throws<AgentWriter.ValidationException>(fun () ->
         AgentWriter.renderAgent agent (fun opts -> opts.OutputFormat <- AgentWriter.Copilot) |> ignore)
 
 // B - Building Tests: Temporary scaffolding (can be removed later)

@@ -119,7 +119,7 @@ let ``A: renderSkill produces frontmatter block with all keys`` () =
 [<Fact>]
 let ``A: renderSkill serializes metadata map as nested YAML mapping`` () =
     let meta = Map.ofList ["author", box "alice"; "version", box "1.0"]
-    let s = skill { metadata meta }
+    let s = skill { name "meta-skill"; description "Metadata test"; metadata meta }
     let result = AgentWriter.renderSkill s AgentWriter.Opencode (fun _ -> ())
     Assert.Contains("metadata:", result)
     Assert.Contains("  author: alice", result)
@@ -129,7 +129,7 @@ let ``A: renderSkill serializes metadata map as nested YAML mapping`` () =
 
 [<Fact>]
 let ``A: renderSkill renders Section node as # Heading`` () =
-    let s = skill { section "Steps" "Do this." }
+    let s = skill { name "section-skill"; description "Section test"; section "Steps" "Do this." }
     let result = AgentWriter.renderSkill s AgentWriter.Opencode (fun _ -> ())
     Assert.Contains("# Steps", result)
     Assert.Contains("Do this.", result)
@@ -138,30 +138,39 @@ let ``A: renderSkill renders Section node as # Heading`` () =
 
 [<Fact>]
 let ``A: renderSkill resolves tool Bash as 'bash' for Opencode harness`` () =
-    let s = skill { template "{{{tool Bash}}}" }
+    let s = skill { name "bash-skill"; description "Bash test"; template "{{{tool Bash}}}" }
     let result = AgentWriter.renderSkill s AgentWriter.Opencode (fun _ -> ())
     Assert.Contains("bash", result)
     Assert.DoesNotContain("{{{tool Bash}}}", result)
 
 [<Fact>]
 let ``A: renderSkill resolves tool Bash as 'Bash' for ClaudeCode harness`` () =
-    let s = skill { template "{{{tool Bash}}}" }
+    let s = skill { name "bash-skill"; description "Bash test"; template "{{{tool Bash}}}" }
     let result = AgentWriter.renderSkill s AgentWriter.ClaudeCode (fun _ -> ())
     Assert.Contains("Bash", result)
     Assert.DoesNotContain("{{{tool Bash}}}", result)
 
-// ── 5.11 empty skill produces no frontmatter block ────────────────────────────
+// ── 5.11 empty skill raises validation error ──────────────────────────────────
 
 [<Fact>]
-let ``A: renderSkill with empty skill produces no frontmatter block`` () =
-    let result = AgentWriter.renderSkill Skill.empty AgentWriter.Opencode (fun _ -> ())
-    Assert.DoesNotContain("---", result)
+let ``C: renderSkill raises when name is missing`` () =
+    let s : Skill = { Frontmatter = Map.ofList ["description", box "desc"]; Sections = [] }
+    let ex = Assert.Throws<AgentWriter.ValidationException>(fun () ->
+        AgentWriter.renderSkill s AgentWriter.Opencode (fun _ -> ()) |> ignore)
+    Assert.Contains("'name'", ex.Message)
+
+[<Fact>]
+let ``C: renderSkill reports all errors when name and description are both missing`` () =
+    let ex = Assert.Throws<AgentWriter.ValidationException>(fun () ->
+        AgentWriter.renderSkill Skill.empty AgentWriter.Opencode (fun _ -> ()) |> ignore)
+    Assert.Contains("'name'", ex.Message)
+    Assert.Contains("'description'", ex.Message)
 
 // ── 5.12 HeadingFormatter option ─────────────────────────────────────────────
 
 [<Fact>]
 let ``A: renderSkill respects HeadingFormatter option`` () =
-    let s = skill { section "overview" "Details here." }
+    let s = skill { name "heading-skill"; description "Heading test"; section "overview" "Details here." }
     let result = AgentWriter.renderSkill s AgentWriter.Opencode (fun opts ->
         opts.HeadingFormatter <- Some (fun s -> s.ToUpper()))
     Assert.Contains("# OVERVIEW", result)
@@ -170,7 +179,7 @@ let ``A: renderSkill respects HeadingFormatter option`` () =
 
 [<Fact>]
 let ``A: renderSkill respects TemplateVariables option`` () =
-    let s = skill { template "Hello {{{name}}}" }
+    let s = skill { name "tpl-skill"; description "Template test"; template "Hello {{{name}}}" }
     let result = AgentWriter.renderSkill s AgentWriter.Opencode (fun opts ->
         opts.TemplateVariables <- Map.ofList ["name", box "world"])
     Assert.Contains("Hello world", result)

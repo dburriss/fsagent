@@ -96,12 +96,16 @@ let ``A: command renders identically for Copilot and ClaudeCode`` () =
     Assert.Equal(opencodeResult, claudeResult)
 
 [<Fact>]
-let ``A: empty command renders only description frontmatter`` () =
-    let cmd =
-        command {
-            description ""
-        }
-    let result = AgentWriter.renderCommand cmd (fun _ -> ())
-    Assert.Contains("---", result)
-    Assert.Contains("description:", result)
-    Assert.DoesNotContain("# ", result)
+let ``C: renderCommand raises when name is empty`` () =
+    let cmd : SlashCommand = { Name = ""; Description = "Does a thing"; Sections = [] }
+    let ex = Assert.Throws<AgentWriter.ValidationException>(fun () ->
+        AgentWriter.renderCommand cmd (fun _ -> ()) |> ignore)
+    Assert.Contains("'name'", ex.Message)
+
+[<Fact>]
+let ``C: renderCommand reports all errors when name and description are both empty`` () =
+    let cmd : SlashCommand = { Name = ""; Description = ""; Sections = [] }
+    let ex = Assert.Throws<AgentWriter.ValidationException>(fun () ->
+        AgentWriter.renderCommand cmd (fun _ -> ()) |> ignore)
+    Assert.Contains("'name'", ex.Message)
+    Assert.Contains("'description'", ex.Message)
