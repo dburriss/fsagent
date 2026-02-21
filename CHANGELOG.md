@@ -3,6 +3,16 @@
 ## [Unreleased]
 
 ### Added
+- **`FileWriter` module** (`FsAgent.Writers.FileWriter`): New harness-aware file-writing module that resolves the correct output path for agents, skills, and slash commands per harness and scope, then writes content to disk. Public API:
+  - `WriteScope` DU (`Project of rootDir: string | Global`) — controls whether output targets a project-local directory or the user's OS config directory.
+  - `ArtifactKind` DU (`AgentArtifact | CommandArtifact of namespace_: string option | SkillArtifact`) — identifies the artifact type and carries ClaudeCode namespace for namespaced commands.
+  - `resolveGlobalRoot` — returns the OS-correct global config root per harness; raises `NotSupportedException` for `Copilot`.
+  - `resolveOutputPath` — pure function mapping `(harness × kind × name × scope)` to an absolute path string; no I/O performed.
+  - `writeFile` — thin I/O wrapper: calls `resolveOutputPath`, creates intermediate directories, writes content, returns resolved path.
+  - `writeAgent` / `writeSkill` / `writeCommand` — convenience wrappers that render the artifact and call `writeFile`; name is derived from `Frontmatter["name"]` (raises `ArgumentException` if absent).
+  - All public symbols re-exported from `FsAgent` namespace (`module FileWriter`, `type WriteScope`, `type ArtifactKind`).
+
+### Added
 - **`SectionStyle` option on `AgentWriter.Options`**: New `SectionStyle` discriminated union (`Markdown` | `Xml`) added to `AgentWriter.Options`. When set to `Xml`, `Section` nodes are rendered as `<name>...</name>` XML tags instead of Markdown headings in both `renderAgent` (via `renderMd`) and `renderSkill`. Defaults to `Markdown` to preserve existing behaviour. `RenameMap` and `HeadingFormatter` continue to apply to the tag name in XML mode.
 
 ### Added

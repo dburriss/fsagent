@@ -20,3 +20,8 @@ module DSL =
 // Re-export modules
 module AST = FsAgent.AST.AST
 module AgentWriter = FsAgent.Writers.AgentWriter
+module FileWriter = FsAgent.Writers.FileWriter
+
+// Re-export FileWriter types
+type WriteScope = FsAgent.Writers.WriteScope
+type ArtifactKind = FsAgent.Writers.ArtifactKind

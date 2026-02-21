@@ -46,6 +46,7 @@
     <Compile Include="Command.fs" />
     <Compile Include="Skill.fs" />
     <Compile Include="Writers.fs" />
+    <Compile Include="FileWriter.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 
