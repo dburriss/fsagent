@@ -54,7 +54,7 @@ Keep it concise — the agent reads the whole file at session start."""
 
 let agentsMdCommand =
     command {
-        // name "create-agents-md"
+        name "create-agents-md"
         description "Generate a minimal AGENTS.md file for your project"
         prompt agentsMdPrompt
     }
