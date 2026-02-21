@@ -16,7 +16,7 @@ Keep it concise — the agent reads the whole file at session start.
 4. Add any project-specific coding conventions or constraints.
 5. Write the file to `AGENTS.md` in the repository root.
 
-# template
+# output
 
 Key files:
 - `README.md`
@@ -46,8 +46,3 @@ Key files:
 # Git Conventions
 - <branch naming>
 - <commit message format>
-
-# output
-
-A valid AGENTS.md file written to the repository root, using the template above filled in with project-specific values.
-Do not include placeholder text like `<...>` in the final file.

@@ -3,6 +3,7 @@
 
 open System.IO
 open FsAgent.Commands
+open FsAgent.Prompts
 open FsAgent.Writers
 
 let scriptDir = __SOURCE_DIRECTORY__
@@ -11,10 +12,8 @@ let scriptDir = __SOURCE_DIRECTORY__
 // AGENTS.md is read by AI coding agents at session start to orient them
 // to the project: key files, guidelines, tech stack, and build/test commands.
 
-let agentsMdCommand =
-    command {
-        name "create-agents-md"
-        description "Generate a minimal AGENTS.md file for your project"
+let agentsMdPrompt =
+    prompt {
         objective """AGENTS.md is placed at the repository root and read automatically by AI coding agents.
 It orients the agent to the project: what matters, how to build and test, and any conventions to follow.
 Keep it concise — the agent reads the whole file at session start."""
@@ -51,6 +50,13 @@ Keep it concise — the agent reads the whole file at session start."""
 # Git Conventions
 - <branch naming>
 - <commit message format>"""
+    }
+
+let agentsMdCommand =
+    command {
+        name "create-agents-md"
+        description "Generate a minimal AGENTS.md file for your project"
+        prompt agentsMdPrompt
     }
 
 let outputPath = Path.Combine(scriptDir, "AGENTS.md.example")
