@@ -27,7 +27,7 @@ Improvements to the core intermediate representation.
 
 Enhancements and correctness fixes in `Writers.fs`.
 
-- [ ] Implement TOON serialization in the import pipeline — currently `DataFormat.Toon` is recognised by `inferFormat` but no TOON serializer exists; writers fall back to raw `File.ReadAllText`. Check for existing TOON serializers that can be leveraged, or implement a custom one if needed.
+- [x] Implement TOON serialization in the import pipeline — currently `DataFormat.Toon` is recognised by `inferFormat` but no TOON serializer exists; writers fall back to raw `File.ReadAllText`. Check for existing TOON serializers that can be leveraged, or implement a custom one if needed.
 - [ ] Implement YAML-to-TOON and JSON-to-TOON re-serialisation at write time (architecture calls for late-bound import formatting)
 - [ ] Implement JSON-to-YAML and YAML-to-JSON cross-format re-serialisation in the import pipeline
 - [ ] Verify and add tests for the `Imported` node `wrapInCodeBlock = false` path end-to-end
@@ -65,7 +65,7 @@ Coverage gaps and test-quality improvements.
 - [ ] Add golden-file tests for `renderAgent` / `renderPrompt` / `renderCommand` / `renderSkill` output across all three harnesses (currently only structural assertions exist)
 - [ ] Add `C`-category tests for the YAML import path once re-serialisation is implemented
 - [ ] Add `C`-category tests for the JSON import path
-- [ ] Add `C`-category tests for TOON import path once TOON serializer exists
+- [x] Add `C`-category tests for TOON import path once TOON serializer exists
 - [ ] Add tests for `AgentBuilder` `template` / `templateFile` operations once implemented
 - [ ] Add tests covering `model` field on commands once implemented
 
