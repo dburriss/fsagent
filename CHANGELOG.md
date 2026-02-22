@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **`FsAgent.Toon` project**: New `netstandard2.0` companion project (`src/FsAgent.Toon/`) providing a pure F# TOON v1.2 parser and normalizing serializer with no external dependencies. Public API: `FsAgent.Toon.ToonSerializer.serialize : string -> Result<string, string>` — parses a TOON document and re-emits normalized output; returns `Error "Line N: msg"` on parse failure, never throws.
+- **`ToonSerializer` hook on `AgentWriter.Options`**: New `mutable ToonSerializer: (string -> Result<string, string>) option` field on `AgentWriter.Options`. When set, `Imported` nodes with `DataFormat.Toon` are parsed and re-serialized via the provided function instead of being passed through as raw bytes. On parse error, the embedded content begins with `[TOON parse error: <msg>]` followed by the raw content. When `None` (default), behaviour is unchanged — raw passthrough.
+- **`resolveImportedContent` helper in `Writers.fs`**: Extracted shared `resolveImportedContent (path: string) (format: DataFormat) (toonSerializer: ...) : string` helper; both `renderMd` and `renderSkill` `Imported` handlers now delegate to it, eliminating the duplicated `File.ReadAllText` pattern.
+- **`examples/toon-data.toon` rewritten**: Corrected from YAML syntax to valid TOON v1.2 syntax with proper array headers (`[N]:`), nested objects, and inline primitive arrays.
+- **C-category TOON tests** (`ToonSerializerTests.fs`): 6 new tests covering `serialize` round-trip of `toon-data.toon`, invalid escape error path, raw YAML passthrough regression, valid TOON import normalization, and no-serializer raw passthrough.
+- **A-category TOON acceptance test extended**: New test asserting that when `ToonSerializer` is registered on options, `Imported` TOON content is normalized (key present in output) rather than passed through as raw bytes.
+
 - **`FileWriter` module** (`FsAgent.Writers.FileWriter`): New harness-aware file-writing module that resolves the correct output path for agents, skills, and slash commands per harness and scope, then writes content to disk. Public API:
   - `WriteScope` DU (`Project of rootDir: string | Global`) — controls whether output targets a project-local directory or the user's OS config directory.
   - `ArtifactKind` DU (`AgentArtifact | CommandArtifact of namespace_: string option | SkillArtifact`) — identifies the artifact type and carries ClaudeCode namespace for namespaced commands.

@@ -39,26 +39,24 @@ mood: neon
 palette:
   primary: sunrise
   accent: aurora
-characters:
+characters[3]:
   - name: Astra
     role: pilot
-    signature: "Skyline sweep"
+    signature: Skyline sweep
   - name: Rig
     role: engineer
-    signature: "Weld and calm"
+    signature: Weld and calm
   - name: Nova
     role: scout
-    signature: "Trailglow"
-missions:
-  - id: 01
-    objective: "Stabilize the aurora shield"
+    signature: Trailglow
+missions[2]:
+  - id: 1
+    objective: Stabilize the aurora shield
     lead: Astra
-  - id: 02
-    objective: "Guide the comet convoy through the meteor band"
+  - id: 2
+    objective: Guide the comet convoy through the meteor band
     lead: Rig
-notes:
-  - "Keep the roster lively and vivid."
-  - "Lean into color references whenever you describe each character."
+notes[2]: "Keep the roster lively and vivid.","Lean into color references whenever you describe each character."
 ```
 
 # examples
@@ -71,4 +69,4 @@ Summarize how the pilot, engineer, and scout work together for the Celestia Resc
 # output
 
 Produce a plan that briefly describes each character, their signature move, and a proposed mission tag.
-Generated 2026-02-21 00:03:39Z for toon-importer
+Generated 2026-02-22 11:59:37Z for toon-importer

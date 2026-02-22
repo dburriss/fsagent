@@ -140,6 +140,13 @@
           "Fue": "[2.2.0, )",
           "YamlDotNet": "[16.3.0, )"
         }
+      },
+      "fsagent.toon": {
+        "type": "Project",
+        "dependencies": {
+          "FSharp.Core": "[8.0.400, )",
+          "FsAgent": "[0.3.1, )"
+        }
       }
     }
   }

@@ -132,6 +132,10 @@ module AgentWriter =
         mutable IncludeFrontmatter: bool
         mutable CustomWriter: (Agent -> Options -> string) option
         mutable TemplateVariables: Template.TemplateVariables
+        /// Optional TOON serializer: parse-and-reserialize a TOON string.
+        /// Returns Ok(normalizedToon) on success or Error(message) on parse failure.
+        /// When None, TOON imports are passed through as raw content.
+        mutable ToonSerializer: (string -> Result<string, string>) option
     }
 
     let formatToLanguageTag (format: DataFormat) : string =
@@ -152,6 +156,7 @@ module AgentWriter =
         IncludeFrontmatter = true
         CustomWriter = None
         TemplateVariables = Map.empty
+        ToonSerializer = None
     }
 
     let rec nodeToObj (node: Node) (templateVars: Template.TemplateVariables) : obj =
@@ -322,6 +327,18 @@ module AgentWriter =
                 |> String.concat "\n  - "
                 |> sprintf "\n  - %s"
 
+    let private resolveImportedContent (path: string) (format: DataFormat) (toonSerializer: (string -> Result<string, string>) option) : string =
+        let raw = System.IO.File.ReadAllText(path)
+        match format with
+        | DataFormat.Toon ->
+            match toonSerializer with
+            | Some serialize ->
+                match serialize raw with
+                | Ok normalized -> normalized
+                | Error msg -> $"[TOON parse error: {msg}]\n{raw}"
+            | None -> raw
+        | _ -> raw
+
     let private renderMd (agent: Agent) (opts: Options) (ctx: WriterContext) : string =
         let sb = StringBuilder()
 
@@ -459,7 +476,7 @@ module AgentWriter =
                     if str.Length > 0 && not (str.EndsWith("\n\n")) then
                         sb.AppendLine() |> ignore
                 try
-                    let content = System.IO.File.ReadAllText(path)
+                    let content = resolveImportedContent path format opts.ToonSerializer
                     if shouldWrap then
                         let langTag = formatToLanguageTag format
                         sb.AppendLine($"```{langTag}") |> ignore
@@ -671,7 +688,7 @@ module AgentWriter =
                     if str.Length > 0 && not (str.EndsWith("\n\n")) then
                         sb.AppendLine() |> ignore
                 try
-                    let content = System.IO.File.ReadAllText(path)
+                    let content = resolveImportedContent path format opts.ToonSerializer
                     if shouldWrap then
                         let langTag = formatToLanguageTag format
                         sb.AppendLine($"```{langTag}") |> ignore

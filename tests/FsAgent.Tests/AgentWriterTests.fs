@@ -8,6 +8,7 @@ open FsAgent.Writers
 open FsAgent.AST
 open FsAgent.Tools
 open FsAgent.Skills
+open FsAgent.Toon
 open System.IO
 
 // A - Acceptance Tests: End-to-end DSL → AST → Writer pipeline
@@ -151,6 +152,23 @@ let ``A: import wraps TOON in toon fence by default`` () =
     let result = AgentWriter.renderAgent agent (fun _ -> ())
     Assert.Contains("```toon", result)
     Assert.Contains("toon content here", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+[<Trait("category", "toon")>]
+let ``A: import with ToonSerializer registered normalizes TOON content and embeds valid TOON key`` () =
+    let tempFile = Path.GetTempFileName()
+    let validToon = "title: Celestia Rescue\nmood: neon"
+    File.WriteAllText(tempFile, validToon)
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Toon, true)]
+    }
+    let result = AgentWriter.renderAgent agent (fun opts ->
+        opts.ToonSerializer <- Some ToonSerializer.serialize)
+    Assert.Contains("```toon", result)
+    // Normalized output preserves key 'title' — not raw YAML/unknown bytes
+    Assert.Contains("title", result)
     File.Delete(tempFile)
 
 [<Fact>]

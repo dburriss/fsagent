@@ -18,6 +18,7 @@
     <Compile Include="CommandTests.fs" />
     <Compile Include="SkillTests.fs" />
     <Compile Include="FileWriterTests.fs" />
+    <Compile Include="ToonSerializerTests.fs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FsAgent\FsAgent.fsproj" />
+    <ProjectReference Include="..\..\src\FsAgent.Toon\FsAgent.Toon.fsproj" />
   </ItemGroup>
 
 </Project>
