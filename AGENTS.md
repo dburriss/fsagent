@@ -2,7 +2,7 @@
 Key files:
 - `README.md`
 - `ARCHITECTURE.md`
-- `opencode/project.md`
+- `PROJECT.md`
 
 # General
 - Keep answers succinct and information-dense.  
