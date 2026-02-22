@@ -1,6 +1,6 @@
 # Harness-Aware File Writer
 
-**Status:** Draft
+**Status:** Done
 
 ## Problem
 

@@ -1,6 +1,6 @@
 # Plan: Skill DSL Support
 
-Status: Draft
+Status: Done
 
 ## Overview
 

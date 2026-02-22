@@ -1,6 +1,6 @@
 # Plan: Field Validation for Command and Skill Builders
 
-Status: Draft
+Status: Done
 
 ## Overview
 

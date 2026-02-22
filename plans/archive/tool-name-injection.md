@@ -1,6 +1,6 @@
 # Plan: Harness-Aware Tool Name Injection in Prompt Templates
 
-Status: Draft
+Status: Done
 
 ## Problem
 

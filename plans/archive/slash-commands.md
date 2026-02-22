@@ -1,6 +1,6 @@
 # Plan: Add Slash Command Support
 
-Status: Draft
+Status: Done
 
 ## Overview
 

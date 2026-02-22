@@ -1,5 +1,7 @@
 # Plan: XML Section Style Option
 
+Status: Done
+
 ## Motivation
 
 Many modern LLMs parse structured prompts more reliably when sections use XML tags

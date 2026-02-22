@@ -1,6 +1,6 @@
 # Plan: Remove Semantic Content Ops from CommandBuilder
 
-Status: Draft
+Status: Done
 
 ## Overview
 

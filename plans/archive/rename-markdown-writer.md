@@ -1,5 +1,7 @@
 # Plan: Rename MarkdownWriter and write* functions
 
+Status: Done
+
 ## Motivation
 
 `MarkdownWriter` is misleading — the module already produces Markdown, JSON, and YAML output
