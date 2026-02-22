@@ -20,11 +20,13 @@ Create a backlog of tasks for the project. Organise by functional areas to make 
 
 User input: $ARGUMENTS
 
-1. Check existing documents and the "User input' for any mentioned tasks or features that need to be added to the backlog.
-2. Use the Questions tool to ask any questions you have about the project or the tasks that need to be added to the backlog.
-3. Go through multiple loops of asking questions and adding tasks to the backlog until you have a comprehensive list of tasks that need to be completed for the project.
-4. Organize the backlog by functional areas (e.g., rendering, file writing, command handling) to make it easier to navigate and prioritize work.
-5. Write the backlog to a markdown file named `BACKLOG.md` in the root directory of the project.
+1. Review the @PROJECT.md to understand the overall project roadmap and identify the major features and milestones.
+2. Review the @ARCHITECTURE.md to understand the system design and how components interact, which may reveal necessary tasks for the backlog.
+3. Check existing  "User input' for any mentioned tasks or features that need to be added to the backlog.
+4. Use the Questions tool to ask any questions you have about the project or the tasks that need to be added to the backlog.
+5. Go through multiple loops of asking questions and adding tasks to the backlog until you have a comprehensive list of tasks that need to be completed for the project.
+6. Organize the backlog by functional areas (e.g., rendering, file writing, command handling) to make it easier to navigate and prioritize work.
+7. Write the backlog to a markdown file named `BACKLOG.md` in the root directory of the project.
 
 ## Output
 
