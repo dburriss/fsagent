@@ -1,6 +1,6 @@
 # File Writer — Path Resolution & `AgentFileWriter`
 
-**Status:** Draft
+**Status:** Done
 
 ---
 
