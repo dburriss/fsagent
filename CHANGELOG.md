@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed (Breaking)
+- **`OpenCodeSkillPath` renamed to `FolderVariant`**: The DU previously named `OpenCodeSkillPath` is now `FolderVariant`. The parameter previously named `?skillPath` on `AgentFileWriter` is now `?folderVariant`; `opencodeSkillPath` on `resolveOutputPathWith` is now `folderVariant`. Update all call sites and type annotations.
+
+### Added
+- **`FolderVariant.ClaudeFolder` case**: New case on `FolderVariant` DU. When passed to `resolveOutputPathWith` or the `AgentFileWriter` constructor, routes **OpenCode and Copilot** project-scope skills to `.claude/skills/<name>/SKILL.md` — the cross-tool path supported by ClaudeCode, OpenCode, and Copilot. `AgentsFolder` and `OpencodeFolder` continue to affect OpenCode only; `ClaudeFolder` is the only case that also affects Copilot.
+
+### Previously unreleased
+- **`OpenCodeSkillPath` DU** (`AgentsFolder | OpencodeFolder`): Controls whether OpenCode project-scope skills are written to `.agents/skills/` (default) or `.opencode/skills/`. Pass explicitly via `resolveOutputPathWith`; arity-4 `resolveOutputPath` and module-level `writeFile`/`writeSkill` default to `AgentsFolder`.
+- **`ConfigPaths` module** (public, re-exported from `FsAgent` namespace): Exposes `resolveProjectRoot (harness) (rootDir)` and `resolveGlobalRoot (harness) (copilotRoot option)` as pure, testable functions. `resolveGlobalRoot` for Copilot resolves in priority order: explicit `copilotRoot` parameter → `COPILOT_GLOBAL_ROOT` environment variable → `NotSupportedException`.
+- **`COPILOT_GLOBAL_ROOT` env-var fallback**: Copilot global scope no longer unconditionally raises; if the `COPILOT_GLOBAL_ROOT` environment variable is set it is used as the global root, enabling CI/CD scenarios without passing an explicit path.
+- **`AgentFileWriter` class** (re-exported from `FsAgent` namespace): Injectable writer with constructor `(fileSystem: IFileSystem, scope: WriteScope, ?configure, ?copilotRoot, ?skillPath)`. Methods: `WriteAgent`, `WriteSkill`, `WriteCommand` — identical semantics to module-level functions but use the injected `IFileSystem` for all I/O, enabling in-memory testing without touching the real filesystem.
+- **`Testably.Abstractions` dependency** on `FsAgent` project (10.1.0): Provides `IFileSystem` abstraction used by `AgentFileWriter`.
+- **C-category filesystem tests** (`FileWriterTests.fs`): 6 new tests (`C 9.1`–`C 9.6`) covering `AgentFileWriter` with `MockFileSystem` for all artifact types and harnesses.
+
+### Changed (Breaking)
+- **OpenCode project-scope skill default path changed**: `resolveOutputPath` (arity-4) and module-level `writeSkill` now route OpenCode + Project + SkillArtifact to `.agents/skills/<name>/SKILL.md` instead of `.opencode/skills/<name>/SKILL.md`. Use `resolveOutputPathWith` with `OpencodeFolder` to restore the previous behaviour.
+
 ### Added
 - **`FsAgent.Toon` project**: New `netstandard2.0` companion project (`src/FsAgent.Toon/`) providing a pure F# TOON v1.2 parser and normalizing serializer with no external dependencies. Public API: `FsAgent.Toon.ToonSerializer.serialize : string -> Result<string, string>` — parses a TOON document and re-emits normalized output; returns `Error "Line N: msg"` on parse failure, never throws.
 - **`ToonSerializer` hook on `AgentWriter.Options`**: New `mutable ToonSerializer: (string -> Result<string, string>) option` field on `AgentWriter.Options`. When set, `Imported` nodes with `DataFormat.Toon` are parsed and re-serialized via the provided function instead of being passed through as raw bytes. On parse error, the embedded content begins with `[TOON parse error: <msg>]` followed by the raw content. When `None` (default), behaviour is unchanged — raw passthrough.

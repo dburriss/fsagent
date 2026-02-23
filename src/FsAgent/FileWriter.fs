@@ -6,6 +6,7 @@ open System.Runtime.InteropServices
 open FsAgent.Agents
 open FsAgent.Skills
 open FsAgent.Commands
+open System.IO.Abstractions
 
 /// Specifies whether to write to a project-local directory or the user's global config.
 type WriteScope =
@@ -22,20 +23,44 @@ type ArtifactKind =
     | CommandArtifact of namespace_: string option
     | SkillArtifact
 
-module FileWriter =
+/// Controls which root directory project-scope skills are written to.
+/// Affects OpenCode for all cases; also affects Copilot for ClaudeFolder.
+type FolderVariant =
+    /// Write to `.agents/skills/` — the cross-tool Agent Skills spec path (default).
+    | AgentsFolder
+    /// Write to `.opencode/skills/` — the OpenCode-specific path.
+    | OpencodeFolder
+    /// Write to `.claude/skills/` — supported by ClaudeCode, OpenCode, and Copilot.
+    | ClaudeFolder
 
-    // ── Global root resolution ────────────────────────────────────────────────
+/// Public module exposing pure path helpers for harness root directories.
+module ConfigPaths =
 
     let private isUnix () =
         RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
         || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
 
-    /// Returns the OS-correct global config root for a harness.
-    /// Raises NotSupportedException for Copilot (no global file-system scope).
-    let resolveGlobalRoot (harness: AgentHarness) : string =
+    /// Returns the harness-specific project root subdirectory within rootDir.
+    /// The rootDir is resolved to an absolute path.
+    let resolveProjectRoot (harness: AgentHarness) (rootDir: string) : string =
+        let absRoot = Path.GetFullPath(rootDir)
+        match harness with
+        | AgentHarness.Opencode   -> Path.Combine(absRoot, ".opencode")
+        | AgentHarness.Copilot    -> Path.Combine(absRoot, ".github")
+        | AgentHarness.ClaudeCode -> Path.Combine(absRoot, ".claude")
+
+    /// Returns the harness-specific global config root.
+    /// For Copilot: explicit copilotRoot → COPILOT_GLOBAL_ROOT env var → NotSupportedException.
+    /// For Opencode and ClaudeCode: resolved from OS profile.
+    let resolveGlobalRoot (harness: AgentHarness) (copilotRoot: string option) : string =
         match harness with
         | AgentHarness.Copilot ->
-            raise (NotSupportedException "Copilot does not support global file-system scope")
+            match copilotRoot with
+            | Some r -> r
+            | None ->
+                let envVal = Environment.GetEnvironmentVariable("COPILOT_GLOBAL_ROOT")
+                if not (String.IsNullOrEmpty(envVal)) then envVal
+                else raise (NotSupportedException "Copilot does not support global file-system scope")
         | AgentHarness.Opencode ->
             if isUnix () then
                 let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
@@ -47,47 +72,41 @@ module FileWriter =
             let home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
             Path.Combine(home, ".claude")
 
-    // ── Harness root directories ──────────────────────────────────────────────
+module FileWriter =
 
-    let private harnessProjectRoot (harness: AgentHarness) (rootDir: string) : string =
-        match harness with
-        | AgentHarness.Opencode  -> Path.Combine(rootDir, ".opencode")
-        | AgentHarness.Copilot   -> Path.Combine(rootDir, ".github")
-        | AgentHarness.ClaudeCode -> Path.Combine(rootDir, ".claude")
+    // ── Internal helpers ──────────────────────────────────────────────────────
 
-    let private scopeRoot (harness: AgentHarness) (scope: WriteScope) : string =
+    let private scopeRoot (harness: AgentHarness) (scope: WriteScope) (copilotRoot: string option) : string =
         match scope with
         | Project rootDir ->
-            let absRoot = Path.GetFullPath(rootDir)
-            harnessProjectRoot harness absRoot
+            ConfigPaths.resolveProjectRoot harness rootDir
         | Global ->
-            resolveGlobalRoot harness   // raises for Copilot
+            ConfigPaths.resolveGlobalRoot harness copilotRoot
 
     // ── Path resolution ───────────────────────────────────────────────────────
 
     /// Pure function: returns the absolute output path for an artifact.
+    /// Uses AgentsFolder as default for OpenCode project-scope skills.
+    /// Equivalent to calling resolveOutputPathWith with AgentsFolder.
     /// No I/O is performed.
     let resolveOutputPath
         (harness: AgentHarness)
         (kind: ArtifactKind)
         (name: string)
         (scope: WriteScope) : string =
-        let root = scopeRoot harness scope
+        let root = scopeRoot harness scope None
         match kind with
         | AgentArtifact ->
-            let subdir =
-                match harness with
-                | AgentHarness.Copilot    -> "agents"
-                | AgentHarness.Opencode   -> "agents"
-                | AgentHarness.ClaudeCode -> "agents"
-            Path.Combine(root, subdir, name + ".md")
+            Path.Combine(root, "agents", name + ".md")
         | SkillArtifact ->
-            let subdir =
-                match harness with
-                | AgentHarness.Copilot    -> "skills"
-                | AgentHarness.Opencode   -> "skills"
-                | AgentHarness.ClaudeCode -> "skills"
-            Path.Combine(root, subdir, name, "SKILL.md")
+            match harness, scope with
+            | AgentHarness.Opencode, Project _ ->
+                // Default: use cross-tool Agent Skills spec path (.agents/)
+                let absRoot = Path.GetFullPath(
+                    match scope with Project r -> r | Global -> "")
+                Path.Combine(absRoot, ".agents", "skills", name, "SKILL.md")
+            | _ ->
+                Path.Combine(root, "skills", name, "SKILL.md")
         | CommandArtifact ns ->
             match harness with
             | AgentHarness.Opencode ->
@@ -96,7 +115,49 @@ module FileWriter =
                 Path.Combine(root, "prompts", name + ".prompt.md")
             | AgentHarness.ClaudeCode ->
                 match ns with
-                | None           -> Path.Combine(root, "commands", name + ".md")
+                | None            -> Path.Combine(root, "commands", name + ".md")
+                | Some namespace_ -> Path.Combine(root, "commands", namespace_, name + ".md")
+
+    /// Pure function: returns the absolute output path for an artifact.
+    /// Accepts an explicit FolderVariant to control project-scope skill root.
+    /// ClaudeFolder affects both OpenCode and Copilot; AgentsFolder/OpencodeFolder affect OpenCode only.
+    /// No I/O is performed.
+    let resolveOutputPathWith
+        (harness: AgentHarness)
+        (kind: ArtifactKind)
+        (name: string)
+        (scope: WriteScope)
+        (folderVariant: FolderVariant) : string =
+        let root = scopeRoot harness scope None
+        match kind with
+        | AgentArtifact ->
+            Path.Combine(root, "agents", name + ".md")
+        | SkillArtifact ->
+            match harness, scope with
+            | (AgentHarness.Opencode | AgentHarness.Copilot), Project _ when folderVariant = ClaudeFolder ->
+                let absRoot = Path.GetFullPath(
+                    match scope with Project r -> r | Global -> "")
+                Path.Combine(absRoot, ".claude", "skills", name, "SKILL.md")
+            | AgentHarness.Opencode, Project _ ->
+                let absRoot = Path.GetFullPath(
+                    match scope with Project r -> r | Global -> "")
+                let skillsRoot =
+                    match folderVariant with
+                    | AgentsFolder   -> Path.Combine(absRoot, ".agents")
+                    | OpencodeFolder -> Path.Combine(absRoot, ".opencode")
+                    | ClaudeFolder   -> Path.Combine(absRoot, ".claude")  // unreachable; handled above
+                Path.Combine(skillsRoot, "skills", name, "SKILL.md")
+            | _ ->
+                Path.Combine(root, "skills", name, "SKILL.md")
+        | CommandArtifact ns ->
+            match harness with
+            | AgentHarness.Opencode ->
+                Path.Combine(root, "commands", name + ".md")
+            | AgentHarness.Copilot ->
+                Path.Combine(root, "prompts", name + ".prompt.md")
+            | AgentHarness.ClaudeCode ->
+                match ns with
+                | None            -> Path.Combine(root, "commands", name + ".md")
                 | Some namespace_ -> Path.Combine(root, "commands", namespace_, name + ".md")
 
     // ── I/O layer ─────────────────────────────────────────────────────────────
@@ -162,3 +223,100 @@ module FileWriter =
                 opts.OutputFormat <- harness
                 configure opts)
         writeFile harness (CommandArtifact namespace_) cmd.Name scope content
+
+// ── AgentFileWriter class ─────────────────────────────────────────────────────
+
+/// Injectable file writer that uses an IFileSystem abstraction for testable I/O.
+/// Accepts a MockFileSystem (Testably.Abstractions.Testing) for in-memory testing.
+type AgentFileWriter
+    (fileSystem   : IFileSystem,
+     scope        : WriteScope,
+     ?configure   : AgentWriter.Options -> unit,
+     ?copilotRoot : string,
+     ?folderVariant : FolderVariant) =
+
+    let configure_ = defaultArg configure (fun _ -> ())
+    let folderVariant_ = defaultArg folderVariant AgentsFolder
+    let copilotRoot_ = copilotRoot
+
+    let scopeRoot (harness: AgentHarness) =
+        match scope with
+        | Project rootDir ->
+            ConfigPaths.resolveProjectRoot harness rootDir
+        | Global ->
+            ConfigPaths.resolveGlobalRoot harness copilotRoot_
+
+    let resolvePath (harness: AgentHarness) (kind: ArtifactKind) (name: string) =
+        let root = scopeRoot harness
+        match kind with
+        | AgentArtifact ->
+            Path.Combine(root, "agents", name + ".md")
+        | SkillArtifact ->
+            match harness, scope with
+            | (AgentHarness.Opencode | AgentHarness.Copilot), Project _ when folderVariant_ = ClaudeFolder ->
+                let absRoot = Path.GetFullPath(
+                    match scope with Project r -> r | Global -> "")
+                Path.Combine(absRoot, ".claude", "skills", name, "SKILL.md")
+            | AgentHarness.Opencode, Project _ ->
+                let absRoot = Path.GetFullPath(
+                    match scope with Project r -> r | Global -> "")
+                let skillsRoot =
+                    match folderVariant_ with
+                    | AgentsFolder   -> Path.Combine(absRoot, ".agents")
+                    | OpencodeFolder -> Path.Combine(absRoot, ".opencode")
+                    | ClaudeFolder   -> Path.Combine(absRoot, ".claude")  // unreachable; handled above
+                Path.Combine(skillsRoot, "skills", name, "SKILL.md")
+            | _ ->
+                Path.Combine(root, "skills", name, "SKILL.md")
+        | CommandArtifact ns ->
+            match harness with
+            | AgentHarness.Opencode ->
+                Path.Combine(root, "commands", name + ".md")
+            | AgentHarness.Copilot ->
+                Path.Combine(root, "prompts", name + ".prompt.md")
+            | AgentHarness.ClaudeCode ->
+                match ns with
+                | None            -> Path.Combine(root, "commands", name + ".md")
+                | Some namespace_ -> Path.Combine(root, "commands", namespace_, name + ".md")
+
+    let requireName (frontmatter: Map<string, obj>) (typeName: string) : string =
+        match frontmatter |> Map.tryFind "name" with
+        | Some v when not (String.IsNullOrWhiteSpace(string v)) -> string v
+        | _ ->
+            raise (ArgumentException(
+                $"{typeName} requires a 'name' in frontmatter to derive the output filename."))
+
+    let writeContent (path: string) (content: string) =
+        let dir = Path.GetDirectoryName(path)
+        fileSystem.Directory.CreateDirectory(dir) |> ignore
+        fileSystem.File.WriteAllText(path, content)
+        path
+
+    /// Renders an Agent and writes it to the harness-correct path via the injected filesystem.
+    /// Returns the resolved path.
+    member _.WriteAgent(agent: Agent, harness: AgentHarness) : string =
+        let name = requireName agent.Frontmatter "Agent"
+        let content =
+            AgentWriter.renderAgent agent (fun opts ->
+                opts.OutputFormat <- harness
+                configure_ opts)
+        let path = resolvePath harness AgentArtifact name
+        writeContent path content
+
+    /// Renders a Skill and writes it to the harness-correct path via the injected filesystem.
+    /// Returns the resolved path.
+    member _.WriteSkill(skill: Skill, harness: AgentHarness) : string =
+        let name = requireName skill.Frontmatter "Skill"
+        let content = AgentWriter.renderSkill skill harness configure_
+        let path = resolvePath harness SkillArtifact name
+        writeContent path content
+
+    /// Renders a SlashCommand and writes it to the harness-correct path via the injected filesystem.
+    /// Returns the resolved path.
+    member _.WriteCommand(cmd: SlashCommand, harness: AgentHarness, ?ns: string) : string =
+        let content =
+            AgentWriter.renderCommand cmd (fun opts ->
+                opts.OutputFormat <- harness
+                configure_ opts)
+        let path = resolvePath harness (CommandArtifact ns) cmd.Name
+        writeContent path content

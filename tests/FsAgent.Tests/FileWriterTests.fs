@@ -9,6 +9,7 @@ open FsAgent.Skills
 open FsAgent.Commands
 open FsAgent.Writers
 open FsAgent.Writers.FileWriter
+open Testably.Abstractions.Testing
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -56,10 +57,15 @@ let ``A 7.1: resolveOutputPath AgentArtifact Project scope for all three harness
     Assert.EndsWith(Path.Combine(".claude", "agents", "my-bot.md"), ccPath)
 
 [<Fact>]
-let ``A 7.2: resolveOutputPath raises NotSupportedException for Copilot + Global`` () =
-    let ex = Assert.Throws<NotSupportedException>(fun () ->
-        resolveOutputPath Copilot AgentArtifact "my-bot" Global |> ignore)
-    Assert.Contains("Copilot", ex.Message)
+let ``A 7.2: resolveOutputPath raises NotSupportedException for Copilot + Global when env var not set`` () =
+    let prev = Environment.GetEnvironmentVariable("COPILOT_GLOBAL_ROOT")
+    try
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", null)
+        let ex = Assert.Throws<NotSupportedException>(fun () ->
+            resolveOutputPath Copilot AgentArtifact "my-bot" Global |> ignore)
+        Assert.Contains("Copilot", ex.Message)
+    finally
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", prev)
 
 [<Fact>]
 let ``A 7.3: resolveOutputPath SkillArtifact Project scope uses name/SKILL.md layout`` () =
@@ -70,7 +76,8 @@ let ``A 7.3: resolveOutputPath SkillArtifact Project scope uses name/SKILL.md la
     let cpPath = resolveOutputPath Copilot SkillArtifact "my-skill" scope
     let ccPath = resolveOutputPath ClaudeCode SkillArtifact "my-skill" scope
 
-    Assert.EndsWith(Path.Combine(".opencode", "skills", "my-skill", "SKILL.md"), ocPath)
+    // OpenCode project-scope skill now defaults to .agents/skills/ (cross-tool spec path)
+    Assert.EndsWith(Path.Combine(".agents", "skills", "my-skill", "SKILL.md"), ocPath)
     Assert.EndsWith(Path.Combine(".github", "skills", "my-skill", "SKILL.md"), cpPath)
     Assert.EndsWith(Path.Combine(".claude", "skills", "my-skill", "SKILL.md"), ccPath)
 
@@ -113,6 +120,104 @@ let ``A 7.8: resolveOutputPath with Project "." produces an absolute path`` () =
 
     Assert.False(path.StartsWith("."), $"Expected absolute path, got: {path}")
     Assert.True(Path.IsPathRooted(path), $"Expected rooted path, got: {path}")
+
+// ── 7.x Tests — FolderVariant option ─────────────────────────────────────────
+
+[<Fact>]
+let ``A 7.9: resolveOutputPath arity-4 default gives .agents/skills/ for OpenCode`` () =
+    let path = resolveOutputPath Opencode SkillArtifact "my-skill" (Project "/repo")
+    Assert.EndsWith(Path.Combine(".agents", "skills", "my-skill", "SKILL.md"), path)
+
+[<Fact>]
+let ``A 7.10: resolveOutputPathWith OpencodeFolder gives .opencode/skills/ for OpenCode`` () =
+    let path = resolveOutputPathWith Opencode SkillArtifact "my-skill" (Project "/repo") OpencodeFolder
+    Assert.EndsWith(Path.Combine(".opencode", "skills", "my-skill", "SKILL.md"), path)
+
+[<Fact>]
+let ``A 7.11: FolderVariant AgentsFolder and OpencodeFolder have no effect on ClaudeCode path`` () =
+    let ccPathAgents   = resolveOutputPathWith ClaudeCode SkillArtifact "s" (Project "/r") AgentsFolder
+    let ccPathOpencode = resolveOutputPathWith ClaudeCode SkillArtifact "s" (Project "/r") OpencodeFolder
+
+    Assert.EndsWith(Path.Combine(".claude", "skills", "s", "SKILL.md"), ccPathAgents)
+    Assert.EndsWith(Path.Combine(".claude", "skills", "s", "SKILL.md"), ccPathOpencode)
+
+[<Fact>]
+let ``A 7.19: resolveOutputPathWith ClaudeFolder gives .claude/skills/ for OpenCode`` () =
+    let path = resolveOutputPathWith Opencode SkillArtifact "my-skill" (Project "/repo") ClaudeFolder
+    Assert.EndsWith(Path.Combine(".claude", "skills", "my-skill", "SKILL.md"), path)
+
+[<Fact>]
+let ``A 7.20: resolveOutputPathWith ClaudeFolder gives .claude/skills/ for Copilot`` () =
+    let path = resolveOutputPathWith Copilot SkillArtifact "my-skill" (Project "/repo") ClaudeFolder
+    Assert.EndsWith(Path.Combine(".claude", "skills", "my-skill", "SKILL.md"), path)
+
+[<Fact>]
+let ``A 7.21: resolveOutputPathWith AgentsFolder and OpencodeFolder have no effect on Copilot path`` () =
+    let cpPathAgents   = resolveOutputPathWith Copilot SkillArtifact "s" (Project "/r") AgentsFolder
+    let cpPathOpencode = resolveOutputPathWith Copilot SkillArtifact "s" (Project "/r") OpencodeFolder
+
+    Assert.EndsWith(Path.Combine(".github", "skills", "s", "SKILL.md"), cpPathAgents)
+    Assert.EndsWith(Path.Combine(".github", "skills", "s", "SKILL.md"), cpPathOpencode)
+
+// ── 7.x Tests — ConfigPaths module ───────────────────────────────────────────
+
+[<Fact>]
+let ``A 7.12: ConfigPaths.resolveProjectRoot returns harness subdirectory for all harnesses`` () =
+    let ocPath = ConfigPaths.resolveProjectRoot Opencode "/repo"
+    let cpPath = ConfigPaths.resolveProjectRoot Copilot "/repo"
+    let ccPath = ConfigPaths.resolveProjectRoot ClaudeCode "/repo"
+
+    Assert.EndsWith(Path.Combine(".opencode"), ocPath)
+    Assert.EndsWith(Path.Combine(".github"), cpPath)
+    Assert.EndsWith(Path.Combine(".claude"), ccPath)
+
+[<Fact>]
+let ``A 7.13: ConfigPaths.resolveGlobalRoot returns OS-correct path for Opencode`` () =
+    let path = ConfigPaths.resolveGlobalRoot Opencode None
+    Assert.EndsWith(Path.Combine(".config", "opencode"), path)
+
+[<Fact>]
+let ``A 7.14: ConfigPaths.resolveGlobalRoot returns .claude path for ClaudeCode`` () =
+    let path = ConfigPaths.resolveGlobalRoot ClaudeCode None
+    Assert.EndsWith(".claude", path)
+
+[<Fact>]
+let ``A 7.15: ConfigPaths.resolveGlobalRoot returns explicit root for Copilot`` () =
+    let path = ConfigPaths.resolveGlobalRoot Copilot (Some "/path/to/private")
+    Assert.Equal("/path/to/private", path)
+
+[<Fact>]
+let ``A 7.16: ConfigPaths.resolveGlobalRoot raises for Copilot when no env var set`` () =
+    let prev = Environment.GetEnvironmentVariable("COPILOT_GLOBAL_ROOT")
+    try
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", null)
+        Assert.Throws<NotSupportedException>(fun () ->
+            ConfigPaths.resolveGlobalRoot Copilot None |> ignore)
+        |> ignore
+    finally
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", prev)
+
+// ── 7.x Tests — Copilot env var fallback ─────────────────────────────────────
+
+[<Fact>]
+let ``A 7.17: ConfigPaths.resolveGlobalRoot uses COPILOT_GLOBAL_ROOT env var when set`` () =
+    let prev = Environment.GetEnvironmentVariable("COPILOT_GLOBAL_ROOT")
+    try
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", "/path/to/github-private")
+        let path = ConfigPaths.resolveGlobalRoot Copilot None
+        Assert.Equal("/path/to/github-private", path)
+    finally
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", prev)
+
+[<Fact>]
+let ``A 7.18: explicit copilotRoot overrides COPILOT_GLOBAL_ROOT env var`` () =
+    let prev = Environment.GetEnvironmentVariable("COPILOT_GLOBAL_ROOT")
+    try
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", "/from-env")
+        let path = ConfigPaths.resolveGlobalRoot Copilot (Some "/explicit")
+        Assert.Equal("/explicit", path)
+    finally
+        Environment.SetEnvironmentVariable("COPILOT_GLOBAL_ROOT", prev)
 
 // ── 8. Tests — File I/O (filesystem, temp directory) ─────────────────────────
 
@@ -246,3 +351,94 @@ let ``C 8.10: writeCommand for ClaudeCode with namespace writes to correct subdi
         Assert.True(File.Exists(returned), $"File not found at: {returned}")
     finally
         if Directory.Exists(tmpRoot) then Directory.Delete(tmpRoot, true)
+
+// ── 9. Tests — AgentFileWriter (MockFileSystem, no real I/O) ─────────────────
+
+[<Fact>]
+let ``C 9.1: AgentFileWriter WriteAgent creates file at correct path in mock filesystem`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo")
+    let agent = mkAgent (Some "my-bot")
+
+    let returned = writer.WriteAgent(agent, Opencode)
+
+    let expected = resolveOutputPath Opencode AgentArtifact "my-bot" (Project "/repo")
+    Assert.Equal(expected, returned)
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.2: AgentFileWriter WriteSkill for OpenCode defaults to .agents/skills/`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo")
+    let skill = mkSkill (Some "my-skill")
+
+    let returned = writer.WriteSkill(skill, Opencode)
+
+    Assert.EndsWith(Path.Combine(".agents", "skills", "my-skill", "SKILL.md"), returned)
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.3: AgentFileWriter WriteSkill for ClaudeCode uses .claude/skills/`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo")
+    let skill = mkSkill (Some "my-skill")
+
+    let returned = writer.WriteSkill(skill, ClaudeCode)
+
+    Assert.EndsWith(Path.Combine(".claude", "skills", "my-skill", "SKILL.md"), returned)
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.4: AgentFileWriter WriteCommand for Copilot uses .prompt.md`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo")
+    let cmd = mkCommand "deploy"
+
+    let returned = writer.WriteCommand(cmd, Copilot)
+
+    Assert.True(returned.EndsWith(".prompt.md"), $"Expected .prompt.md suffix, got: {returned}")
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.5: AgentFileWriter WriteCommand for ClaudeCode with namespace uses subdirectory`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo")
+    let cmd = mkCommand "apply"
+
+    let returned = writer.WriteCommand(cmd, ClaudeCode, ns = "opsx")
+
+    Assert.EndsWith(Path.Combine("opsx", "apply.md"), returned)
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.6: AgentFileWriter constructed with copilotRoot uses it for Copilot global scope`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Global, copilotRoot = "/ctor-root")
+    let agent = mkAgent (Some "my-bot")
+
+    let returned = writer.WriteAgent(agent, Copilot)
+
+    Assert.True(returned.StartsWith("/ctor-root"), $"Expected path under /ctor-root, got: {returned}")
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.7: AgentFileWriter with ClaudeFolder writes Opencode skill to .claude/skills/`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo", folderVariant = ClaudeFolder)
+    let skill = mkSkill (Some "my-skill")
+
+    let returned = writer.WriteSkill(skill, Opencode)
+
+    Assert.EndsWith(Path.Combine(".claude", "skills", "my-skill", "SKILL.md"), returned)
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")
+
+[<Fact>]
+let ``C 9.8: AgentFileWriter with ClaudeFolder writes Copilot skill to .claude/skills/`` () =
+    let fs = MockFileSystem()
+    let writer = AgentFileWriter(fs, Project "/repo", folderVariant = ClaudeFolder)
+    let skill = mkSkill (Some "my-skill")
+
+    let returned = writer.WriteSkill(skill, Copilot)
+
+    Assert.EndsWith(Path.Combine(".claude", "skills", "my-skill", "SKILL.md"), returned)
+    Assert.True(fs.File.Exists(returned), $"File not found in mock fs at: {returned}")

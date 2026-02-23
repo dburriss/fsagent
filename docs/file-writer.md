@@ -39,7 +39,7 @@ Paths are determined by the combination of **harness**, **artifact kind**, and *
 
 ---
 
-## Module functions (simple API)
+## Module functions (low-level API)
 
 ```fsharp
 open FsAgent.Writers.FileWriter
@@ -108,10 +108,11 @@ Preferred for testable code. Accepts an `IFileSystem` so tests can use `MockFile
 
 ```fsharp
 type AgentFileWriter(
-    fileSystem : IFileSystem,
-    scope      : WriteScope,
-    ?configure : AgentWriter.Options -> unit,
-    ?copilotRoot : string)
+    fileSystem   : IFileSystem,
+    scope        : WriteScope,
+    ?configure   : AgentWriter.Options -> unit,
+    ?copilotRoot : string,
+    ?folderVariant : FolderVariant)
 ```
 
 ### Members
@@ -146,13 +147,14 @@ When you only need the path without writing:
 
 ```fsharp
 val resolveOutputPath :
-    harness     : AgentHarness ->
-    kind        : ArtifactKind ->
-    name        : string ->
-    scope       : WriteScope ->
-    copilotRoot : string option ->
+    harness : AgentHarness ->
+    kind    : ArtifactKind ->
+    name    : string ->
+    scope   : WriteScope ->
     string
 ```
+
+Defaults to `AgentsFolder` for OpenCode project-scope skills. For explicit control use `resolveOutputPathWith`.
 
 ```fsharp
 let p = FileWriter.resolveOutputPath
@@ -160,8 +162,42 @@ let p = FileWriter.resolveOutputPath
             AgentArtifact
             "my-agent"
             (Project "/repo")
-            None
 // → "/repo/.github/agents/my-agent.md"
+```
+
+## `resolveOutputPathWith` (pure, no I/O)
+
+Variant that accepts an explicit `FolderVariant` to control the project-scope skill root.
+`ClaudeFolder` affects both OpenCode and Copilot; `AgentsFolder`/`OpencodeFolder` affect OpenCode only.
+
+```fsharp
+val resolveOutputPathWith :
+    harness      : AgentHarness ->
+    kind         : ArtifactKind ->
+    name         : string ->
+    scope        : WriteScope ->
+    folderVariant: FolderVariant ->
+    string
+```
+
+```fsharp
+// Write to .opencode/skills/ instead of the default .agents/skills/
+let p = FileWriter.resolveOutputPathWith
+            AgentHarness.Opencode
+            SkillArtifact
+            "my-skill"
+            (Project "/repo")
+            OpencodeFolder
+// → "/repo/.opencode/skills/my-skill/SKILL.md"
+
+// Write to .claude/skills/ — readable by ClaudeCode, OpenCode, and Copilot
+let p = FileWriter.resolveOutputPathWith
+            AgentHarness.Copilot
+            SkillArtifact
+            "my-skill"
+            (Project "/repo")
+            ClaudeFolder
+// → "/repo/.claude/skills/my-skill/SKILL.md"
 ```
 
 ---
@@ -212,4 +248,16 @@ type ArtifactKind =
     | AgentArtifact
     | SkillArtifact
     | CommandArtifact of namespace_: string option
+```
+
+## `FolderVariant`
+
+Controls which root directory project-scope skills are written to.
+`ClaudeFolder` affects both OpenCode and Copilot; `AgentsFolder`/`OpencodeFolder` affect OpenCode only.
+
+```fsharp
+type FolderVariant =
+    | AgentsFolder   // default — cross-tool Agent Skills spec path (.agents/skills/)
+    | OpencodeFolder // OpenCode-specific path (.opencode/skills/)
+    | ClaudeFolder   // cross-tool Claude-compatible path (.claude/skills/); affects OpenCode and Copilot
 ```
