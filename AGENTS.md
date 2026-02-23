@@ -1,4 +1,8 @@
 
+# FsAgent
+
+An F# library for generating agent configuration files for AI tools (Opencode, Copilot, Claude Code). Provides an immutable AST, a computation expression DSL (`agent { ... }`, `skill { ... }`, `command { ... }`), and a configurable writer that targets multiple harnesses.
+
 Key files:
 - `README.md`
 - `ARCHITECTURE.md`
@@ -22,7 +26,9 @@ Key files:
 # Build & Test
 ```bash
 dotnet build                    # Build project
+dotnet build -c Release         # Build in release mode
 dotnet test                     # Run unit tests
+dotnet test --filter "DisplayName~inferFormat"  # Run specific test by name
 fsx scripts/build.fsx           # Alternative build script
 ```
 
@@ -43,6 +49,8 @@ Temporary scaffolding during TDD, debugging, or exploration. These tests are dis
 Validate external boundaries: YAML/JSON parsing, TOON serialization, file I/O for imports, writer frontmatter generation. Keep separate to avoid polluting acceptance tests.
 
 Label tests by external dependencies (e.g., `yaml`, `json`, `filesystem`, `serialization`) to make execution constraints explicit.
+
+Tests use xUnit with naming convention: `[Category]: Description`.
 
 # Repository Overview
 An F# DSL and library for generating custom agent files for AI agent tools. The project uses stratified design: DSL layer builds AST, writers convert AST to output formats (Markdown, JSON), and low-level import pipeline handles file parsing and serialization.
