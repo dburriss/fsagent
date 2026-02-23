@@ -1,8 +1,8 @@
-// Run `dotnet fsi examples/xml-sections.fsx` from the repo root.
+// Run `dotnet fsi examples/xml-sections/xml-sections.fsx` from the repo root.
 // Demonstrates SectionStyle.Xml — renders Section nodes as <tag>...</tag>
 // instead of Markdown headings. Useful when targeting LLMs that parse
 // structured prompts more reliably with XML tags.
-#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 
 open FsAgent.Agents
 open FsAgent.Prompts

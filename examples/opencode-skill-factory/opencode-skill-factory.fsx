@@ -1,4 +1,4 @@
-// Run `dotnet fsi examples/opencode-skill-factory.fsx` from the repo root.
+// Run `dotnet fsi examples/opencode-skill-factory/opencode-skill-factory.fsx` from the repo root.
 //
 // Demonstrates the FileWriter convenience API by generating three artifacts
 // and writing them directly into the local .opencode directory:
@@ -9,7 +9,7 @@
 //   .opencode/agents/fsagent-author.md          — sub-agent that orchestrates all three
 //   .opencode/commands/new-fsagent-artifact.md  — slash command to invoke the sub-agent
 
-#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 // Fue is a transitive dependency required for Template node rendering.
 #r "nuget: Fue, 2.2.0"
 
@@ -20,9 +20,9 @@ open FsAgent.Skills
 open FsAgent.Tools
 open FsAgent.Writers
 
-// The project root is one directory above /examples.
+// The project root is two directories above /examples/opencode-skill-factory.
 let projectRoot =
-    System.IO.Path.GetFullPath(System.IO.Path.Combine(__SOURCE_DIRECTORY__, ".."))
+    System.IO.Path.GetFullPath(System.IO.Path.Combine(__SOURCE_DIRECTORY__, "..", ".."))
 
 let scope = Project projectRoot
 

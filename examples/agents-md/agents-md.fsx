@@ -1,5 +1,5 @@
-// Run `dotnet fsi examples/agents-md.fsx` from the repo root to emit AGENTS.md.
-#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+// Run `dotnet fsi examples/agents-md/agents-md.fsx` from the repo root to emit AGENTS.md.
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 
 open System.IO
 open FsAgent.Commands

@@ -1,7 +1,7 @@
-// Run `dotnet fsi examples/ck-skill.fsx` from the repo root to emit ck-semantic-search.SKILL.md.
+// Run `dotnet fsi examples/ck-skill/ck-skill.fsx` from the repo root to emit ck-semantic-search.SKILL.md.
 // Demonstrates the `skill { ... }` CE to produce a SKILL.md that teaches an AI agent
 // how to use ck (https://beaconbay.github.io/ck/) for semantic code search.
-#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 // Fue is a transitive dependency required for Template node rendering.
 #r "nuget: Fue, 2.2.0"
 

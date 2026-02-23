@@ -31,7 +31,7 @@ Use the imported TOON catalog to highlight signatures, roles, and mission hooks.
 
 # context
 
-Catalog file: examples/toon-data.toon contents available below.
+Catalog file: examples/toon/toon-data.toon contents available below.
 
 ```toon
 title: Celestia Rescue
@@ -69,4 +69,4 @@ Summarize how the pilot, engineer, and scout work together for the Celestia Resc
 # output
 
 Produce a plan that briefly describes each character, their signature move, and a proposed mission tag.
-Generated 2026-02-22 11:59:37Z for toon-importer
+Generated 2026-02-23 21:01:55Z for toon-importer

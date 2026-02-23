@@ -1,5 +1,5 @@
-// Run `dotnet fsi examples/toon.fsx` from the repo root to emit toon-agent.md.
-#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+// Run `dotnet fsi examples/toon/toon.fsx` from the repo root to emit toon-agent.md.
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 
 open System
 open System.IO
@@ -9,7 +9,7 @@ open FsAgent.Writers
 open FsAgent.Tools
 
 let scriptDir = __SOURCE_DIRECTORY__
-let repoRoot = Path.GetFullPath(Path.Combine(scriptDir, ".."))
+let repoRoot = Path.GetFullPath(Path.Combine(scriptDir, "..", ".."))
 let toonDataPath = Path.Combine(scriptDir, "toon-data.toon")
 let importPath = Path.GetRelativePath(repoRoot, toonDataPath)
 

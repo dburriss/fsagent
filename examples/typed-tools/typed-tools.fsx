@@ -1,5 +1,5 @@
 #!/usr/bin/env dotnet fsi
-#r "../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
 
 open FsAgent.Agents
 open FsAgent.Writers
