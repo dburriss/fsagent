@@ -3,62 +3,54 @@ description: Teach an agent how to author a new skill using the fsagent F# DSL.
 license: MIT
 metadata: 
   author: fsagent example
-  version: 1.0.0
+  version: 2.0.0
 name: create-skill
 ---
 
-# Overview
-
-A *skill* is defined with the `skill { ... }` computation expression.
-Skills are loaded on demand and teach the agent a focused domain of knowledge or behaviour.
-They require `name` and `description` in the frontmatter.
-
-# Minimal Example
+# Boilerplate
 
 ```fsharp
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+#r "nuget: Fue, 2.2.0"  // For template nodes with {{{tool Name}}}
+
 open FsAgent.Skills
 open FsAgent.Writers
+```
 
-let mySkill =
-    skill {
-        name        "my-skill"
-        description "Teach the agent how to do X."
-        section "Instructions" "Step-by-step instructions for doing X."
-    }
+# Pattern
 
-// Write to .opencode/skills/my-skill/SKILL.md
-let path =
-    FileWriter.writeSkill mySkill AgentWriter.Opencode (Project ".") (fun _ -> ())
+```fsharp
+let mySkill = skill {
+    name        "my-skill"
+    description "Teach the agent how to do X."
+    license     "MIT"
+    section "Instructions" "Step-by-step guide for doing X."
+    template "Use the {{{tool Bash}}} tool to run commands."
+}
+
+let path = FileWriter.writeSkill mySkill AgentWriter.Opencode (Project ".") (fun _ -> ())
 printfn "Wrote %s" path
 ```
 
-# Metadata Fields
+# Operations
 
-Optional frontmatter fields:
-
-| Field           | Purpose                              |
-|-----------------|--------------------------------------|
-| `license`       | License identifier (e.g. "MIT")      |
-| `compatibility` | Prerequisite note (e.g. tool needed) |
-| `metadata`      | Arbitrary key/value map              |
-
-# Template Nodes
-
-Use `template` to inject harness-aware tool references at render time.
-Use triple braces — **never double braces**:
-
-```fsharp
-skill {
-    name "bash-skill"
-    description "Use Bash for shell commands."
-    template "Run commands with the {{{tool Bash}}} tool."
-}
+```
+name : string (required)
+description : string (required)
+license : string
+compatibility : string (e.g., "Requires X tool")
+metadata : Map<string, obj> (arbitrary key/value pairs)
+section : string * string
+prompt : Prompt (embed a reusable prompt)
+import : string (code-block wrapped)
+importRaw : string (raw embed)
+template : string (Fue template with {{{variable}}} and {{{tool Name}}})
+templateFile : string (load template from file path)
 ```
 
-The `{{{tool Bash}}}` placeholder resolves to the harness-correct tool name.
+# Reference
 
-# Workflow
-
-1. Define the skill with `skill { ... }`.
-2. Call `FileWriter.writeSkill skill harness scope configure`.
-3. In the harness, load the skill by name to inject its instructions.
+```
+For template rendering and tool name injection, see Templating (Fue) in AGENTS.md.
+For FileWriter API, see PROJECT.md.
+```

@@ -3,63 +3,64 @@ description: Teach an agent how to author a new agent definition using the fsage
 license: MIT
 metadata: 
   author: fsagent example
-  version: 1.0.0
+  version: 2.0.0
 name: create-agent
 ---
 
-# Overview
-
-An *agent* in fsagent is defined with the `agent { ... }` computation expression.
-It combines frontmatter metadata (name, description, model, tools) with a prompt body.
-
-Key rule: the `name` field is required — it becomes the output filename.
-
-# Minimal Example
+# Boilerplate
 
 ```fsharp
+#r "../../src/FsAgent/bin/Debug/netstandard2.0/FsAgent.dll"
+
 open FsAgent.Agents
+open FsAgent.Prompts
+open FsAgent.Tools
 open FsAgent.Writers
+```
 
-let myAgent =
-    agent {
-        name        "my-agent"
-        description "A brief description shown in the agent picker."
-        model       "claude-opus-4-5"
-        prompt (prompt {
-            role         "You are a helpful assistant."
-            instructions "Answer concisely."
-        })
-    }
+# Pattern
 
-// Write to .opencode/agents/my-agent.md
-let path =
-    FileWriter.writeAgent myAgent AgentWriter.Opencode (Project ".") (fun _ -> ())
+```fsharp
+let myAgent = agent {
+    name        "my-agent"
+    description "A helpful assistant."
+    model       "claude-opus-4-5"
+    tools       [Read; Write; Bash]
+    prompt (prompt {
+        role         "You are a helpful assistant."
+        instructions "Answer concisely."
+    })
+}
+
+let path = FileWriter.writeAgent myAgent AgentWriter.Opencode (Project ".") (fun _ -> ())
 printfn "Wrote %s" path
 ```
 
-# Adding Tools
+# Operations
 
-Restrict or allow specific tools using `tools` and `disallowedTools`.
+```
+name : string (required)
+description : string
+model : string
+temperature : float
+maxTokens : float
+tools : Tool list
+disallowedTools : Tool list
+author : string
+version : string
+license : string
+prompt : Prompt (embed a reusable prompt)
+section : string * string
+import : string (code-block wrapped)
+importRaw : string (raw embed)
+meta : MetaBuilder (use kv, kvList, kvObj, kvListObj for custom frontmatter)
 
-```fsharp
-open FsAgent.Tools
-
-let researchAgent =
-    agent {
-        name        "research-agent"
-        description "Research-only agent with read and web access."
-        tools       [ Read; WebFetch; WebSearch ]
-        prompt (prompt {
-            role "You are a research assistant."
-        })
-    }
+Available tools: Write, Edit, Bash, Shell, Read, Glob, List, LSP, Skill, TodoWrite, TodoRead, WebFetch, WebSearch, Question, Todo, Custom "name"
 ```
 
-Available tool values: `Write`, `Edit`, `Bash`, `Read`, `Glob`, `WebFetch`, `WebSearch`,
-`Question`, `Skill`, `TodoWrite`, `TodoRead`, `Custom "tool-name"`.
+# Reference
 
-# Workflow
-
-1. Define the agent with `agent { ... }`.
-2. Call `FileWriter.writeAgent agent harness scope configure` to render and write.
-3. Restart the harness (or reload agents) so the new agent is available.
+```
+For detailed type info and harness-specific tool mapping, see ARCHITECTURE.md.
+For FileWriter API and harness support matrix, see PROJECT.md.
+```
