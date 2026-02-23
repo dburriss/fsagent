@@ -38,10 +38,10 @@ Enhancements and correctness fixes in `Writers.fs`.
 
 Gaps in `FileWriter.fs` path resolution and scope support.
 
-- [ ] Support skills being written to `.agents/` folder for harnesses that use that convention (currently `resolveOutputPath` for `SkillArtifact` does not vary by harness)
-- [ ] Implement global Copilot config path resolution — currently raises `NotSupportedException`; NOTES.md calls for a config file for global Copilot location
-- [ ] Expose a `ConfigPaths` module (or equivalent) with higher-level helpers for resolving harness-specific root directories, consistent with what `knowledge/fsagent-api.md` documents
-- [ ] Consider introducing a file-IO abstraction (interface or function set) to decouple `FileWriter` from direct `File.*` / `Directory.*` calls, enabling in-memory testing without hitting the filesystem
+- [x] Support skills being written to `.agents/` folder for harnesses that use that convention — `resolveOutputPath` now varies by harness for `SkillArtifact`; `FolderVariant` DU (`AgentsFolder | OpencodeFolder | ClaudeFolder`) controls the root for OpenCode and Copilot project-scope skills
+- [x] Implement global Copilot config path resolution — `ConfigPaths.resolveGlobalRoot` resolves via explicit `copilotRoot` parameter → `COPILOT_GLOBAL_ROOT` env var → `NotSupportedException`
+- [x] Expose a `ConfigPaths` module with higher-level helpers for resolving harness-specific root directories
+- [x] Consider introducing a file-IO abstraction to decouple `FileWriter` from direct `File.*` / `Directory.*` calls — `AgentFileWriter` class accepts `IFileSystem` (Testably.Abstractions) for in-memory testing
 
 ---
 
