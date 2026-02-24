@@ -99,3 +99,15 @@ let ``DSL importRaw operation adds Imported node with wrapInCodeBlock false`` ()
     match a.Sections[0] with
     | Imported("data.json", Json, false) -> ()
     | _ -> Assert.Fail("Expected Imported node with json format and wrapInCodeBlock=false")
+
+// A - Acceptance Tests: sectionFrom DSL operation
+
+[<Fact>]
+let ``A: sectionFrom in prompt CE produces Section with Imported Markdown node`` () =
+    let p = prompt {
+        sectionFrom "Build & Test" "some.md"
+    }
+    Assert.Equal(1, p.Sections.Length)
+    match p.Sections[0] with
+    | Section("Build & Test", [Imported("some.md", Markdown, false)]) -> ()
+    | _ -> Assert.Fail("Expected Section(\"Build & Test\", [Imported(\"some.md\", Markdown, false)])")

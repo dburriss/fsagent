@@ -33,6 +33,10 @@ module CommandBuilder =
         member _.Section(cmd: SlashCommand, name: string, content: string) =
             { cmd with Sections = cmd.Sections @ [Section(name, [Text content])] }
 
+        [<CustomOperation("sectionFrom")>]
+        member _.SectionFrom(cmd: SlashCommand, name: string, path: string) =
+            { cmd with Sections = cmd.Sections @ [Section(name, [Imported(path, AST.inferFormat path, false)])] }
+
         [<CustomOperation("import")>]
         member _.Import(cmd: SlashCommand, path: string) =
             { cmd with Sections = cmd.Sections @ [AST.importRef path] }

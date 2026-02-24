@@ -6,6 +6,10 @@
 - **`OpenCodeSkillPath` renamed to `FolderVariant`**: The DU previously named `OpenCodeSkillPath` is now `FolderVariant`. The parameter previously named `?skillPath` on `AgentFileWriter` is now `?folderVariant`; `opencodeSkillPath` on `resolveOutputPathWith` is now `folderVariant`. Update all call sites and type annotations.
 
 ### Added
+- **`Markdown` DataFormat variant**: New `Markdown` case added to the `DataFormat` DU in `AST.fs`. `inferFormat` now maps `.md` and `.markdown` extensions to `Markdown` instead of `Unknown`. The writer renders `Markdown` imports as raw text (no code block) by default, and uses `"markdown"` as the language tag when code-block wrapping is requested.
+- **`sectionFrom` DSL operation**: New `sectionFrom (name: string) (path: string)` custom operation available on all four CE builders (`prompt`, `agent`, `skill`, `command`). Produces `Section(name, [Imported(path, inferFormat path, false)])`, loading section content from an external file at write time.
+
+### Added
 - **`FolderVariant.ClaudeFolder` case**: New case on `FolderVariant` DU. When passed to `resolveOutputPathWith` or the `AgentFileWriter` constructor, routes **OpenCode and Copilot** project-scope skills to `.claude/skills/<name>/SKILL.md` — the cross-tool path supported by ClaudeCode, OpenCode, and Copilot. `AgentsFolder` and `OpencodeFolder` continue to affect OpenCode only; `ClaudeFolder` is the only case that also affects Copilot.
 
 ### Previously unreleased

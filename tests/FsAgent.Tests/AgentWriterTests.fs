@@ -753,3 +753,33 @@ let ``A: renderSkill with SectionStyle Xml renders sections as XML tags`` () =
     Assert.Contains("<instructions>", result)
     Assert.Contains("</instructions>", result)
     Assert.DoesNotContain("# instructions", result)
+
+// C - Communication Tests: Markdown DataFormat rendering
+
+[<Fact>]
+let ``C: Imported(path, Markdown, false) renders as raw text without code block`` () =
+    let tempFile = Path.GetTempFileName() + ".md"
+    File.WriteAllText(tempFile, "# Hello\n\nSome content")
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Markdown, false)]
+    }
+    let result = AgentWriter.renderAgent agent (fun _ -> ())
+    Assert.Contains("# Hello", result)
+    Assert.Contains("Some content", result)
+    Assert.DoesNotContain("```", result)
+    File.Delete(tempFile)
+
+[<Fact>]
+let ``C: Imported(path, Markdown, true) renders with markdown fenced code block`` () =
+    let tempFile = Path.GetTempFileName() + ".md"
+    File.WriteAllText(tempFile, "# Hello\n\nSome content")
+    let agent: Agent = {
+        Frontmatter = Map.empty
+        Sections = [Imported(tempFile, Markdown, true)]
+    }
+    let result = AgentWriter.renderAgent agent (fun _ -> ())
+    Assert.Contains("```markdown", result)
+    Assert.Contains("# Hello", result)
+    Assert.Contains("Some content", result)
+    File.Delete(tempFile)

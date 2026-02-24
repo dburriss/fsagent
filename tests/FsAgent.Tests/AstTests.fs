@@ -85,3 +85,17 @@ let ``TemplateFile node contains path`` () =
     | TemplateFile path ->
         Assert.Equal("templates/greeting.txt", path)
     | _ -> Assert.Fail("Expected TemplateFile node")
+
+// C - Communication Tests: inferFormat extension mapping
+
+[<Fact>]
+let ``C: inferFormat ".md" returns Markdown`` () =
+    Assert.Equal(Markdown, AST.inferFormat "file.md")
+
+[<Fact>]
+let ``C: inferFormat ".markdown" returns Markdown`` () =
+    Assert.Equal(Markdown, AST.inferFormat "file.markdown")
+
+[<Fact>]
+let ``C: inferFormat ".txt" still returns Unknown`` () =
+    Assert.Equal(Unknown, AST.inferFormat "file.txt")

@@ -92,6 +92,10 @@ module PromptBuilder =
         member _.Section(prompt, name: string, content: string) =
             { prompt with Sections = prompt.Sections @ [Section(name, [Text content])] }
 
+        [<CustomOperation("sectionFrom")>]
+        member _.SectionFrom(prompt, name: string, path: string) =
+            { prompt with Sections = prompt.Sections @ [Section(name, [Imported(path, AST.inferFormat path, false)])] }
+
         [<CustomOperation("import")>]
         member _.Import(prompt, path: string) =
             { prompt with Sections = prompt.Sections @ [AST.importRef path] }

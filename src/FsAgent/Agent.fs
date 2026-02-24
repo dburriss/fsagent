@@ -96,6 +96,10 @@ module AgentBuilder =
         member _.Section(agent: Agent, name: string, content: string) =
             { agent with Sections = agent.Sections @ [Section(name, [Text content])] }
 
+        [<CustomOperation("sectionFrom")>]
+        member _.SectionFrom(agent: Agent, name: string, path: string) =
+            { agent with Sections = agent.Sections @ [Section(name, [Imported(path, AST.inferFormat path, false)])] }
+
         [<CustomOperation("import")>]
         member _.Import(agent: Agent, path: string) =
             { agent with Sections = agent.Sections @ [AST.importRef path] }

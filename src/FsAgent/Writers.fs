@@ -143,6 +143,7 @@ module AgentWriter =
         | DataFormat.Yaml -> "yaml"
         | DataFormat.Json -> "json"
         | DataFormat.Toon -> "toon"
+        | DataFormat.Markdown -> "markdown"
         | DataFormat.Unknown -> ""
 
     let defaultOptions () = {

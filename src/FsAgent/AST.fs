@@ -4,6 +4,7 @@ type DataFormat =
     | Yaml
     | Json
     | Toon
+    | Markdown
     | Unknown
 
 type Node =
@@ -30,6 +31,7 @@ module AST =
         | ".yml" | ".yaml" -> Yaml
         | ".json" -> Json
         | ".toon" -> Toon
+        | ".md" | ".markdown" -> Markdown
         | _ -> Unknown
 
     let importRef (path: string) : Node =

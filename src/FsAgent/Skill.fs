@@ -48,6 +48,10 @@ module SkillBuilder =
         member _.Prompt(s: Skill, prompt: Prompt) =
             { s with Sections = s.Sections @ prompt.Sections }
 
+        [<CustomOperation("sectionFrom")>]
+        member _.SectionFrom(s: Skill, name: string, path: string) =
+            { s with Sections = s.Sections @ [Section(name, [Imported(path, AST.inferFormat path, false)])] }
+
         [<CustomOperation("import")>]
         member _.Import(s: Skill, path: string) =
             { s with Sections = s.Sections @ [AST.importRef path] }
