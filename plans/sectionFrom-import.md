@@ -1,6 +1,6 @@
 # Plan: `sectionFrom` DSL Operation and Markdown Format
 
-Status: Draft
+Status: Done
 
 ## Problem
 
