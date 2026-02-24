@@ -1,0 +1,6 @@
+- Keep answers succinct and information-dense.  
+- Be critical of ideas; call out flawed assumptions, missing information, or unnecessary complexity.  
+- Prefer simplicity and incremental changes.  
+- State uncertainty explicitly when information is incomplete.  
+- Work in small steps and verify each change.  
+- When building new things, consult the @ARCHITECTURE.md file

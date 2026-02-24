@@ -1,0 +1,10 @@
+- Prefer simplicity.
+- Use pure functions; push I/O to the boundaries.
+- Apply functional programming where practical.
+- Use stratified design: assemble complex behaviour from smaller, simpler components.
+- DSL layer must not depend on output formats.
+- Writers must not mutate AST.
+- Follow naming: `PascalCase` for types/modules, `camelCase` for values/parameters.
+- Run `build` and `test` before and after all code/config changes.
+- Update `CHANGELOG.md` with changes when a feature is added, modified, or removed.
+- When splitting Bash commands across multiple lines, ensure there is **no trailing whitespace** after the backslash (`\`) continuation character.

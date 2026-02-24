@@ -6,84 +6,14 @@ open FsAgent.Writers
 
 let agentsMd =
     prompt {
-        section "FsAgent" """An F# library for generating agent configuration files for AI tools (Opencode, Copilot, Claude Code). Provides an immutable AST, a computation expression DSL (`agent { ... }`, `skill { ... }`, `command { ... }`), and a configurable writer that targets multiple harnesses.
-
-Key files:
-- `README.md`
-- `ARCHITECTURE.md`
-- `PROJECT.md`"""
-
-        section "General" """- Keep answers succinct and information-dense.  
-- Be critical of ideas; call out flawed assumptions, missing information, or unnecessary complexity.  
-- Prefer simplicity and incremental changes.  
-- State uncertainty explicitly when information is incomplete.  
-- Work in small steps and verify each change.  
-- When building new things, consult the @ARCHITECTURE.md file"""
-
-        section "Tech Stack" """- F# (.NET 10.0) with computation expressions for DSL
-- YAML/JSON parsing (YamlDotNet, System.Text.Json)
-- Custom TOON serializer for embedded data
-- Optional testing with xUnit3
-- Build automation with `dotnet` CLI and `fsx` scripts"""
-
-        section "Build & Test" """```bash
-dotnet build                    # Build project
-dotnet build -c Release         # Build in release mode
-dotnet test                     # Run unit tests
-dotnet test --filter "DisplayName~inferFormat"  # Run specific test by name
-fsx scripts/build.fsx           # Alternative build script
-```
-
-## Testing Guidelines
-- Default to TDD.
-- Prefer in-memory tests.
-- Run build and tests before and after modifications.
-- Use Assert.Fail("message") instead of Assert.True(false, "message") for test failures.
-
-### ABC Test Categories
-**A – Acceptance Tests**  
-Validate agent generation and writer output. Test DSL→AST→Writer pipeline end-to-end with fast, in-memory execution.
-
-**B – Building Tests**  
-Temporary scaffolding during TDD, debugging, or exploration. These tests are disposable.
-
-**C – Communication Tests**  
-Validate external boundaries: YAML/JSON parsing, TOON serialization, file I/O for imports, writer frontmatter generation. Keep separate to avoid polluting acceptance tests.
-
-Label tests by external dependencies (e.g., `yaml`, `json`, `filesystem`, `serialization`) to make execution constraints explicit.
-
-Tests use xUnit with naming convention: `[Category]: Description`."""
-
-        section "Repository Overview" """An F# DSL and library for generating custom agent files for AI agent tools. The project uses stratified design: DSL layer builds AST, writers convert AST to output formats (Markdown, JSON), and low-level import pipeline handles file parsing and serialization.
-
-Key directories:
-- `/src` - Root project files (DSL, AST, Writers, Serialization modules)
-- `/tests` - Test projects follow ABC style
-- `/docs` - Basic docs for developers
-- `/knowledge` - Summaries for compacting knowledge for AGENTS
-- `.opencode/` - OpenCode plugin configuration and command definitions
-- `openspec/` - Project specifications and change proposals"""
-
-        section "Templating (Fue)" """- Variable interpolation uses **triple** braces: `{{{variable}}}`
-- Function calls also use **triple** braces: `{{{tool Bash}}}` — never double braces `{{...}}`
-- See `knowledge/fue-templating.md` for full reference."""
-
-        section "Coding Guidelines" """- Prefer simplicity.
-- Use pure functions; push I/O to the boundaries.
-- Apply functional programming where practical.
-- Use stratified design: assemble complex behaviour from smaller, simpler components.
-- DSL layer must not depend on output formats.
-- Writers must not mutate AST.
-- Follow naming: `PascalCase` for types/modules, `camelCase` for values/parameters.
-- Run `build` and `test` before and after all code/config changes.
-- Update `CHANGELOG.md` with changes when a feature is added, modified, or removed.
-- When splitting Bash commands across multiple lines, ensure there is **no trailing whitespace** after the backslash (`\`) continuation character."""
-
-        section "Git Conventions" """- `main` contains releasable code
-- Feature branches: `feat/*`, `fix/*`, `refactor/*`
-- Small, atomic commits with clear intent
-- Commit pattern: `type: description` (e.g., `feat: add JSON writer`)
-- No worktrees detected - use standard branch workflow"""
+        sectionFrom "FsAgent" "knowledge/agents/fsagent.md"
+        sectionFrom "General" "knowledge/agents/general.md"
+        sectionFrom "Tech Stack" "knowledge/agents/tech-stack.md"
+        sectionFrom "Build & Test" "knowledge/agents/build-and-test.md"
+        sectionFrom "Repository Overview" "knowledge/agents/repository-overview.md"
+        sectionFrom "Templating (Fue)" "knowledge/agents/templating.md"
+        sectionFrom "Coding Guidelines" "knowledge/agents/coding-guidelines.md"
+        sectionFrom "Git Conventions" "knowledge/agents/git-conventions.md"
     }
 
 let content = AgentWriter.renderPrompt agentsMd (fun opts ->

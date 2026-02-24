@@ -1,0 +1,3 @@
+- Variable interpolation uses **triple** braces: `{{{variable}}}`
+- Function calls also use **triple** braces: `{{{tool Bash}}}` — never double braces `{{...}}`
+- See `knowledge/fue-templating.md` for full reference.

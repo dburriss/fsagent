@@ -1,0 +1,5 @@
+- `main` contains releasable code
+- Feature branches: `feat/*`, `fix/*`, `refactor/*`
+- Small, atomic commits with clear intent
+- Commit pattern: `type: description` (e.g., `feat: add JSON writer`)
+- No worktrees detected - use standard branch workflow

@@ -1,0 +1,5 @@
+- F# (.NET 10.0) with computation expressions for DSL
+- YAML/JSON parsing (YamlDotNet, System.Text.Json)
+- Custom TOON serializer for embedded data
+- Optional testing with xUnit3
+- Build automation with `dotnet` CLI and `fsx` scripts
