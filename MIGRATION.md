@@ -4,6 +4,69 @@ This guide covers all breaking changes in FsAgent.
 
 ---
 
+## OpenCodeSkillPath → FolderVariant (unreleased)
+
+The `OpenCodeSkillPath` DU has been renamed to `FolderVariant` and the optional parameter `?skillPath` on `AgentFileWriter` and `resolveOutputPathWith` has been renamed to `?folderVariant`.
+
+### Rename map
+
+| Old | New |
+|-----|-----|
+| `OpenCodeSkillPath` | `FolderVariant` |
+| `AgentsFolder` | `FolderVariant.AgentsFolder` |
+| `OpencodeFolder` | `FolderVariant.OpencodeFolder` |
+| `?skillPath` | `?folderVariant` |
+
+### Quick migration
+
+**Before:**
+```fsharp
+resolveOutputPathWith harness kind name scope opencodeSkillPath:OpencodeFolder
+AgentFileWriter(fs, scope, skillPath = OpencodeFolder)
+```
+
+**After:**
+```fsharp
+resolveOutputPathWith harness kind name scope folderVariant:OpencodeFolder
+AgentFileWriter(fs, scope, folderVariant = OpencodeFolder)
+```
+
+The new `ClaudeFolder` case is also available and routes OpenCode and Copilot project-scope skills to `.claude/skills/<name>/SKILL.md`.
+
+---
+
+## CommandBuilder semantic ops removed (unreleased)
+
+The `role`, `objective`, `instructions`, `context`, `output`, and `examples` custom operations have been removed from `CommandBuilder`. Use `prompt { ... }` composition instead.
+
+### Quick migration
+
+**Before:**
+```fsharp
+let cmd = command {
+    name "my-command"
+    description "Does something"
+    role "You are a helpful assistant"
+    instructions "Be concise"
+}
+```
+
+**After:**
+```fsharp
+let body = prompt {
+    role "You are a helpful assistant"
+    instructions "Be concise"
+}
+
+let cmd = command {
+    name "my-command"
+    description "Does something"
+    prompt body
+}
+```
+
+---
+
 ## MarkdownWriter → AgentWriter (pre-1.0 rename)
 
 `module MarkdownWriter` has been renamed to `module AgentWriter`. All public write functions have been renamed to `render*`. The `writeMarkdown` alias has been removed.

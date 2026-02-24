@@ -2,199 +2,87 @@
 
 ## [Unreleased]
 
-### Changed (Breaking)
-- **`OpenCodeSkillPath` renamed to `FolderVariant`**: The DU previously named `OpenCodeSkillPath` is now `FolderVariant`. The parameter previously named `?skillPath` on `AgentFileWriter` is now `?folderVariant`; `opencodeSkillPath` on `resolveOutputPathWith` is now `folderVariant`. Update all call sites and type annotations.
-
 ### Added
-- **`Markdown` DataFormat variant**: New `Markdown` case added to the `DataFormat` DU in `AST.fs`. `inferFormat` now maps `.md` and `.markdown` extensions to `Markdown` instead of `Unknown`. The writer renders `Markdown` imports as raw text (no code block) by default, and uses `"markdown"` as the language tag when code-block wrapping is requested.
-- **`sectionFrom` DSL operation**: New `sectionFrom (name: string) (path: string)` custom operation available on all four CE builders (`prompt`, `agent`, `skill`, `command`). Produces `Section(name, [Imported(path, inferFormat path, false)])`, loading section content from an external file at write time.
-
-### Added
-- **`FolderVariant.ClaudeFolder` case**: New case on `FolderVariant` DU. When passed to `resolveOutputPathWith` or the `AgentFileWriter` constructor, routes **OpenCode and Copilot** project-scope skills to `.claude/skills/<name>/SKILL.md` — the cross-tool path supported by ClaudeCode, OpenCode, and Copilot. `AgentsFolder` and `OpencodeFolder` continue to affect OpenCode only; `ClaudeFolder` is the only case that also affects Copilot.
-
-### Previously unreleased
-- **`OpenCodeSkillPath` DU** (`AgentsFolder | OpencodeFolder`): Controls whether OpenCode project-scope skills are written to `.agents/skills/` (default) or `.opencode/skills/`. Pass explicitly via `resolveOutputPathWith`; arity-4 `resolveOutputPath` and module-level `writeFile`/`writeSkill` default to `AgentsFolder`.
-- **`ConfigPaths` module** (public, re-exported from `FsAgent` namespace): Exposes `resolveProjectRoot (harness) (rootDir)` and `resolveGlobalRoot (harness) (copilotRoot option)` as pure, testable functions. `resolveGlobalRoot` for Copilot resolves in priority order: explicit `copilotRoot` parameter → `COPILOT_GLOBAL_ROOT` environment variable → `NotSupportedException`.
-- **`COPILOT_GLOBAL_ROOT` env-var fallback**: Copilot global scope no longer unconditionally raises; if the `COPILOT_GLOBAL_ROOT` environment variable is set it is used as the global root, enabling CI/CD scenarios without passing an explicit path.
-- **`AgentFileWriter` class** (re-exported from `FsAgent` namespace): Injectable writer with constructor `(fileSystem: IFileSystem, scope: WriteScope, ?configure, ?copilotRoot, ?skillPath)`. Methods: `WriteAgent`, `WriteSkill`, `WriteCommand` — identical semantics to module-level functions but use the injected `IFileSystem` for all I/O, enabling in-memory testing without touching the real filesystem.
-- **`Testably.Abstractions` dependency** on `FsAgent` project (10.1.0): Provides `IFileSystem` abstraction used by `AgentFileWriter`.
-- **C-category filesystem tests** (`FileWriterTests.fs`): 6 new tests (`C 9.1`–`C 9.6`) covering `AgentFileWriter` with `MockFileSystem` for all artifact types and harnesses.
-
-### Changed (Breaking)
-- **OpenCode project-scope skill default path changed**: `resolveOutputPath` (arity-4) and module-level `writeSkill` now route OpenCode + Project + SkillArtifact to `.agents/skills/<name>/SKILL.md` instead of `.opencode/skills/<name>/SKILL.md`. Use `resolveOutputPathWith` with `OpencodeFolder` to restore the previous behaviour.
-
-### Added
-- **`FsAgent.Toon` project**: New `netstandard2.0` companion project (`src/FsAgent.Toon/`) providing a pure F# TOON v1.2 parser and normalizing serializer with no external dependencies. Public API: `FsAgent.Toon.ToonSerializer.serialize : string -> Result<string, string>` — parses a TOON document and re-emits normalized output; returns `Error "Line N: msg"` on parse failure, never throws.
-- **`ToonSerializer` hook on `AgentWriter.Options`**: New `mutable ToonSerializer: (string -> Result<string, string>) option` field on `AgentWriter.Options`. When set, `Imported` nodes with `DataFormat.Toon` are parsed and re-serialized via the provided function instead of being passed through as raw bytes. On parse error, the embedded content begins with `[TOON parse error: <msg>]` followed by the raw content. When `None` (default), behaviour is unchanged — raw passthrough.
-- **`resolveImportedContent` helper in `Writers.fs`**: Extracted shared `resolveImportedContent (path: string) (format: DataFormat) (toonSerializer: ...) : string` helper; both `renderMd` and `renderSkill` `Imported` handlers now delegate to it, eliminating the duplicated `File.ReadAllText` pattern.
-- **`examples/toon-data.toon` rewritten**: Corrected from YAML syntax to valid TOON v1.2 syntax with proper array headers (`[N]:`), nested objects, and inline primitive arrays.
-- **C-category TOON tests** (`ToonSerializerTests.fs`): 6 new tests covering `serialize` round-trip of `toon-data.toon`, invalid escape error path, raw YAML passthrough regression, valid TOON import normalization, and no-serializer raw passthrough.
-- **A-category TOON acceptance test extended**: New test asserting that when `ToonSerializer` is registered on options, `Imported` TOON content is normalized (key present in output) rather than passed through as raw bytes.
-
-- **`FileWriter` module** (`FsAgent.Writers.FileWriter`): New harness-aware file-writing module that resolves the correct output path for agents, skills, and slash commands per harness and scope, then writes content to disk. Public API:
-  - `WriteScope` DU (`Project of rootDir: string | Global`) — controls whether output targets a project-local directory or the user's OS config directory.
-  - `ArtifactKind` DU (`AgentArtifact | CommandArtifact of namespace_: string option | SkillArtifact`) — identifies the artifact type and carries ClaudeCode namespace for namespaced commands.
-  - `resolveGlobalRoot` — returns the OS-correct global config root per harness; raises `NotSupportedException` for `Copilot`.
-  - `resolveOutputPath` — pure function mapping `(harness × kind × name × scope)` to an absolute path string; no I/O performed.
-  - `writeFile` — thin I/O wrapper: calls `resolveOutputPath`, creates intermediate directories, writes content, returns resolved path.
-  - `writeAgent` / `writeSkill` / `writeCommand` — convenience wrappers that render the artifact and call `writeFile`; name is derived from `Frontmatter["name"]` (raises `ArgumentException` if absent).
-  - All public symbols re-exported from `FsAgent` namespace (`module FileWriter`, `type WriteScope`, `type ArtifactKind`).
-
-### Added
-- **`SectionStyle` option on `AgentWriter.Options`**: New `SectionStyle` discriminated union (`Markdown` | `Xml`) added to `AgentWriter.Options`. When set to `Xml`, `Section` nodes are rendered as `<name>...</name>` XML tags instead of Markdown headings in both `renderAgent` (via `renderMd`) and `renderSkill`. Defaults to `Markdown` to preserve existing behaviour. `RenameMap` and `HeadingFormatter` continue to apply to the tag name in XML mode.
-
-### Added
-- **`AgentWriter.ValidationException`**: Custom F# exception type (`exception ValidationException of string`) defined in `FsAgent.Writers.AgentWriter`. Raised by all three render functions when required fields fail validation, allowing callers to catch validation errors specifically.
+- `FolderVariant` DU with `ClaudeFolder` case — routes OpenCode and Copilot skills to `.claude/skills/`
+- `Markdown` data format variant — `.md`/`.markdown` imports rendered as raw text
+- `sectionFrom` DSL operation — loads named section content from an external file
+- `SectionStyle` option (`Markdown` | `Xml`) on `AgentWriter.Options`
+- `ValidationException` on `AgentWriter` — typed exception for render validation errors
+- `FsAgent.Toon` project — pure F# TOON v1.2 parser/serializer (`netstandard2.0`, no dependencies)
+- `ToonSerializer` hook on `AgentWriter.Options` for normalizing TOON imports
+- `FileWriter` module — harness-aware path resolution and file writing (`WriteScope`, `ArtifactKind`)
+- `AgentFileWriter` class — injectable writer using `IFileSystem` for testable I/O
+- `ConfigPaths` module — pure functions for resolving project/global roots per harness
+- `COPILOT_GLOBAL_ROOT` env-var fallback for Copilot global scope
+- `skill { ... }` CE builder with YAML frontmatter and `renderSkill` writer
+- `command { ... }` CE builder for slash commands and `renderCommand` writer
+- `{{{tool <Name>}}}` template syntax — resolves to harness-correct tool names at write time
 
 ### Changed
-- **`renderCommand` validation**: `AgentWriter.renderCommand` now validates that `Name` and `Description` are non-empty and non-whitespace before serializing. All violations are collected and reported in a single `raise (ValidationException ...)` with a bulleted message (e.g., `SlashCommand validation failed:\n- requires a non-empty 'name'`).
-- **`renderSkill` validation**: `AgentWriter.renderSkill` now validates that `Frontmatter` contains non-empty, non-whitespace values for both `"name"` and `"description"` keys before serializing. All violations reported in a single `raise (ValidationException ...)` (e.g., `Skill validation failed:\n- requires a non-empty 'name' in frontmatter`).
-- **`renderAgent` validation (Copilot)**: Replaced the single-condition `name.IsNone || desc.IsNone` guard with a collect-then-throw pattern that names each missing field individually, and updated to use `raise (ValidationException ...)` instead of `failwith`.
+- **BREAKING**: `OpenCodeSkillPath` renamed to `FolderVariant`; `?skillPath` → `?folderVariant`
+- **BREAKING**: OpenCode project-scope skill default path changed to `.agents/skills/` (use `OpencodeFolder` to restore)
+- **BREAKING**: `CommandBuilder` semantic ops removed — use `prompt { ... }` composition
+- **BREAKING**: `module MarkdownWriter` → `module AgentWriter`; `write*` → `render*`; `writeMarkdown` removed
+- `renderCommand` and `renderSkill` validate required fields, reporting all violations in a single `ValidationException`
+- `renderAgent` Copilot validation uses `ValidationException` with per-field reporting
 
-### Added
-- **`skill-builder`**: `Skill` record type (`Frontmatter: Map<string, obj>`, `Sections: Node list`) in `FsAgent.Skills` namespace, with a `skill { ... }` computation expression exposing `name`, `description`, `license`, `compatibility`, `metadata`, `section`, `prompt`, `import`, `importRaw`, `template`, and `templateFile` custom operations
-- **`skill-writer`**: `AgentWriter.renderSkill` that accepts a `Skill`, an `AgentHarness`, and an `Options -> unit` configurator, producing a SKILL.md-compatible Markdown string with YAML frontmatter; harness-aware `{{{tool X}}}` resolution and all standard `Options` fields are supported
-- `type Skill` alias and `let skill` CE re-exported from `FsAgent` namespace for `open FsAgent` access
-
-### Changed (Breaking)
-- **`CommandBuilder` semantic ops removed**: `role`, `objective`, `instructions`, `context`, `output`, and `examples` custom operations have been removed from `CommandBuilder`. Callers must migrate to `prompt { ... }` composition — e.g. `command { prompt (let p = prompt { role "..." }; p) }` or bind the prompt outside the CE and pass it via `prompt p`.
-- **`module MarkdownWriter` renamed to `module AgentWriter`** in `FsAgent.Writers` namespace
-- **`writeAgent` renamed to `renderAgent`** (public)
-- **`writePrompt` renamed to `renderPrompt`** (public)
-- **`writeCommand` renamed to `renderCommand`** (public)
-- **`writeMarkdown` removed** — use `renderAgent` directly
-- Private helpers renamed: `writeMd` → `renderMd`, `writeJson` → `renderJson`, `writeYaml` → `renderYaml`
-
-### Added
-- **SlashCommand DSL**: `SlashCommand` record type (`Name`, `Description`, `Sections`) in `FsAgent.Commands` namespace
-- **`command { }` CE builder**: Computation expression with `name`, `description`, `section`, `import`, `importRaw`, `template`, `templateFile`, and `prompt` operations
-- **`AgentWriter.renderCommand`**: Renders a `SlashCommand` to Markdown with `description`-only frontmatter, reusing existing section/template/import rendering
-- `type SlashCommand` alias and `let command` CE re-exported from `FsAgent` namespace for `open FsAgent` access
-
-### Added
-- **Tool name injection in templates**: `{{{tool <Name>}}}` syntax in template strings resolves to the harness-correct tool name at write time (e.g., `{{{tool Bash}}}` → `"bash"` for Opencode, `"ClaudeCode"` for ClaudeCode)
-- `Template.renderWithHarness` and `Template.renderFileWithHarness` functions for harness-aware template rendering
-- `AgentHarness` type moved above `Template` module in `Writers.fs` to allow use in template function signatures
-
-### Changed
-- `renderMd` `Template` and `TemplateFile` branches now use harness-aware render functions; existing variable substitution behaviour is unchanged
+See [MIGRATION.md](MIGRATION.md) for migration guide.
 
 ## [0.3.1] - 2026-02-04
 
 ### Changed
-- **Opencode tool output format**: Tools now output in struct/map format with boolean values (e.g., `bash: true`, `write: false`) instead of list format
-- **Opencode shows disabled tools**: Disabled tools now appear with `false` value in Opencode output, providing explicit visibility of all tool states
-- **Alphabetical tool ordering**: Opencode tools are now sorted alphabetically for deterministic output
+- Opencode tools output as struct/map with boolean values; disabled tools shown as `false`
+- Tools sorted alphabetically for deterministic output
 
 ### Fixed
-- Fixed malformed YAML output when Copilot/ClaudeCode agents have only `disallowedTools` with no enabled tools - now correctly omits the tools section instead of outputting `tools: \n  - `
-
-### Added
-- 4 new unit tests covering harness-specific tool output format scenarios (alphabetical sorting, empty tools, only disallowedTools for Copilot/ClaudeCode)
-- OpenSpec requirement documentation for harness-specific tools output format in `openspec/specs/markdown-writer/spec.md`
+- Malformed YAML when Copilot/ClaudeCode agents have only `disallowedTools` with no enabled tools
 
 ## [0.3.0] - 2026-02-02
 
 ### Added
-- **Tool discriminated union**: Type-safe tool configuration with `Write`, `Edit`, `Bash`, `WebFetch`, `Todo`, and `Custom of string` cases
-- **ClaudeCode harness**: New `AgentHarness` case for Claude Code platform with capitalized tool names
-- **Harness-specific tool name mapping**: Tools automatically map to correct names based on target platform (e.g., `Write` → "write" for Opencode, "Write" for ClaudeCode)
-- **Typed tools operation**: Agent builder `tools` operation now accepts `Tool list` for compile-time safety and IDE autocomplete
-- **Typed disallowedTools operation**: Agent builder `disallowedTools` operation now accepts `Tool list` instead of `string list`
-- **FsAgent.Tools namespace**: New dedicated namespace for Tool type and related tool functionality
+- `Tool` DU — type-safe tool configuration (`Write`, `Edit`, `Bash`, `WebFetch`, `Todo`, `Custom of string`)
+- `ClaudeCode` harness with platform-specific tool name mapping
+- `FsAgent.Tools` namespace
 
 ### Changed
-- **BREAKING**: `Tool` type moved from `FsAgent.AST` to `FsAgent.Tools` namespace - users must update imports from `open FsAgent.AST` to `open FsAgent.Tools`
-- **BREAKING**: `AgentFormat` type renamed to `AgentHarness` throughout codebase to better represent execution platform
-- **BREAKING**: `tools` operation signature changed from `obj list` to `Tool list`
-- **BREAKING**: `disallowedTools` operation signature changed from `string list` to `Tool list`
-- **BREAKING**: Frontmatter storage changed - tools stored as `Tool list` objects, not string maps
-- Tool name resolution moved from agent definition time to write time, enabling harness-agnostic agent definitions
-- Tools are now always output as a list format, with disabled tools omitted from the output
+- **BREAKING**: `Tool` type moved from `FsAgent.AST` to `FsAgent.Tools`
+- **BREAKING**: `AgentFormat` renamed to `AgentHarness`
+- **BREAKING**: `tools` accepts `Tool list` (was `obj list`); `disallowedTools` accepts `Tool list` (was `string list`)
+- **BREAKING**: Frontmatter stores tools as `Tool list`, not string maps
+- Tool name resolution deferred to write time — agent definitions are now harness-agnostic
 
 ### Removed
-- **BREAKING**: `toolMap` operation removed from agent builder - use `tools` + `disallowedTools` instead
-- **BREAKING**: `ToolFormat` option removed from `AgentWriter.Options` - tools are now always output as a list (equivalent to the old `ToolsList` format). The `ToolFormat` option (`ToolsList`, `ToolsMap`, `Auto`) has been removed to simplify the API. Since `Auto` defaulted to `ToolsList` for all harnesses, the format option was redundant. Disabled tools are simply omitted from the output list.
+- **BREAKING**: `toolMap` operation — use `tools` + `disallowedTools`
+- **BREAKING**: `ToolFormat` option — tools always output as list; disabled tools omitted
 
-### Migration
-See [MIGRATION.md](MIGRATION.md) for complete migration guide from v1.x to v2.0.
-
-**Quick migration examples:**
-```fsharp
-// Before (v1.x)
-open FsAgent.AST
-tools ["write" :> obj; "bash" :> obj]
-disallowedTools ["bash"]
-opts.OutputFormat <- AgentWriter.AgentFormat.Opencode
-
-// After (v2.0)
-open FsAgent.Tools  // Tool type now in Tools namespace
-tools [Write; Bash]
-disallowedTools [Bash]
-opts.OutputFormat <- Opencode
-```
-
----
+See [MIGRATION.md](MIGRATION.md) for migration guide.
 
 ## [0.2.0] - Previous Release
 
 ### Added
-- **Prompt as first-class type**: New `Prompt` type with `prompt { ... }` computation expression builder for creating reusable prompts
-- **Template support**: Added `Template` and `TemplateFile` node cases with Fue-based variable substitution (`{{{variable}}}` syntax)
-- **Namespace organization**: Domain-focused namespaces (`FsAgent.AST`, `FsAgent.Prompts`, `FsAgent.Agents`, `FsAgent.Writers`)
-- **New writer functions**: `renderPrompt` for rendering prompts without frontmatter blocks, `renderAgent` as primary agent writer
-- **Template operations**: `template` and `templateFile` operations in prompt builder for dynamic content generation
-- **Prompt metadata**: Prompt builder supports `name`, `description`, `author`, `version`, `license` metadata operations
-- **Agent metadata operations**: Agent builder now supports `model`, `temperature`, `maxTokens`, `tools` operations
-- **Fue dependency**: Integrated Fue 2.2.0 template library for Mustache-like templating
+- `Prompt` type with `prompt { ... }` CE builder for reusable prompts
+- `Template` and `TemplateFile` nodes with Fue-based `{{{variable}}}` substitution
+- `template` / `templateFile` operations on prompt builder
+- `renderPrompt` and `renderAgent` writer functions
 - `importRaw` DSL operation for raw content embedding without code fences
-- `DisableCodeBlockWrapping` writer option to force raw output for all imports
+- `DisableCodeBlockWrapping` writer option
+- Prompt metadata operations (`name`, `description`, `author`, `version`, `license`)
+- Agent metadata operations (`model`, `temperature`, `maxTokens`, `tools`)
 
 ### Changed
-- **BREAKING**: Agent builder no longer supports `role`, `objective`, `instructions`, `context`, `output`, `examples` operations directly - must use prompts instead
-- **BREAKING**: Code organization split into multiple files (AST.fs, Prompt.fs, Agent.fs, Writers.fs) with new namespace structure
-- **BREAKING**: `import` now automatically wraps content in fenced code blocks (` ```json `, ` ```yaml `, ` ```toon `). Use `importRaw` for raw embedding
-- **BREAKING**: `ImportInclusion` type removed entirely. Imports are always resolved—code block behavior is controlled by the DSL operation (`import` vs `importRaw`), not writer options
-- Prompt constructors (`role`, `objective`, `instructions`, `context`, `output`, `example`, `examples`) moved from AST module to Prompt module
-- `writeMarkdown` alias removed — was previously an alias to `writeAgent`
-- Library.fs now serves as backward compatibility layer with re-exports
-- Target netstandard2.0 for broader compatibility
+- **BREAKING**: Agent builder semantic ops (`role`, `objective`, etc.) removed — use `prompt { ... }` composition
+- **BREAKING**: Codebase split into `AST.fs`, `Prompt.fs`, `Agent.fs`, `Writers.fs` with new namespaces
+- **BREAKING**: `import` now wraps content in fenced code blocks; use `importRaw` for raw embedding
+- **BREAKING**: `ImportInclusion` type removed — code block wrapping controlled by DSL operation choice
+- Target changed to `netstandard2.0`
 
-### Migration Guide
-**Before (v0.1.0):**
-```fsharp
-open FsAgent.DSL
-
-let agent = agent {
-    role "You are a helpful assistant"
-    objective "Answer questions"
-    instructions "Be concise"
-}
-```
-
-**After (v0.2.0):**
-```fsharp
-open FsAgent.Agents
-open FsAgent.Prompts
-
-let assistantPrompt = prompt {
-    role "You are a helpful assistant"
-    objective "Answer questions"
-    instructions "Be concise"
-}
-
-let agent = agent {
-    prompt assistantPrompt
-}
-```
-
-**Backward compatibility:** Existing code using `open FsAgent.DSL` continues to work via re-exports.
+See [MIGRATION.md](MIGRATION.md) for migration guide.
 
 ## [0.1.0] - 2025-12-15
 
 ### Added
-- Constructors for `instructions`, `context`, `result`, `example`, `examples`
-- Markdown writer with configurable options for output format, type, import inclusion, heading renames, and custom writers
-- Agent DSL: Top-level F# computation expression `agent { ... }` for ergonomic agent authoring
-- Frontmatter helpers: `fmStr`, `fmNum`, `fmBool`, `fmList`, `fmMap` for generic metadata
-- Import inference: `importRef` infers format from file extensions (.yml/.yaml/.json/.toon)
+- `agent { ... }` CE builder for agent authoring
+- Markdown writer with configurable options (format, heading renames, custom writers)
+- Section constructors: `instructions`, `context`, `result`, `example`, `examples`
+- Frontmatter helpers: `fmStr`, `fmNum`, `fmBool`, `fmList`, `fmMap`
+- `importRef` with format inference from file extensions
